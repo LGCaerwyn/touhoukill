@@ -117,7 +117,7 @@ end
 
 function SmartAI:shouldUseAnaleptic(target, slash)
 	if sgs.turncount <= 1 and self.role == "renegade" and sgs.isLordHealthy() and self:getOverflow() < 2 then return false end
-
+    if target:hasSkill("xuying") then return false end
 	--【冰魄】对策
 	local fakeDamage=sgs.DamageStruct()
 	fakeDamage.card=slash
@@ -139,6 +139,16 @@ function SmartAI:shouldUseAnaleptic(target, slash)
 		if self:isFriend(shrx,target) and shrx:inMyAttackRange(target) then
 			return false 
 		end
+	end
+	--【噬史对策】
+	local huiyin = self.room:findPlayerBySkillName("shishi")
+	if huiyin  and huiyin:getPile("lishi"):isEmpty() and self:isEnemy(huiyin) then
+		return false
+	end
+	--【乱影对策】
+	local merry = self.room:findPlayerBySkillName("luanying")
+	if merry and self:isFriend(merry, target) and self:canLuanying(merry, slash) then
+		return false
 	end
 	
 	if target:hasSkill("zhenlie") then return false end
@@ -163,7 +173,15 @@ function SmartAI:shouldUseAnaleptic(target, slash)
 	if self.player:hasSkill("kofliegong") and self.player:getPhase() == sgs.Player_Play and hcard >= self.player:getHp() then return true end
 	if self.player:hasSkill("tieji") then return true end
 	--勇仪主动吃酒
-	if self.player:hasSkill("haoyin") and self:canGuaili(slash) then return true end
+	if  self:canGuaili(slash) then 
+		return true 
+	end
+	if self.player:hasSkill("jiuhao") and not self.player:hasFlag("jiuhao") and #self.enemies >0 then
+		local jiuhaoTarget = sgs.ai_skill_playerchosen.zero_card_as_slash(self, self.room:getOtherPlayers(self.player))
+		if jiuhaoTarget and self:isEnemy(self.player, jiuhaoTarget) then
+			return true
+		end
+	end
 	
 	if self.player:hasWeapon("axe") and self.player:getCards("he"):length() > 4 then return true end
 	--if target:hasFlag("dahe") then return true end
@@ -244,7 +262,7 @@ function SmartAI:searchForAnaleptic(use, enemy, slash)
 	end
 
 	local card_str = self:getCardId("Analeptic")
-	if card_str then return sgs.Card_Parse(card_str) end
+	if card_str then  return sgs.Card_Parse(card_str) end
 
 	for _, anal in ipairs(cards) do
 		if (anal:getClassName() == "Analeptic") and not (anal:getEffectiveId() == slash:getEffectiveId()) then

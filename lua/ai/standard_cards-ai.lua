@@ -493,9 +493,18 @@ function SmartAI:slashIsEffective(slash, to, from, ignore_armor)
 	fakeDamage.from=from
 	fakeDamage.to=to
 	
-	if to:hasSkill("xuying") then return true end
-	if to:hasSkill("zhengti") then--结果就不杀了。。。哪怕正体的是敌人。。。
-		return self:zhengtiParse(from,to)
+	if to:hasSkill("xuying") and to:getHandcardNum() > 0 then return true end
+	if to:hasSkill("zhengti") then--严格来讲应该往后挪
+	    local zhengti, transfer_to = self:zhengtiParse(from,to)
+		if zhengti then
+			return false
+		elseif transfer_to then
+			if self:isFriend(from, transfer_to) then 
+				return false
+			else
+				to = transfer_to
+			end
+		end
 	end
 	if self:touhouDamage(fakeDamage,from,to).damage<=0  then 
 		if not self:touhouDamageEffect(fakeDamage,from,to) then
@@ -631,7 +640,7 @@ function SmartAI:useCardSlash(card, use)
 		end
 		return card:targetFilter(targets, target, self.player)
 	end
-	
+
 	--for shikong 
 	--简单粗暴
 	if  self.player:hasSkill("shikong") and self.player:getPhase()==sgs.Player_Play  
@@ -670,6 +679,8 @@ function SmartAI:useCardSlash(card, use)
 		return
 	end
 	
+
+	
 	if not use.isDummy and self.player:hasSkill("qingnang") and self:isWeak() and self:getOverflow() == 0 then return end
 	for _, friend in ipairs(self.friends_noself) do
 		local slash_prohibit = false
@@ -691,6 +702,8 @@ function SmartAI:useCardSlash(card, use)
 	end
 
 
+
+	
 	local targets = {}
 	local forbidden = {}
 	self:sort(self.enemies, "defenseSlash")
@@ -716,6 +729,8 @@ function SmartAI:useCardSlash(card, use)
 			end
 		end
 	end]]
+	
+
 	for _, target in ipairs(targets) do
 		local canliuli = false
 		for _, friend in ipairs(self.friends_noself) do
@@ -756,7 +771,6 @@ function SmartAI:useCardSlash(card, use)
 						return
 					end
 				end
-
 				if target:isChained() and self:isGoodChainTarget(target, nil, nil, nil, card) and not use.card then
 					local here=false
 					if self.player:hasSkill("here") or target:hasSkill("here") then
@@ -793,17 +807,21 @@ function SmartAI:useCardSlash(card, use)
 				end
 			end
 			
+
 			use.card = use.card or usecard
 			if use.to and not use.to:contains(target) and canAppendTarget(target) then
 				use.to:append(target)
 			end
 			if not use.isDummy then
 				local analeptic = self:searchForAnaleptic(use, target, use.card)
-				if analeptic and self:shouldUseAnaleptic(target, use.card) and analeptic:getEffectiveId() ~= card:getEffectiveId() then
+				
+				if analeptic and self:shouldUseAnaleptic(target, use.card) and analeptic:getEffectiveId() ~= card:getEffectiveId() 
+				and not  (analeptic:getSkillName() == "bllmshiyu" and card:getSubcards():length() > 1) then 
 					use.card = analeptic
 					if use.to then use.to = sgs.SPlayerList() end
 					return
 				end
+				
 				if self.player:hasSkill("jilve") and self.player:getMark("@bear") > 0 and not self.player:hasFlag("JilveWansha") and target:getHp() == 1 and not self.room:getCurrent():hasSkill("wansha")
 					and (target:isKongcheng() or getCardsNum("Jink", target, self.player) < 1 or sgs.card_lack[target:objectName()]["Jink"] == 1) then
 					use.card = sgs.Card_Parse("@JilveCard=.")
@@ -823,6 +841,9 @@ function SmartAI:useCardSlash(card, use)
 		end
 	end
 
+	
+
+	
 	for _, friend in ipairs(self.friends_noself) do
 		local slash_prohibit = self:slashProhibit(card, friend)
 		if (not use.current_targets or not table.contains(use.current_targets, friend:objectName()))
@@ -2559,6 +2580,13 @@ function SmartAI:getDangerousCard(who)
 	local treasure = who:getTreasure() 
 	local defensiveHorse = who:getDefensiveHorse()
 	
+	--魔操对策
+	local shrx = self.room:findPlayerBySkillName("mocao")
+	if shrx and shrx:objectName() ~= who:objectName()  and self:isFriend(shrx, who) and who:getLostHp() >= 2 then
+		for _,equip in sgs.qlist(who:getEquips()) do
+			return equip:getEffectiveId()
+		end
+	end
 	if treasure and treasure:isKindOf("WoodenOx") and who:getPile("wooden_ox"):length() > 1 then
 		return treasure:getEffectiveId()
 	end

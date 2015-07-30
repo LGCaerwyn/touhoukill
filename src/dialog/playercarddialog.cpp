@@ -44,7 +44,8 @@ PlayerCardDialog::PlayerCardDialog(const ClientPlayer *player, const QString &fl
     setLayout(layout);
 }
 
-QWidget *PlayerCardDialog::createAvatar() {
+QWidget *PlayerCardDialog::createAvatar()
+{
     QGroupBox *box = new QGroupBox(ClientInstance->getPlayerName(player->objectName()));
     box->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
 
@@ -59,7 +60,8 @@ QWidget *PlayerCardDialog::createAvatar() {
     return box;
 }
 
-QWidget *PlayerCardDialog::createHandcardButton() {
+QWidget *PlayerCardDialog::createHandcardButton()
+{
     if (!player->isKongcheng() && (Self == player || handcard_visible)) {
         QGroupBox *area = new QGroupBox(tr("Handcard area"));
         QVBoxLayout *layout = new QVBoxLayout;
@@ -114,7 +116,8 @@ QWidget *PlayerCardDialog::createHandcardButton() {
     return button;
 }
 
-QWidget *PlayerCardDialog::createEquipArea() {
+QWidget *PlayerCardDialog::createEquipArea()
+{
     QGroupBox *area = new QGroupBox(tr("Equip area"));
     QVBoxLayout *layout = new QVBoxLayout;
     QString suffix1 = "";
@@ -200,13 +203,17 @@ QWidget *PlayerCardDialog::createEquipArea() {
     }
 }
 
-QWidget *PlayerCardDialog::createJudgingArea() {
+QWidget *PlayerCardDialog::createJudgingArea()
+{
     QGroupBox *area = new QGroupBox(tr("Judging Area"));
     QVBoxLayout *layout = new QVBoxLayout;
     QList<const Card *> cards = player->getJudgingArea();
     foreach (const Card *card, cards) {
         const Card *real = Sanguosha->getEngineCard(card->getId());
-        PlayerCardButton *button = new PlayerCardButton(real->getFullName());
+        QString name = real->getFullName();
+        if (name != card->getFullName())
+            name = name + "as" + card->getName();
+        PlayerCardButton *button = new PlayerCardButton(name);
         button->setIcon(G_ROOM_SKIN.getCardSuitPixmap(real->getSuit()));
         layout->addWidget(button);
         button->setEnabled(!disabled_ids.contains(card->getEffectiveId())
@@ -226,7 +233,8 @@ QWidget *PlayerCardDialog::createJudgingArea() {
     }
 }
 
-void PlayerCardDialog::emitId() {
+void PlayerCardDialog::emitId()
+{
     int id = mapper.value(sender(), -2);
     if (id != -2)
         emit card_id_chosen(id);

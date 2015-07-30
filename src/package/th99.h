@@ -5,7 +5,8 @@
 #include "card.h"
 
 
-class qiuwenCard : public SkillCard {
+class qiuwenCard : public SkillCard
+{
     Q_OBJECT
 
 public:
@@ -14,7 +15,8 @@ public:
     virtual void use(Room *room, ServerPlayer *source, QList<ServerPlayer *> &targets) const;
 };
 
-class dangjiaCard : public SkillCard {
+class dangjiaCard : public SkillCard
+{
     Q_OBJECT
 
 public:
@@ -24,7 +26,8 @@ public:
     virtual void use(Room *room, ServerPlayer *source, QList<ServerPlayer *> &targets) const;
 };
 
-class xiufuCard : public SkillCard {
+class xiufuCard : public SkillCard
+{
     Q_OBJECT
 
 public:
@@ -33,7 +36,8 @@ public:
     virtual void use(Room *room, ServerPlayer *source, QList<ServerPlayer *> &targets) const;
 };
 
-class lianxiCard : public SkillCard {
+class lianxiCard : public SkillCard
+{
     Q_OBJECT
 
 public:
@@ -44,7 +48,8 @@ public:
     virtual const Card *validate(CardUseStruct &use) const;
 };
 
-class zhesheCard : public SkillCard {
+class zhesheCard : public SkillCard
+{
     Q_OBJECT
 
 public:
@@ -54,7 +59,8 @@ public:
     virtual void onEffect(const CardEffectStruct &effect) const;
 };
 
-class zhuonongCard : public SkillCard {
+class zhuonongCard : public SkillCard
+{
     Q_OBJECT
 
 public:
@@ -64,7 +70,21 @@ public:
     virtual void onEffect(const CardEffectStruct &effect) const;
 };
 
-class panduCard : public SkillCard {
+class yushouCard : public SkillCard
+{
+    Q_OBJECT
+
+public:
+    Q_INVOKABLE yushouCard();
+
+    virtual bool targetFilter(const QList<const Player *> &targets, const Player *to_select, const Player *Self) const;
+    virtual bool targetsFeasible(const QList<const Player *> &targets, const Player *Self) const;
+    virtual void onUse(Room *room, const CardUseStruct &card_use) const;
+
+};
+
+class panduCard : public SkillCard
+{
     Q_OBJECT
 
 public:
@@ -76,7 +96,8 @@ public:
 
 
 
-class th99Package : public Package {
+class th99Package : public Package
+{
     Q_OBJECT
 
 public:

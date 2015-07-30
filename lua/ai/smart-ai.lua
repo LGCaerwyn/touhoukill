@@ -8,7 +8,7 @@ require "middleclass"
 math.randomseed(os.time())
 
 -- SmartAI is the base class for all other specialized AI classes
-SmartAI = class "SmartAI"
+SmartAI = (require "middleclass").class("SmartAI")
 
 --version = "QSanguosha AI 20140901 (V1.414213562 Alpha)"
 version = "TouhouKill AI 20150405"
@@ -667,7 +667,7 @@ function SmartAI:getUseValue(card)
 	return v
 end
 
-function SmartAI:getUsePriority(card)
+function SmartAI:getUsePriority(card)  --优先度 要考虑目标角色才合适。。。。比如使用杀 目标为司马时 能不能先吃桃。。。
 	local class_name = card:getClassName()
 	local v = 0
 	if card:isKindOf("EquipCard") then
@@ -1392,6 +1392,8 @@ function sgs.isLordInDanger()
 end
 
 function sgs.gameProcess(room, arg)  --尼玛 不看具体技能和牌的数量么 卧槽  只有一些枚举。。。 
+
+	
 	local rebel_num = sgs.current_mode_players["rebel"]
 	local loyal_num = sgs.current_mode_players["loyalist"]
 	if rebel_num == 0 and loyal_num> 0 then return "loyalist"
@@ -1425,7 +1427,7 @@ function sgs.gameProcess(room, arg)  --尼玛 不看具体技能和牌的数量�
 				rebel_value = rebel_value + 0.4
 			end
 			if aplayer:getMark("@duanchang") > 0 and aplayer:getMaxHp() <= 3 then rebel_value = rebel_value - 1 end
-
+            if aplayer:hasSkill("xisan") then  rebel_value = rebel_value + 2 end
 			if aplayer:hasSkills("luanying+jingjie") or aplayer:hasSkills("mengxian+jingjie") then rebel_value = rebel_value + 2 end
 			if aplayer:hasSkill("ganying") and lord:hasSkill("fengsu") then rebel_value = rebel_value + 2 end
 			if aplayer:hasSkill("baochun") and aplayer:getMaxHp() >3 then rebel_value = rebel_value + aplayer:getMaxHp() - 3 end
@@ -4396,6 +4398,9 @@ function SmartAI:getTurnUse()
 
 		if dummy_use.card then
 			if dummy_use.card:isKindOf("Slash") then
+				if dummy_use.card:getSkillName() == "jiuhao" or dummy_use.card:getSkillName() == "duzhua" then
+					slashAvail = slashAvail+1
+				end
 				if slashAvail > 0 then
 					slashAvail = slashAvail - 1
 					table.insert(turnUse, dummy_use.card)
@@ -7163,11 +7168,14 @@ function SmartAI:touhouDamageEffect(damage,from,to)
 		if self:sidieEffect(from) then
 			return true
 		end
-		if from:hasWeapon("IceSword") then
+		if from:hasWeapon("IceSword") and not to:isNude() then
 			return true
 		end
 	end
-	if from:hasSkills("shenyin|lizhi") then
+	if from:hasSkill("lizhi") then
+		return true
+	end
+	if from:hasSkill("shenyin") and not to:isNude() then
 		return true
 	end
 	if from:hasSkill("huanming")  and from:getMark("huanming") == 0 then
@@ -7196,9 +7204,9 @@ end
 --先天性无效
 function SmartAI:touhouEffectNullify(card,from,to)
 	if not card then return false end
-		if card:isBlack() and to:hasSkill("zhengyi") then
-			return true
-		end
+		--if card:isBlack() and to:hasSkill("zhengyi") then
+		--	return true
+		--end
 		if card:isKindOf("TrickCard") then
 			if to:hasSkill("yunshang") and not from:inMyAttackRange(to) then
 				return true
@@ -7555,7 +7563,7 @@ end
 
 --主要用于要求出杀闪等respone时
 function SmartAI:touhouNeedAvoidAttack(damage,from,to,ignoreDamageEffect)
-	if to:hasSkill("huanmeng")  and damage.card and damage.card:isKindOf("Slash") then return true end
+	if to:hasSkill("xuying") and to:getHandcardNum() > 0 and damage.card and damage.card:isKindOf("Slash") then return true end
 	ignoreDamageEffect = ignoreDamageEffect or false 
 	if not ignoreDamageEffect then 
 		local effect=self:touhouDamageEffect(damage,from,to)
