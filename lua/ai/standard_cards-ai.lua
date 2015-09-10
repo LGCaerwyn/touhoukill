@@ -125,6 +125,12 @@ function sgs.getDefenseSlash(player, self)
 	if player:hasSkill("langying") and player:getCards("e"):length()>0 then
 		defense = defense + 2.2
 	end
+	if self and self:canKexue(player) then
+		defense = defense + 3.2
+	end
+	if self and self:canJie(player) then
+		defense = defense + 1.2
+	end
 	
 	if (player:hasArmorEffect("EightDiagram") or (player:hasSkill("bazhen") and not player:getArmor()))
 	  and not IgnoreArmor(attacker, player) then
@@ -1503,6 +1509,12 @@ sgs.weapon_range.Halberd = 4
 sgs.weapon_range.KylinBow = 5
 
 sgs.ai_skill_invoke.DoubleSword = function(self, data)
+	local target = self.player:getTag("DoubleSwordTarget"):toPlayer()
+	if target then
+		return not self:needKongcheng(self.player, true) and  not self:needKongcheng(target, true) 
+		--and self:doNotDiscard(target, "h")
+		and not (self:getLeastHandcardNum(target) > 0 and self:hasLoseHandcardEffective(target))
+	end
 	return not self:needKongcheng(self.player, true)
 end
 
@@ -2003,14 +2015,14 @@ end
 function sgs.ai_armor_value.EightDiagram(player, self)
 	--其实需要先确定目的
 	--直接return其实很武断
-	if self.player:hasSkill("douhun") then
+	--[[if self.player:hasSkill("douhun") then
 		if self.role == "loyalist" and self.player:getKingdom()=="zhan" 
 		and getLord(self.player) and getLord(self.player):hasLordSkill("tianren") then
 			return 3
 		else
 			return 0
 		end
-	end
+	end]]
 	
 	local haszj = self:hasSkills("guidao", self:getEnemies(player))
 	if haszj then
@@ -2176,7 +2188,7 @@ sgs.ai_skill_cardask["savage-assault-slash"] = function(self, data, pattern, tar
 end
 sgs.ai_choicemade_filter.cardResponded["savage-assault-slash"] = function(self, player, promptlist)
 	local target = findPlayerByObjectName(self.room, promptlist[4])
-	if target:hasSkill("lizhi") and promptlist[#promptlist] ~= "_nil_" then
+	if target and target:hasSkill("lizhi") and promptlist[#promptlist] ~= "_nil_" then
 		sgs.updateIntention(player, target, 80)
 	end
 end
@@ -2377,6 +2389,8 @@ end
 function SmartAI:useCardDuel(duel, use)
 	if self.player:hasSkill("wuyan") and not self.player:hasSkill("jueqing") then return end
 	if self.player:hasSkill("noswuyan") then return end
+	
+    self:updatePlayers() --为何self.enemies没有被及时更新？？？ phasestart时不是要更新么 卧槽
 
 	local enemies = self:exclude(self.enemies, duel)
 	local friends = self:exclude(self.friends_noself, duel)
@@ -2785,8 +2799,10 @@ function SmartAI:useCardSnatchOrDismantlement(card, use)
 			end
 		end
 		enemies = self:exclude(enemies, card)
-		self:sort(enemies, "defense")
-		enemies = sgs.reverse(enemies)
+		self:sort(enemies, "defense")--拆顺盲狙的情况下，用defense牌序是什么意思。 不该是threat之流的么。。。
+		enemies = sgs.reverse(enemies)--这就是妈的二位忠默默装上装备过，三位忠起手就拆的原因么。。。全场就二号位最高。。。
+		--解决方案，1 self.enemy 的判断加入盲狙因素
+		--2这里引入对主公的威胁值的判断。
 	else
 		enemies = self:exclude(self.enemies, card)
 		self:sort(enemies, "defense")
@@ -4107,8 +4123,6 @@ wooden_ox_skill.getTurnUseCard = function(self)
 			local target_role = sgs.evaluatePlayerRole(friend)
 			if sgs.explicit_renegade and target_role == "renegade"  then
 				friend = nil
-			elseif sgs.explicit_renegade_players[friend:objectName()]  then
-				friend = nil
 			end
 			if not friend then
 				local lord = self.room:getLord()
@@ -4148,9 +4162,12 @@ end
 
 sgs.ai_playerchosen_intention.wooden_ox = -60
 sgs.ai_no_playerchosen_intention.wooden_ox =function(self, from)
-	if sgs.current_mode_players["rebel"] == 0 then
-		local lord =self.room:getLord()
-		if lord  then
+	
+	local lord =self.room:getLord()
+	if lord  then
+		if sgs.current_mode_players["rebel"] == 0 then
+			sgs.updateIntention(from, lord, 10)
+		elseif not self:isWeak(from) and self:isWeak(lord)  then
 			sgs.updateIntention(from, lord, 10)
 		end
 	end

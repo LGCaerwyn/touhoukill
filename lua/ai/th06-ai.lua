@@ -23,7 +23,17 @@ function sgs.ai_cardsview_valuable.skltkexuepeach(self, class_name, player)
 end
 sgs.ai_card_intention.skltkexueCard = sgs.ai_card_intention.Peach
 sgs.ai_use_priority.skltkexueCard = sgs.ai_use_priority.Peach + 0.1
-
+function SmartAI:canKexue(player)
+    if not player:hasSkill("skltkexue") then
+		return false
+	end
+	for _,p in sgs.qlist(self.room:getOtherPlayers(player)) do
+		if self:isFriend(p, player) and p:getHp() > 1  then
+			return true
+		end
+	end
+	return false 
+end
 
 function SmartAI:invokeTouhouJudge(player)
 	player = player or self.player
@@ -110,7 +120,9 @@ sgs.ai_skill_askforag.mingyun = function(self, card_ids)
 	end
 	return card_ids[1]
 end
-
+sgs.ai_skillProperty.mingyun = function(self)
+	return "wizard_harm"
+end
 
 sgs.ai_skill_playerchosen.xueyi = function(self, targets)
 	target_table =sgs.QList2Table(targets)
@@ -168,6 +180,9 @@ sgs.ai_cardneed.pohuai = function(to, card, self)
 			return  card:isKindOf("OffensiveHorse")
 		end
 	end
+end
+sgs.ai_skillProperty.pohuai = function(self)
+	return "cause_judge"
 end
 
 
@@ -276,7 +291,9 @@ sgs.ai_need_damaged.huisu = function(self, attacker, player)
 	end
 	return false
 end
-
+sgs.ai_skillProperty.huisu = function(self)
+	return "cause_judge"
+end
 
 sgs.ai_skill_invoke.bolan = function(self)
 	if self.player:getPile("yao_mark"):length()>0 then
@@ -350,6 +367,30 @@ sgs.ai_cardneed.qiyao = function(to, card, self)
 end
 
 
+sgs.ai_skill_invoke.neijin = function(self)
+	local current = self.room:getCurrent() 
+	if current then
+		return self:isFriend(current)
+	end
+	return false
+end
+sgs.ai_choicemade_filter.skillInvoke.neijin = function(self, player, promptlist)
+	local current = self.room:getCurrent() 
+	if  current and  promptlist[#promptlist] == "yes" then
+		sgs.updateIntention(player, current, -40)
+	end
+end
+
+sgs.ai_skill_playerchosen.taiji = function(self, targets)
+	if #self.enemies > 0 then
+		self:sort(self.enemies, "hp")
+		return self.enemies[1]
+	end
+    return nil	
+end
+
+
+--[[
 sgs.ai_skill_cardask["douhun-slash"]  = function(self, data, pattern, target)
 	local effect = data:toSlashEffect()
 	local p
@@ -392,7 +433,7 @@ sgs.ai_slash_prohibit.douhun = function(self, from, to, card)
 	end
 	return false
 end	
-
+]]
 --[[sgs.ai_view_as.zhanyi = function(card, player, card_place)
         local suit = card:getSuitString()
         local number = card:getNumberString()
@@ -401,6 +442,7 @@ end
                 return ("slash:zhanyi[%s:%s]=%d"):format(suit, number, card_id)
         end
 end]]
+--[[
 sgs.ai_skill_cardask["@zhanyi"] = function(self, data)
 	
 	local cards = self.player:getCards("h")
@@ -432,8 +474,8 @@ sgs.ai_skill_cardask["@zhanyi"] = function(self, data)
 	if #qis==0 then return "." end
 	return "$" .. table.concat(qis, "+")
 end
-
-
+]]
+--[[
 function sgs.ai_cardsview_valuable.zhanyi(self, class_name, player)
 	if class_name == "Slash" then
 		if (sgs.Sanguosha:getCurrentCardUseReason() ~= sgs.CardUseStruct_CARD_USE_REASON_RESPONSE) then
@@ -446,38 +488,9 @@ function sgs.ai_cardsview_valuable.zhanyi(self, class_name, player)
         local number = card:getNumberString()
         local card_id = card:getEffectiveId()
 		return ("slash:zhanyi[%s:%s]=%d"):format(suit, number, card_id)
-		--[[local card
-
-		local peaches={}
-		local blacks={}
-		local reds={}
-		local cards = self.player:getHandcards()
-		cards=self:touhouAppendExpandPileToList(self.player,cards)
-		for _,c in sgs.qlist(cards) do
-			if c:isKindOf("Peach") then
-				table.insert(peaches,c)
-			elseif c:isRed() then
-				table.insert(reds,c)
-			elseif c:isBlack() then
-				table.insert(blacks,c)
-			end
-		end
-		
-		--need sort
-		if #reds>0 then
-			card=reds[1]
-		elseif #blacks>0 then
-			card=blacks[1]
-		elseif #peaches>0 then
-			card=peaches[1]
-		end
-		if not card then return nil end
-		local suit = card:getSuitString()
-        local number = card:getNumberString()
-        local card_id = card:getEffectiveId()
-		return ("slash:zhanyi[%s:%s]=%d"):format(suit, number, card_id)]]
 	end
-end
+end]]
+
 sgs.ai_cardneed.zhanyi = function(to, card, self)
 	return card:isKindOf("Slash")
 	--return  card:isRed()
@@ -485,6 +498,8 @@ end
 sgs.ai_skill_invoke.zhanyi = function(self)
 	return true
 end
+
+
 
 sgs.ai_skill_invoke.dongjie = function(self, data)
         local damage =self.player:getTag("dongjie_damage"):toDamage()
@@ -603,6 +618,21 @@ sgs.ai_skill_choice.anyu= function(self, choices, data)
 	end
 	return "turnover"
 end
+sgs.ai_slash_prohibit.anyu = function(self, from, to, card)
+	if not card:isBlack() or not to:hasSkill("zhenye") then return false end
+
+	if self:isFriend(from, to) then return false end
+	return not self:isWeak(to) and not to:faceUp() 
+
+	--local turnFriend =false
+	--for _,p in pairs (self.friends) do
+	--	if not p:faceUp() then
+	--		turnFriend = true
+	--	end
+	--end
+	--return not self:isWeak(to) and turnFriend
+end
+
 
 --function SmartAI:getEnemyNumBySeat(from, to, target, include_neutral)
 qiyue_find_righter = function(room,target) 
@@ -695,8 +725,8 @@ function banyue_skill.getTurnUseCard(self)
 		return sgs.Card_Parse("@banyueCard=.")
 end
 sgs.ai_skill_use_func.banyueCard = function(card, use, self)
-        self:sort(self.friends_noself)
-        if #self.friends_noself == 1 then return end
+        if #self.friends < 2 then return end
+		self:sort(self.friends)
         for _, p in ipairs(self.friends) do
                 use.card = card
                 if use.to then

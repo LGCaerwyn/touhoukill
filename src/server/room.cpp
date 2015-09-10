@@ -2036,11 +2036,11 @@ void Room::swapPile()
     qShuffle(*m_drawPile);
     foreach(int card_id, *m_drawPile)
         setCardMapping(card_id, NULL, Player::DrawPile);
-    //for skill "qiannian" in touhougod.cpp
-    ServerPlayer *player = findPlayerBySkillName("qiannian");
-    if (player != NULL)
-        player->gainMark("@qiannian", 1);
-
+    
+    QVariant qtimes;
+    qtimes.setValue(times);
+    foreach (ServerPlayer *player, getAllPlayers()) 
+        thread->trigger(DrawPileSwaped, this, player, qtimes);
 }
 
 QList<int> Room::getDiscardPile()
@@ -3930,20 +3930,18 @@ void Room::drawCards(QList<ServerPlayer *> players, QList<int> n_list, const QSt
         if (!player->isAlive() && reason != "reform") continue;
         int n = n_list.at(qMin(index, len - 1));
         if (n <= 0) continue;
-        QList<int> card_ids;
-        if (player->hasSkill("qiangyu")) {
-            bool unenable = getTag("FirstRound").toBool();
-            CardsMoveOneTimeStruct moveOneTime;
-            QVariant data = QVariant::fromValue(moveOneTime);
-            if (!unenable && (player->askForSkillInvoke("qiangyu", data))) {
-                setPlayerFlag(player, "qiangyu");
-                card_ids = getNCards(n + 2, false);
-            } else {
-                card_ids = getNCards(n, false);
-            }
-        } else {
-            card_ids = getNCards(n, false);
+
+        bool initalDraw = getTag("FirstRound").toBool();
+        if (!initalDraw){
+            QVariant qnum;
+            qnum.setValue(n);
+            thread->trigger(DrawCardsFromDrawPile, this, player, qnum);
+            n = qnum.toInt();
         }
+        
+        QList<int> card_ids;
+        card_ids = getNCards(n, false);
+        
         CardsMoveStruct move;
         move.card_ids = card_ids;
         move.from = NULL;
