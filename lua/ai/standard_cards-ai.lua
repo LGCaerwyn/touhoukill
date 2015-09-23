@@ -131,7 +131,12 @@ function sgs.getDefenseSlash(player, self)
 	if self and self:canJie(player) then
 		defense = defense + 1.2
 	end
-	
+	if player:hasSkill("wushou") then
+		defense = defense + (0.6 * (1 + player:getLostHp()))
+	end
+	if player:hasSkill("guangji") and not player:getPile("tianyi"):isEmpty() then
+		defense = defense + 10
+	end
 	if (player:hasArmorEffect("EightDiagram") or (player:hasSkill("bazhen") and not player:getArmor()))
 	  and not IgnoreArmor(attacker, player) then
 		hasEightDiagram = true
@@ -552,6 +557,8 @@ function SmartAI:isPriorFriendOfSlash(friend, card, source)
 	--要求自己已经跳身份，且敌人数量不为0
 	--特定对象优先死蝶 不行么。。。
 	if self:sidieEffect(source) then 
+		local sidies = self:touhouSidieTarget(card,source)
+		if #sidies ~= 0 and not table.contains(sidies, friend:objectName()) then return false end
 		if sgs.ai_role[source:objectName()]  ~= "netural" then
 			local sidieTargets=sgs.SPlayerList()
 			for _,p in sgs.qlist(self.room:getOtherPlayers(friend)) do

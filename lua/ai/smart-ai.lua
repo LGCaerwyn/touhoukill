@@ -1607,6 +1607,7 @@ function SmartAI:objectiveLevel(player)
 			--检测溢出只是单纯考虑存牌吧。。。不去白白浪费牌吧 但是那些不涉及用牌的技能呢？？？
 			--主要目的是局势均衡时把身份跳出来？？
 			--return 3  --尼玛对于忠和反都是3这个太没节操了
+			-- overflow return 3 你妹 然后一贯石斧砸下去就麻痹缺牌过
 		elseif process:match("rebel") then
 			return target_role == "rebel" and 5 or target_role == "neutral" and 0 or -1
 		elseif process:match("dilemma") then
@@ -7422,7 +7423,7 @@ end]]
 --【死蝶】
 --【白楼】【楼观】【怪力】【幻视】
 function SmartAI:touhouSidieTarget(card,from)
-	targets={}
+	local targets={}
 	if from:getPhase() ~=sgs.Player_Play then
 		return targets
 	end
@@ -7431,7 +7432,7 @@ function SmartAI:touhouSidieTarget(card,from)
 			--if p:hasSkill("huanshi") then
 			--	table.insert(targets,p:objectName())
 			--end
-			if p:hasSkills("guaili|shuangren|huwei") then
+			if p:hasSkills("guaili|shuangren|huwei|lianxi|shende") then
 				table.insert(targets,p:objectName())
 			end
 		end
