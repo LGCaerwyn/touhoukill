@@ -15,7 +15,7 @@ public:
         : m_hasTimer(false), m_autoHide(false), m_timer(0),
         m_step(0), m_max(0), m_val(0), m_mutex(QMutex::Recursive)
     {
-        this->setTextVisible(false);
+        setTextVisible(false);
     }
     inline void setTimerEnabled(bool enabled)
     {
@@ -41,8 +41,11 @@ public:
     virtual void show();
     virtual void hide();
 
+    bool hasTimer() const { return m_hasTimer; }
+
 signals:
     void timedOut();
+    void timerStep(time_t val, time_t max);
 
 protected:
     virtual void timerEvent(QTimerEvent *);

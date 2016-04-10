@@ -9,6 +9,7 @@
 #include "customassigndialog.h"
 #include "miniscenarios.h"
 #include "SkinBank.h"
+#include "protocol.h"
 
 #include <QMessageBox>
 #include <QFormLayout>
@@ -22,6 +23,8 @@
 #include <QApplication>
 #include <QHostInfo>
 #include <QAction>
+
+using namespace QSanProtocol;
 
 static QLayout *HLay(QWidget *left, QWidget *right)
 {
@@ -120,28 +123,30 @@ QWidget *ServerDialog::createPackageTab()
         extension_group->addButton(checkbox);
 
         switch (package->getType()) {
-        case Package::GeneralPack: {
-            if (extension == "standard")
-                continue;
-            row = i / 5;
-            column = i % 5;
-            i++;
+            case Package::GeneralPack:
+            {
+                if (extension == "standard")
+                    continue;
+                row = i / 5;
+                column = i % 5;
+                i++;
 
-            layout1->addWidget(checkbox, row, column + 1);
-            break;
-        }
-        case Package::CardPack: {
-            if (extension == "touhoucard")
-                continue;
-            row = j / 5;
-            column = j % 5;
-            j++;
+                layout1->addWidget(checkbox, row, column + 1);
+                break;
+            }
+            case Package::CardPack:
+            {
+                if (extension == "touhoucard")
+                    continue;
+                row = j / 5;
+                column = j % 5;
+                j++;
 
-            layout2->addWidget(checkbox, row, column + 1);
-            break;
-        }
-        default:
-            break;
+                layout2->addWidget(checkbox, row, column + 1);
+                break;
+            }
+            default:
+                break;
         }
     }
 
@@ -153,34 +158,6 @@ QWidget *ServerDialog::createPackageTab()
 
     widget->setLayout(layout);
     return widget;
-}
-
-void ServerDialog::setMaxHpSchemeBox()
-{
-    if (!second_general_checkbox->isChecked()) {
-        prevent_awaken_below3_checkbox->setVisible(false);
-
-        scheme0_subtraction_label->setVisible(false);
-        scheme0_subtraction_spinbox->setVisible(false);
-
-        return;
-    }
-    int index = max_hp_scheme_ComboBox->currentIndex();
-    if (index == 0) {
-        prevent_awaken_below3_checkbox->setVisible(false);
-
-        scheme0_subtraction_label->setVisible(true);
-        scheme0_subtraction_spinbox->setVisible(true);
-        scheme0_subtraction_spinbox->setValue(Config.value("Scheme0Subtraction", 3).toInt());
-        scheme0_subtraction_spinbox->setEnabled(true);
-    } else {
-        prevent_awaken_below3_checkbox->setVisible(true);
-        prevent_awaken_below3_checkbox->setChecked(Config.value("PreventAwakenBelow3", false).toBool());
-        prevent_awaken_below3_checkbox->setEnabled(true);
-
-        scheme0_subtraction_label->setVisible(false);
-        scheme0_subtraction_spinbox->setVisible(false);
-    }
 }
 
 QWidget *ServerDialog::createAdvancedTab()
@@ -226,23 +203,23 @@ QWidget *ServerDialog::createAdvancedTab()
 
     maxchoice_spinbox = new QSpinBox;
     maxchoice_spinbox->setRange(3, 10);
-    maxchoice_spinbox->setValue(Config.value("MaxChoice", 5).toInt());
+    maxchoice_spinbox->setValue(Config.value("MaxChoice", 6).toInt());
 
     godlimit_label = new QLabel(tr("Upperlimit for gods"));
     godlimit_label->setToolTip(tr("<font color=#FFFF33>-1 means that all gods may appear in your general chosen dialog!</font>"));
     godlimit_spinbox = new QSpinBox;
     godlimit_spinbox->setRange(-1, 8);
-    godlimit_spinbox->setValue(Config.value("GodLimit", -1).toInt());
+    godlimit_spinbox->setValue(Config.value("GodLimit", 1).toInt());
 
     lord_maxchoice_label = new QLabel(tr("Upperlimit for lord"));
     lord_maxchoice_label->setToolTip(tr("<font color=#FFFF33>-1 means that all lords are available</font>"));
     lord_maxchoice_spinbox = new QSpinBox;
     lord_maxchoice_spinbox->setRange(-1, 10);
-    lord_maxchoice_spinbox->setValue(Config.value("LordMaxChoice", -1).toInt());
+    lord_maxchoice_spinbox->setValue(Config.value("LordMaxChoice", 6).toInt());
 
     nonlord_maxchoice_spinbox = new QSpinBox;
     nonlord_maxchoice_spinbox->setRange(0, 10);
-    nonlord_maxchoice_spinbox->setValue(Config.value("NonLordMaxChoice", 2).toInt());
+    nonlord_maxchoice_spinbox->setValue(Config.value("NonLordMaxChoice", 6).toInt());
 
     forbid_same_ip_checkbox = new QCheckBox(tr("Forbid same IP with multiple connection"));
     forbid_same_ip_checkbox->setChecked(Config.ForbidSIMC);
@@ -250,57 +227,34 @@ QWidget *ServerDialog::createAdvancedTab()
     disable_chat_checkbox = new QCheckBox(tr("Disable chat"));
     disable_chat_checkbox->setChecked(Config.DisableChat);
 
-    second_general_checkbox = new QCheckBox(tr("Enable second general"));
-    second_general_checkbox->setChecked(Config.Enable2ndGeneral);
-
-    scene_checkbox = new QCheckBox(tr("Enable Scene"));
-    scene_checkbox->setChecked(Config.EnableScene);    //changjing
+    //second_general_checkbox = new QCheckBox(tr("Enable second general"));
+    //second_general_checkbox->setChecked(Config.Enable2ndGeneral);
 
     //same_checkbox = new QCheckBox(tr("Enable Same"));
     //same_checkbox->setChecked(Config.EnableSame);
 
-    max_hp_label = new QLabel(tr("Max HP scheme"));
-    max_hp_scheme_ComboBox = new QComboBox;
+    //max_hp_label = new QLabel(tr("Max HP scheme"));
+    /* max_hp_scheme_ComboBox = new QComboBox;
     max_hp_scheme_ComboBox->addItem(tr("Sum - X"));
     max_hp_scheme_ComboBox->addItem(tr("Minimum"));
     max_hp_scheme_ComboBox->addItem(tr("Maximum"));
     max_hp_scheme_ComboBox->addItem(tr("Average"));
-    max_hp_scheme_ComboBox->setCurrentIndex(Config.MaxHpScheme);
+    max_hp_scheme_ComboBox->setCurrentIndex(Config.MaxHpScheme); */
 
     prevent_awaken_below3_checkbox = new QCheckBox(tr("Prevent maxhp being less than 3 for awaken skills"));
     prevent_awaken_below3_checkbox->setChecked(Config.PreventAwakenBelow3);
-    prevent_awaken_below3_checkbox->setEnabled(max_hp_scheme_ComboBox->currentIndex() != 0);
+    //prevent_awaken_below3_checkbox->setEnabled(max_hp_scheme_ComboBox->currentIndex() != 0);
+    prevent_awaken_below3_checkbox->setEnabled(false);
 
-    scheme0_subtraction_label = new QLabel(tr("Subtraction for scheme 0"));
-    scheme0_subtraction_label->setVisible(max_hp_scheme_ComboBox->currentIndex() == 0);
-    scheme0_subtraction_spinbox = new QSpinBox;
+    //scheme0_subtraction_label = new QLabel(tr("Subtraction for scheme 0"));
+    //scheme0_subtraction_label->setVisible(max_hp_scheme_ComboBox->currentIndex() == 0);
+    /* scheme0_subtraction_spinbox = new QSpinBox;
     scheme0_subtraction_spinbox->setRange(-5, 12);
     scheme0_subtraction_spinbox->setValue(Config.Scheme0Subtraction);
-    scheme0_subtraction_spinbox->setVisible(max_hp_scheme_ComboBox->currentIndex() == 0);
+    scheme0_subtraction_spinbox->setVisible(max_hp_scheme_ComboBox->currentIndex() == 0); */
 
-    connect(max_hp_scheme_ComboBox, SIGNAL(currentIndexChanged(int)), this, SLOT(setMaxHpSchemeBox()));
+    //connect(max_hp_scheme_ComboBox, SIGNAL(currentIndexChanged(int)), this, SLOT(setMaxHpSchemeBox()));
 
-    /*basara_checkbox = new QCheckBox(tr("Enable Basara"));
-    basara_checkbox->setChecked(Config.EnableBasara);
-    updateButtonEnablility(mode_group->checkedButton());
-    connect(mode_group, SIGNAL(buttonClicked(QAbstractButton *)), this, SLOT(updateButtonEnablility(QAbstractButton *)));
-
-    hegemony_checkbox = new QCheckBox(tr("Enable Hegemony"));
-    hegemony_checkbox->setChecked(Config.EnableBasara && Config.EnableHegemony);
-    hegemony_checkbox->setEnabled(basara_checkbox->isChecked());
-    connect(basara_checkbox, SIGNAL(toggled(bool)), hegemony_checkbox, SLOT(setChecked(bool)));
-    connect(basara_checkbox, SIGNAL(toggled(bool)), hegemony_checkbox, SLOT(setEnabled(bool)));
-
-    hegemony_maxchoice_label = new QLabel(tr("Upperlimit for hegemony"));
-    hegemony_maxchoice_spinbox = new QSpinBox;
-    hegemony_maxchoice_spinbox->setRange(5, 10);
-    hegemony_maxchoice_spinbox->setValue(Config.value("HegemonyMaxChoice", 7).toInt());
-
-    hegemony_maxshown_label = new QLabel(tr("Max shown num for hegemony"));
-    hegemony_maxshown_spinbox = new QSpinBox;
-    hegemony_maxshown_spinbox->setRange(1, 11);
-    hegemony_maxshown_spinbox->setValue(Config.value("HegemonyMaxShown", 2).toInt());
-    */
     //enable_surprising_generals_checkbox = new QCheckBox(tr("Enable surprising generals"));
     //enable_surprising_generals_checkbox->setChecked(Config.EnableSurprisingGenerals);
 
@@ -329,9 +283,9 @@ QWidget *ServerDialog::createAdvancedTab()
     layout->addLayout(HLay(godlimit_label, godlimit_spinbox));
     layout->addLayout(HLay(lord_maxchoice_label, lord_maxchoice_spinbox));
     layout->addLayout(HLay(new QLabel(tr("Upperlimit for non-lord")), nonlord_maxchoice_spinbox));
-    layout->addWidget(second_general_checkbox);
-    layout->addLayout(HLay(max_hp_label, max_hp_scheme_ComboBox));
-    layout->addLayout(HLay(scheme0_subtraction_label, scheme0_subtraction_spinbox));
+    //layout->addWidget(second_general_checkbox);
+    //layout->addLayout(HLay(max_hp_label, max_hp_scheme_ComboBox));
+    //layout->addLayout(HLay(scheme0_subtraction_label, scheme0_subtraction_spinbox));
     layout->addWidget(prevent_awaken_below3_checkbox);
     //layout->addLayout(HLay(basara_checkbox, hegemony_checkbox));
     //layout->addLayout(HLay(hegemony_maxchoice_label, hegemony_maxchoice_spinbox));
@@ -346,21 +300,21 @@ QWidget *ServerDialog::createAdvancedTab()
     QWidget *widget = new QWidget;
     widget->setLayout(layout);
 
-    max_hp_label->setVisible(Config.Enable2ndGeneral);
-    connect(second_general_checkbox, SIGNAL(toggled(bool)), max_hp_label, SLOT(setVisible(bool)));
-    max_hp_scheme_ComboBox->setVisible(Config.Enable2ndGeneral);
-    connect(second_general_checkbox, SIGNAL(toggled(bool)), max_hp_scheme_ComboBox, SLOT(setVisible(bool)));
+    //max_hp_label->setVisible(Config.Enable2ndGeneral);
+    //connect(second_general_checkbox, SIGNAL(toggled(bool)), max_hp_label, SLOT(setVisible(bool)));
+    //max_hp_scheme_ComboBox->setVisible(Config.Enable2ndGeneral);
+    //connect(second_general_checkbox, SIGNAL(toggled(bool)), max_hp_scheme_ComboBox, SLOT(setVisible(bool)));
 
     if (Config.Enable2ndGeneral) {
-        prevent_awaken_below3_checkbox->setVisible(max_hp_scheme_ComboBox->currentIndex() != 0);
-        scheme0_subtraction_label->setVisible(max_hp_scheme_ComboBox->currentIndex() == 0);
-        scheme0_subtraction_spinbox->setVisible(max_hp_scheme_ComboBox->currentIndex() == 0);
+        //prevent_awaken_below3_checkbox->setVisible(max_hp_scheme_ComboBox->currentIndex() != 0);
+        //scheme0_subtraction_label->setVisible(max_hp_scheme_ComboBox->currentIndex() == 0);
+        //scheme0_subtraction_spinbox->setVisible(max_hp_scheme_ComboBox->currentIndex() == 0);
     } else {
         prevent_awaken_below3_checkbox->setVisible(false);
-        scheme0_subtraction_label->setVisible(false);
-        scheme0_subtraction_spinbox->setVisible(false);
+        //scheme0_subtraction_label->setVisible(false);
+        //scheme0_subtraction_spinbox->setVisible(false);
     }
-    connect(second_general_checkbox, SIGNAL(toggled(bool)), this, SLOT(setMaxHpSchemeBox()));
+    //connect(second_general_checkbox, SIGNAL(toggled(bool)), this, SLOT(setMaxHpSchemeBox()));
 
     /*hegemony_maxchoice_label->setVisible(Config.EnableHegemony);
     connect(hegemony_checkbox, SIGNAL(toggled(bool)), hegemony_maxchoice_label, SLOT(setVisible(bool)));
@@ -474,10 +428,10 @@ void ServerDialog::updateButtonEnablility(QAbstractButton *button)
 
     if (button->objectName().contains("mini")) {
         mini_scene_button->setEnabled(true);
-        second_general_checkbox->setChecked(false);
-        second_general_checkbox->setEnabled(false);
+        //second_general_checkbox->setChecked(false);
+        //second_general_checkbox->setEnabled(false);
     } else {
-        second_general_checkbox->setEnabled(true);
+        //second_general_checkbox->setEnabled(true);
         mini_scene_button->setEnabled(false);
     }
 }
@@ -977,17 +931,18 @@ void Select3v3GeneralDialog::fillTabWidget()
     QList<const Package *> packages = Sanguosha->findChildren<const Package *>();
     foreach (const Package *package, packages) {
         switch (package->getType()) {
-        case Package::GeneralPack:
-        case Package::MixedPack: {
-            QListWidget *list = new QListWidget;
-            list->setViewMode(QListView::IconMode);
-            list->setDragDropMode(QListView::NoDragDrop);
-            fillListWidget(list, package);
+            case Package::GeneralPack:
+            case Package::MixedPack:
+            {
+                QListWidget *list = new QListWidget;
+                list->setViewMode(QListView::IconMode);
+                list->setDragDropMode(QListView::NoDragDrop);
+                fillListWidget(list, package);
 
-            tab_widget->addTab(list, Sanguosha->translate(package->objectName()));
-        }
-        default:
-            break;
+                tab_widget->addTab(list, Sanguosha->translate(package->objectName()));
+            }
+            default:
+                break;
         }
     }
 }
@@ -1092,14 +1047,13 @@ bool ServerDialog::config()
     Config.FreeAssignSelf = Config.EnableCheat && free_assign_self_checkbox->isChecked() && free_assign_checkbox->isEnabled();
     Config.ForbidSIMC = forbid_same_ip_checkbox->isChecked();
     Config.DisableChat = disable_chat_checkbox->isChecked();
-    Config.Enable2ndGeneral = second_general_checkbox->isChecked();
-    Config.EnableScene = scene_checkbox->isChecked();        //changjing
+    //Config.Enable2ndGeneral = second_general_checkbox->isChecked();
     //Config.EnableSame = same_checkbox->isChecked();
     //Config.EnableBasara = basara_checkbox->isChecked() && basara_checkbox->isEnabled();
     //Config.EnableHegemony = hegemony_checkbox->isChecked() && hegemony_checkbox->isEnabled();
-    Config.MaxHpScheme = max_hp_scheme_ComboBox->currentIndex();
+    //Config.MaxHpScheme = max_hp_scheme_ComboBox->currentIndex();
     if (Config.MaxHpScheme == 0) {
-        Config.Scheme0Subtraction = scheme0_subtraction_spinbox->value();
+        //Config.Scheme0Subtraction = scheme0_subtraction_spinbox->value();
         Config.PreventAwakenBelow3 = false;
     } else {
         Config.Scheme0Subtraction = 3;
@@ -1152,13 +1106,8 @@ bool ServerDialog::config()
     Config.setValue("ForbidSIMC", Config.ForbidSIMC);
     Config.setValue("DisableChat", Config.DisableChat);
     Config.setValue("Enable2ndGeneral", Config.Enable2ndGeneral);
-    Config.setValue("EnableScene", Config.EnableScene);   //changjing
     //Config.setValue("EnableSame", Config.EnableSame);
-    //Config.setValue("EnableBasara", Config.EnableBasara);
-    //Config.setValue("EnableHegemony", Config.EnableHegemony);
     //Config.setValue("EnableSurprisingGenerals", Config.EnableSurprisingGenerals);
-    //Config.setValue("HegemonyMaxChoice", hegemony_maxchoice_spinbox->value());
-    //Config.setValue("HegemonyMaxShown", hegemony_maxshown_spinbox->value());
     Config.setValue("MaxHpScheme", Config.MaxHpScheme);
     Config.setValue("Scheme0Subtraction", Config.Scheme0Subtraction);
     Config.setValue("PreventAwakenBelow3", Config.PreventAwakenBelow3);
@@ -1229,9 +1178,13 @@ Server::Server(QObject *parent)
 void Server::broadcast(const QString &msg)
 {
     QString to_sent = msg.toUtf8().toBase64();
-    to_sent = ".:" + to_sent;
+    JsonArray arg;
+    arg << "." << to_sent;
+
+    Packet packet(S_SRC_ROOM | S_TYPE_NOTIFICATION | S_DEST_CLIENT, S_COMMAND_SPEAK);
+    packet.setMessageBody(arg);
     foreach(Room *room, rooms)
-        room->broadcastInvoke("speak", to_sent);
+        room->broadcastInvoke(&packet);
 }
 
 bool Server::listen()
@@ -1247,6 +1200,10 @@ void Server::daemonize()
 Room *Server::createNewRoom()
 {
     Room *new_room = new Room(this, Config.GameMode);
+    if (!new_room->getLuaState()) {
+        delete new_room;
+        return NULL;
+    }
     current = new_room;
     rooms.insert(current);
 
@@ -1269,8 +1226,13 @@ void Server::processNewConnection(ClientSocket *socket)
     }
 
     connect(socket, SIGNAL(disconnected()), this, SLOT(cleanup()));
-    socket->send("checkVersion " + Sanguosha->getVersion());
-    socket->send("setup " + Sanguosha->getSetupString());
+    Packet packet(S_SRC_ROOM | S_TYPE_NOTIFICATION | S_DEST_CLIENT, S_COMMAND_CHECK_VERSION);
+    packet.setMessageBody((Sanguosha->getVersion()));
+    socket->send((packet.toString()));
+    Packet packet2(S_SRC_ROOM | S_TYPE_NOTIFICATION | S_DEST_CLIENT, S_COMMAND_SETUP);
+    QString s = Sanguosha->getSetupString();
+    packet2.setMessageBody(s);
+    socket->send((packet2.toString()));
     emit server_message(tr("%1 connected").arg(socket->peerName()));
 
     connect(socket, SIGNAL(message_got(const char *)), this, SLOT(processRequest(const char *)));
@@ -1287,20 +1249,23 @@ void Server::processRequest(const char *request)
     ClientSocket *socket = qobject_cast<ClientSocket *>(sender());
     socket->disconnect(this, SLOT(processRequest(const char *)));
 
-    QRegExp rx("(signupr?) (.+):(.+)(:.+)?\n");
-    if (!rx.exactMatch(request)) {
+
+    Packet signup;
+    if (!signup.parse(request) || signup.getCommandType() != S_COMMAND_SIGNUP) {
         emit server_message(tr("Invalid signup string: %1").arg(request));
-        socket->send("warn INVALID_FORMAT");
+        QSanProtocol::Packet packet(S_SRC_ROOM | S_TYPE_NOTIFICATION | S_DEST_CLIENT, S_COMMAND_WARN);
+        packet.setMessageBody("INVALID_FORMAT");
+        socket->send(packet.toString());
         socket->disconnectFromHost();
         return;
     }
 
-    QStringList texts = rx.capturedTexts();
-    QString command = texts.at(1);
-    QString screen_name = ConvertFromBase64(texts.at(2));
-    QString avatar = texts.at(3);
+    const JsonArray &body = signup.getMessageBody().value<JsonArray>();
+    bool reconnection_enabled = body[0].toBool();
+    QString screen_name = QString::fromUtf8(QByteArray::fromBase64(body[1].toString().toLatin1()));
+    QString avatar = body[2].toString();
 
-    if (command == "signupr") {
+    if (reconnection_enabled) {
         foreach (QString objname, name2objname.values(screen_name)) {
             ServerPlayer *player = players.value(objname);
             if (player && player->getState() == "offline" && !player->getRoom()->isFinished()) {

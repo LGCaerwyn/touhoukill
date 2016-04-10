@@ -11,7 +11,8 @@
 #include <QCheckBox>
 #include <QSpinBox>
 
-namespace Ui {
+namespace Ui
+{
     class MainWindow;
 }
 
@@ -75,10 +76,8 @@ private slots:
     void on_actionAbout_Lua_triggered();
     void on_actionAbout_fmod_triggered();
     void on_actionReplay_file_convert_triggered();
-    void on_actionPackaging_triggered();
     void on_actionPC_Console_Start_triggered();
     void on_actionRecord_analysis_triggered();
-    void on_actionCard_editor_triggered();
     void on_actionAcknowledgement_triggered();
     void on_actionBroadcast_triggered();
     void on_actionScenario_Overview_triggered();

@@ -26,7 +26,7 @@ public:
 
     void setSocket(ClientSocket *socket);
 
-    void invoke(const QSanProtocol::QSanPacket *packet);
+    void invoke(const QSanProtocol::AbstractPacket *packet);
     void invoke(const char *method, const QString &arg = ".");
     QString reportHeader() const;
     void unicast(const QString &message);
@@ -47,6 +47,7 @@ public:
     void clearPrivatePiles();
     void drawCards(int n, const QString &reason = QString());
     bool askForSkillInvoke(const QString &skill_name, const QVariant &data = QVariant());
+    bool askForSkillInvoke(const Skill *skill, const QVariant &data = QVariant());
     QList<int> forceToDiscard(int discard_num, bool include_equip, bool is_discard = true);
     QList<int> handCards() const;
     virtual QList<const Card *> getHandcards() const;
@@ -61,6 +62,7 @@ public:
     QList<Player::Phase> &getPhases();
     void skip(Player::Phase phase, bool isCost = false, bool sendLog = true);
     void insertPhase(Player::Phase phase);
+    void exchangePhases(Player::Phase phase, Player::Phase phase1);
     bool isSkipped(Player::Phase phase);
 
     void gainMark(const QString &mark, int n = 1);
@@ -114,7 +116,6 @@ public:
     void addToPile(const QString &pile_name, int card_id, bool open = true);
     void addToPile(const QString &pile_name, QList<int> card_ids, bool open = true);
     void addToPile(const QString &pile_name, QList<int> card_ids, bool open, CardMoveReason reason);
-    void exchangeFreelyFromPrivatePile(const QString &skill_name, const QString &pile_name, int upperlimit = 1000, bool include_equip = false);
     void gainAnExtraTurn();
 
     void copyFrom(ServerPlayer *sp);
@@ -163,20 +164,20 @@ public:
     {
         m_clientResponseString = val;
     }
-    inline Json::Value getClientReply()
+    inline const QVariant &getClientReply()
     {
         return _m_clientResponse;
     }
-    inline void setClientReply(const Json::Value &val)
+    inline void setClientReply(const QVariant &val)
     {
         _m_clientResponse = val;
     }
     unsigned int m_expectedReplySerial; // Suggest the acceptable serial number of an expected response.
     bool m_isClientResponseReady; //Suggest whether a valid player's reponse has been received.
     bool m_isWaitingReply; // Suggest if the server player is waiting for client's response.
-    Json::Value m_cheatArgs; // Store the cheat code received from client.
+    QVariant m_cheatArgs; // Store the cheat code received from client.
     QSanProtocol::CommandType m_expectedReplyCommand; // Store the command to be sent to the client.
-    Json::Value m_commandArgs; // Store the command args to be sent to the client.
+    QVariant m_commandArgs; // Store the command args to be sent to the client.
 
     // static function
     static bool CompareByActionOrder(ServerPlayer *a, ServerPlayer *b);
@@ -201,7 +202,7 @@ private:
     QStringList selected; // 3v3 mode use only
     QDateTime test_time;
     QString m_clientResponseString;
-    Json::Value _m_clientResponse;
+    QVariant _m_clientResponse;
 
 private slots:
     void getMessage(const char *message);

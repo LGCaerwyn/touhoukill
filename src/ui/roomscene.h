@@ -23,6 +23,7 @@ class QSanButton;
 class QGroupBox;
 struct RoomLayout;
 class BubbleChatBox;
+class ChooseTriggerOrderBox;
 
 #include <QGraphicsScene>
 #include <QTableWidget>
@@ -201,6 +202,7 @@ public:
     void chooseOrder(QSanProtocol::Game3v3ChooseOrderCommand reason);
     void chooseRole(const QString &scheme, const QStringList &roles);
     void chooseDirection();
+    void chooseTriggerOrder(const QVariantList &options, bool optional);
 
     void bringToFront(QGraphicsItem *item);
     void arrangeSeats(const QList<const ClientPlayer *> &seats);
@@ -220,13 +222,19 @@ public:
     void doScript();
     void viewGenerals(const QString &reason, const QStringList &names);
 
-    void handleGameEvent(const Json::Value &arg);
+    void handleGameEvent(const QVariant &arg);
 
     void doOkButton();
     void doCancelButton();
     void doDiscardButton();
     void highlightSkillButton(QString skill_name, bool highlight);
     bool isHighlightStatus(Client::Status status);
+
+    void doSkinChange(const QString &generalName, int skinIndex);
+    inline QPointF tableCenterPos()
+    {
+        return m_tableCenterPos;
+    }
 protected:
     virtual void mousePressEvent(QGraphicsSceneMouseEvent *event);
     virtual void mouseMoveEvent(QGraphicsSceneMouseEvent *event);
@@ -286,7 +294,7 @@ private:
     QList<const Player *> selected_targets;
 
     GuanxingBox *guanxing_box;
-
+    ChooseTriggerOrderBox *m_chooseTriggerOrderBox;
     QList<CardItem *> gongxin_items;
 
     ClientLogBox *log_box;
@@ -304,7 +312,7 @@ private:
     int m_tablew;
     int m_tableh;
 
-    TimeLabel *time_label_wedgit;
+    TimeLabel *time_label_widget;
 
     QMap<QString, BubbleChatBox *> m_bubbleChatBoxs;
 
@@ -390,7 +398,7 @@ private:
     QRectF m_tableRect;
     QSet<HeroSkinContainer *> m_heroSkinContainers;
 
-    private slots:
+private slots:
     void fillCards(const QList<int> &card_ids, const QList<int> &disabled_ids = QList<int>());
     void updateSkillButtons();
     void acquireSkill(const ClientPlayer *player, const QString &skill_name);
@@ -399,6 +407,9 @@ private:
     void onSkillActivated();
     void onSkillDeactivated();
     void doTimeout();
+
+
+
     void startInXs();
     void hideAvatars();
     void changeHp(const QString &who, int delta, DamageStruct::Nature nature, bool losthp);
@@ -458,6 +469,7 @@ private:
 
     void skillStateChange(const QString &skill_name);
     void trust();
+    void skillInvalidityChange(ClientPlayer *player);
 
 signals:
     void restart();

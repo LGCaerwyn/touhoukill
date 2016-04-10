@@ -115,6 +115,7 @@ CommonTranslationTable = {
 	["#ChooseKingdom"] = "%from 选择了 %arg 势力",
 	["#NullificationDetails"] = "【<font color=\"yellow\"><b>无懈可击</b></font>】的目标是 %from 对 %to 的锦囊 【%arg】",
 	["#SkillAvoid"] = "%from 的“%arg”被触发，不能被选择为此 【%arg2】 的目标",
+	["#CardNullified"] = "【%arg】对 %from 无效",
 	["#Transfigure"] = "%from 变身为 %arg",
 	["#TransfigureDual"] = "%from 的 %arg2 变身为 %arg",
 	["#AcquireSkill"] = "%from 获得了技能“%arg”",
@@ -184,7 +185,13 @@ CommonTranslationTable = {
 	["$CancelTarget"] = "%from 使用【%arg】的目标 %to 被取消",
 	["$CancelTargetNoUser"] = "【%arg】的目标 %to 被取消",
 	["#UseLuckCard"] = "%from 使用了 <font color=\"yellow\"><b>手气卡</b></font>",
-
+	["#ForbidExtraTurn"] = "由于场上存在其他额外回合效果， %from 的额外回合效果被防止" ,
+    
+	["TriggerOrder"] = "选择触发顺序",
+	["GameRule:TriggerOrder"] = "请选择先发动的技能",
+	["trigger_none"] = "不发动",
+	
+	
 	["cw"] = "顺时针",
 	["ccw"] = "逆时针",
 	["@3v3-action"] = "请选择行动角色",
@@ -194,7 +201,6 @@ CommonTranslationTable = {
 	["#TrickDirection"] = "%from 选择了 %arg 作为结算顺序",
 	["custom"] = "自定义模式",
 	["UnknowNick"] = "",
-	["DefaultIllustrator"] = "KayaK",
 
 	["@waked"] = "觉醒",
 

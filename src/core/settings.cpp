@@ -56,20 +56,15 @@ void Settings::init()
         AppFont = value("AppFont", QApplication::font("QMainWindow")).value<QFont>();
         UIFont = value("UIFont", QApplication::font("QTextEdit")).value<QFont>();
         TextEditColor = QColor(value("TextEditColor", "white").toString());
+        ToolTipBackgroundColor = value("ToolTipBackgroundColor", "#000000").toString();
     }
 
     CountDownSeconds = value("CountDownSeconds", 3).toInt();
-    GameMode = value("GameMode", "02p").toString();
+    GameMode = value("GameMode", "08p").toString();
 
     QStringList banpackagelist = value("BanPackages").toStringList();
     if (banpackagelist.isEmpty()) {
-        banpackagelist << "nostalgia" << "nostal_standard" << "yitian" << "wisdom" << "nostal_wind"
-            /*<< "disaster"*/ << "god" << "YJCM" /*<< "yitian_cards"*/ << "test"
-            << "sp" << "sp_cards" << "BGM" << "YJCM2012" << "Special3v3"
-            << "New3v3Card" /*<< "joy" << "joy_equip"*/ << "hegemony_card"
-            << "hegemony" << "ling" << "BGMDIY" << "New3v3_2013Card"
-            << "nostal_yjcm" << "nostal_yjcm2012" << "YJCM2013" << "New1v1Card" << "assassins"
-            << "hegemony_sp" << "Special1v1" << "Special1v1OL" << "Special3v3_2013";
+        banpackagelist << "touhoucard";
     }
     setValue("BanPackages", banpackagelist);
 
@@ -82,10 +77,7 @@ void Settings::init()
     DisableChat = value("DisableChat", false).toBool();
     FreeAssignSelf = EnableCheat && value("FreeAssignSelf", false).toBool();
     Enable2ndGeneral = value("Enable2ndGeneral", false).toBool();
-    EnableScene = value("EnableScene", false).toBool();
     EnableSame = value("EnableSame", false).toBool();
-    EnableBasara = value("EnableBasara", false).toBool();
-    EnableHegemony = value("EnableHegemony", false).toBool();
     MaxHpScheme = value("MaxHpScheme", 0).toInt();
     Scheme0Subtraction = value("Scheme0Subtraction", 3).toInt();
     PreventAwakenBelow3 = value("PreventAwakenBelow3", false).toBool();
@@ -111,10 +103,10 @@ void Settings::init()
     ServerName = value("ServerName", tr("%1's server").arg(UserName)).toString();
 
     HostAddress = value("HostAddress", "127.0.0.1").toString();
-    UserAvatar = value("UserAvatar", "zhangliao").toString();
+    UserAvatar = value("UserAvatar", "shirasawa").toString();
     HistoryIPs = value("HistoryIPs").toStringList();
     DetectorPort = value("DetectorPort", 9526u).toUInt();
-    MaxCards = value("MaxCards", 15).toInt();
+    MaxCards = value("MaxCards", 12).toInt();
 
     EnableHotKey = value("EnableHotKey", true).toBool();
     NeverNullifyMyTrick = value("NeverNullifyMyTrick", true).toBool();
@@ -135,13 +127,13 @@ void Settings::init()
     BGMVolume = value("BGMVolume", 1.0f).toFloat();
     EffectVolume = value("EffectVolume", 1.0f).toFloat();
 
-    QStringList backimages;
-    backimages << "1" << "2" << "3" << "4" << "5" << "6" << "7" << "8";
 
-    qShuffle(backimages);
-    QString backimage = backimages.at(0);
 
-    BackgroundImage = value("BackgroundImage", "backdrop/new-version" + backimage + ".jpg").toString();
+    int length = 8;
+    int index = qrand() % length + 1;
+    QString bgFilename = QString("%1%2%3").arg("backdrop/hall/gensoukyou_").arg(index).arg(".jpg");
+
+    BackgroundImage = value("BackgroundImage", bgFilename).toString();
     TableBgImage = value("TableBgImage", "backdrop/default.jpg").toString();
     UseLordBackdrop = value("UseLordBackdrop", true).toBool();
 

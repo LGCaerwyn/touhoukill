@@ -180,5 +180,12 @@
 "handCardNumber-red-default": "image/system/red/%1.png",
 "handCardSuit-default": "image/system/cardsuit/%1.png",
 "cardTianyi-default": "image/system/tianyi/%1.png",
-"judgeCardIcon-default": "image/icon/%1.png"
+"judgeCardIcon-default": "image/icon/%1.png",
+
+
+"headIcon": "image/system/head.png",
+"deputyIcon": "image/system/deputy.png",
+"roleShownIcon": "image/system/role_shown_icon.png",
+
+"lightbox-default": "image/animate/%1.png"
 }

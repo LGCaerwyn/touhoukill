@@ -19,11 +19,15 @@
 #include <QMutex>
 #include <QPropertyAnimation>
 
+#ifdef Q_OS_WIN
+class QWinTaskbarButton;
+#endif
+
 
 class Dashboard : public PlayerCardContainer
 {
     Q_OBJECT
-        Q_ENUMS(SortType)
+    Q_ENUMS(SortType)
 
 public:
     enum SortType
@@ -49,6 +53,7 @@ public:
     void showControlButtons();
 
     virtual void showProgressBar(QSanProtocol::Countdown countdown);
+    virtual void hideProgressBar();
 
     QRectF getAvatarAreaSceneBoundingRect() const
     {
@@ -91,7 +96,9 @@ public:
     const Card *pendingCard() const;
 
     void expandPileCards(const QString &pile_name);
+    void expandPileCard();
     void retractPileCards(const QString &pile_name);
+    void retractPileCard();
     inline const QStringList &getPileExpanded() const
     {
         return _m_pile_expanded;
@@ -128,6 +135,10 @@ public slots:
     void skillButtonDeactivated();
     void selectAll();
     void controlNullificationButton(bool show);
+
+#ifdef Q_OS_WIN
+    void updateTimedProgressBar(time_t val, time_t max);
+#endif
 
 protected:
     void _createExtraButtons();
@@ -236,7 +247,8 @@ protected:
     const ViewAsSkill *view_as_skill;
     const FilterSkill *filter;
     QStringList _m_pile_expanded;
-
+    QList<int> _m_id_expanded;
+    
     // for equip skill/selections
     PixmapAnimation *_m_equipBorders[5];
     QSanSkillButton *_m_equipSkillBtns[5];
@@ -255,6 +267,11 @@ protected:
 
     QList<CardItem *> _m_cardItemsAnimationFinished;
     QMutex m_mutexCardItemsAnimationFinished;
+
+#ifdef Q_OS_WIN
+    QWinTaskbarButton *taskbarButton;
+#endif
+
 
 protected slots:
     virtual void _onEquipSelectChanged();

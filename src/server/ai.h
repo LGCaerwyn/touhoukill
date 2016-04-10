@@ -29,7 +29,6 @@ public:
         Friend, Enemy, Neutrality
     };
     static Relation GetRelation3v3(const ServerPlayer *a, const ServerPlayer *b);
-    static Relation GetRelationHegemony(const ServerPlayer *a, const ServerPlayer *b);
     static Relation GetRelation(const ServerPlayer *a, const ServerPlayer *b);
     Relation relationTo(const ServerPlayer *other) const;
     bool isFriend(const ServerPlayer *other) const;
@@ -55,7 +54,7 @@ public:
     virtual const Card *askForSinglePeach(ServerPlayer *dying) = 0;
     virtual ServerPlayer *askForYiji(const QList<int> &cards, const QString &reason, int &card_id) = 0;
     virtual void askForGuanxing(const QList<int> &cards, QList<int> &up, QList<int> &bottom, int guanxing_type) = 0;
-    virtual void filterEvent(TriggerEvent triggerEvent, ServerPlayer *player, const QVariant &data);
+    virtual void filterEvent(TriggerEvent triggerEvent, const QVariant &data);
 
 protected:
     Room *room;
@@ -118,7 +117,7 @@ public:
     virtual ServerPlayer *askForYiji(const QList<int> &cards, const QString &reason, int &card_id);
     virtual void askForGuanxing(const QList<int> &cards, QList<int> &up, QList<int> &bottom, int guanxing_type);
 
-    virtual void filterEvent(TriggerEvent triggerEvent, ServerPlayer *player, const QVariant &data);
+    virtual void filterEvent(TriggerEvent triggerEvent, const QVariant &data);
 
     LuaFunction callback;
 

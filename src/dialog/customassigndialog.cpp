@@ -1665,13 +1665,13 @@ void GeneralAssignDialog::chooseGeneral()
     QAbstractButton *button = group->checkedButton();
     if (button)
         emit general_chosen(button->objectName());
-    this->reject();
+    reject();
 }
 
 void GeneralAssignDialog::clearGeneral()
 {
     emit general_cleared();
-    this->reject();
+    reject();
 }
 
 //------------------------------
@@ -1902,7 +1902,7 @@ void SkillAssignDialog::updateSkillList()
     skill_list->clear();
     skill_info->clear();
 
-    foreach (QString skill_name, update_skills) {
+    foreach(QString skill_name, update_skills) {
         if (Sanguosha->getSkill(skill_name) != NULL) {
             QListWidgetItem *item = new QListWidgetItem(Sanguosha->translate(skill_name));
             item->setData(Qt::UserRole, skill_name);

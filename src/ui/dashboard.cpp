@@ -18,6 +18,11 @@
 #include <QParallelAnimationGroup>
 #include <QTimer>
 
+#ifdef Q_OS_WIN
+#include <QWinTaskbarButton>
+#include <QWinTaskbarProgress>
+#endif
+
 using namespace QSanProtocol;
 
 Dashboard::Dashboard(QGraphicsItem *widget) //QGraphicsPixmapItem *widget
@@ -57,6 +62,15 @@ Dashboard::Dashboard(QGraphicsItem *widget) //QGraphicsPixmapItem *widget
 
     _m_sort_menu = new QMenu(RoomSceneInstance->mainWindow());
     //_m_carditem_context_menu = NULL;
+
+#ifdef Q_OS_WIN
+    taskbarButton = new QWinTaskbarButton(this);
+    taskbarButton->setWindow(RoomSceneInstance->mainWindow()->windowHandle());
+    QWinTaskbarProgress *prog = taskbarButton->progress();
+    prog->setVisible(false);
+    prog->setMinimum(0);
+    prog->reset();
+#endif
 }
 
 bool Dashboard::isAvatarUnderMouse()
@@ -81,7 +95,47 @@ void Dashboard::showProgressBar(QSanProtocol::Countdown countdown)
     _m_progressBar->setCountdown(countdown);
     connect(_m_progressBar, SIGNAL(timedOut()), this, SIGNAL(progressBarTimedOut()));
     _m_progressBar->show();
+#ifdef Q_OS_WIN
+    if (_m_progressBar->hasTimer()) {
+        connect(_m_progressBar, &QSanCommandProgressBar::timerStep, this, &Dashboard::updateTimedProgressBar, Qt::UniqueConnection);
+        QWinTaskbarProgress *prog = taskbarButton->progress();
+        prog->reset();
+        prog->resume();
+        prog->setMaximum(countdown.max);
+        prog->setMinimum(0);
+        prog->setValue(countdown.max - countdown.current);
+        prog->show();
+    }
+#endif
 }
+
+void Dashboard::hideProgressBar()
+{
+    PlayerCardContainer::hideProgressBar();
+#ifdef Q_OS_WIN
+    QWinTaskbarProgress *prog = taskbarButton->progress();
+    prog->hide();
+    prog->reset();
+    prog->resume();
+#endif
+}
+
+#ifdef Q_OS_WIN
+void Dashboard::updateTimedProgressBar(time_t val, time_t max)
+{
+    QWinTaskbarProgress *prog = taskbarButton->progress();
+    prog->setMaximum(max);
+    prog->setValue(max - val);
+
+    if (val > max * 0.8)
+        prog->stop();
+    else if (val > max * 0.5)
+        prog->pause();
+    else
+        prog->resume();
+
+}
+#endif
 
 QGraphicsItem *Dashboard::getMouseClickReceiver()
 {
@@ -104,6 +158,7 @@ int Dashboard::getButtonWidgetWidth() const
 
 void Dashboard::_createMiddle()
 {
+
     // this is just a random rect. see constructor for more details
     QRect rect = QRect(0, 0, 1, G_DASHBOARD_LAYOUT.m_normalHeight);
     _paintPixmap(_m_middleFrame, rect, _getPixmap(QSanRoomSkin::S_SKIN_KEY_MIDDLEFRAME), this);
@@ -112,7 +167,7 @@ void Dashboard::_createMiddle()
 
     trusting_item = new QGraphicsRectItem(this);
     trusting_text = new QGraphicsSimpleTextItem(tr("Trusting ..."), this);
-    trusting_text->setPos(this->boundingRect().width() / 2, 50);
+    trusting_text->setPos(boundingRect().width() / 2, 50);
 
     QBrush trusting_brush(G_DASHBOARD_LAYOUT.m_trustEffectColor);
     trusting_item->setBrush(trusting_brush);
@@ -143,16 +198,16 @@ void Dashboard::_adjustComponentZValues(bool killed)
 
 int Dashboard::width()
 {
-    return this->_m_width;
+    return _m_width;
 }
 
 
 
 void Dashboard::_createRight()
-{
-    QRect rect = QRect(_m_width - G_DASHBOARD_LAYOUT.m_rightWidth, -70,
+{   //40 equals diff bettween middlefarme and rightframe 
+    QRect rect = QRect(_m_width - G_DASHBOARD_LAYOUT.m_rightWidth, -40,
         G_DASHBOARD_LAYOUT.m_rightWidth,
-        G_DASHBOARD_LAYOUT.m_normalHeight + 70);
+        G_DASHBOARD_LAYOUT.m_normalHeight + 40);
     _paintPixmap(_m_rightFrame, rect, QPixmap(1, 1), _m_groupMain);
     _paintPixmap(_m_rightFrameBg, QRect(0, 0, rect.width(), rect.height()),
         _getPixmap(QSanRoomSkin::S_SKIN_KEY_RIGHTFRAME), _m_rightFrame);
@@ -160,9 +215,9 @@ void Dashboard::_createRight()
 
     _m_skillDock = new QSanInvokeSkillDock(_m_rightFrame);
     QRect avatar = G_DASHBOARD_LAYOUT.m_avatarArea;
-    _m_skillDock->setPos(avatar.left() + 15, avatar.bottom() +
+    _m_skillDock->setPos(avatar.left() + 25, avatar.bottom() +
         G_DASHBOARD_LAYOUT.m_skillButtonsSize[0].height() - 25);
-    _m_skillDock->setWidth(avatar.width() - 30);
+    _m_skillDock->setWidth(avatar.width() - 50);
 }
 
 
@@ -170,9 +225,9 @@ void Dashboard::_updateFrames()
 {
     // Here is where we adjust all frames to actual width
     QRect rect = QRect(G_DASHBOARD_LAYOUT.m_leftWidth, 0,
-        this->width() - G_DASHBOARD_LAYOUT.m_rightWidth - G_DASHBOARD_LAYOUT.m_leftWidth, G_DASHBOARD_LAYOUT.m_normalHeight);
+        width() - G_DASHBOARD_LAYOUT.m_rightWidth - G_DASHBOARD_LAYOUT.m_leftWidth, G_DASHBOARD_LAYOUT.m_normalHeight);
     _paintPixmap(_m_middleFrame, rect, _getPixmap(QSanRoomSkin::S_SKIN_KEY_MIDDLEFRAME), this);
-    QRect rect2 = QRect(0, 0, this->width(), G_DASHBOARD_LAYOUT.m_normalHeight);
+    QRect rect2 = QRect(0, 0, width(), G_DASHBOARD_LAYOUT.m_normalHeight);
     trusting_item->setRect(rect2);
     trusting_item->setPos(0, 0);
     trusting_text->setPos((rect2.width() - Config.BigFont.pixelSize() * 4.5) / 2,
@@ -210,7 +265,7 @@ void Dashboard::killPlayer()
 void Dashboard::revivePlayer()
 {
     _m_votesGot = 0;
-    this->setGraphicsEffect(NULL);
+    setGraphicsEffect(NULL);
     Q_ASSERT(_m_deathIcon);
     _m_deathIcon->hide();
     refresh();
@@ -221,8 +276,8 @@ void Dashboard::setDeathColor()
     QGraphicsColorizeEffect *effect = new QGraphicsColorizeEffect();
     effect->setColor(_m_layout->m_deathEffectColor);
     effect->setStrength(1.0);
-    this->setGraphicsEffect(effect);
-    refresh(true);
+    setGraphicsEffect(effect);
+    refresh();
 }
 
 bool Dashboard::_addCardItems(QList<CardItem *> &card_items, const CardsMoveStruct &moveInfo)
@@ -429,7 +484,7 @@ void Dashboard::setWidth(int width)
 {
     prepareGeometryChange();
     adjustCards(true);
-    this->_m_width = width;
+    _m_width = width;
     _updateFrames();
     _updateDeathIcon();
 }
@@ -582,9 +637,11 @@ void Dashboard::skillButtonDeactivated()
 void Dashboard::selectAll()
 {
     foreach (const QString &pile, Self->getPileNames()) {
-        if (pile.startsWith("&") || pile == "wooden_ox" || pile == "piao")
+        if (pile.startsWith("&") || pile == "wooden_ox" || pile == "piao" || pile == "chaoren")
             retractPileCards(pile);
     }
+    retractPileCard();
+
     if (view_as_skill) {
         unselectAll();
         foreach (CardItem *card_item, m_handCards) {
@@ -730,7 +787,7 @@ void Dashboard::_adjustCards()
     QSanRoomSkin::DashboardLayout *layout = (QSanRoomSkin::DashboardLayout *)_m_layout;
     int leftWidth = layout->m_leftWidth;
     int cardHeight = G_COMMON_LAYOUT.m_cardNormalHeight;
-    int middleWidth = _m_width - layout->m_leftWidth - layout->m_rightWidth - this->getButtonWidgetWidth();
+    int middleWidth = _m_width - layout->m_leftWidth - layout->m_rightWidth - getButtonWidgetWidth();
     QRect rowRect = QRect(leftWidth, layout->m_normalHeight - cardHeight - 3, middleWidth, cardHeight);
     for (int i = 0; i < maxCards; i++)
         row.push_back(m_handCards[i]);
@@ -897,10 +954,10 @@ void Dashboard::beginSorting()
         type = (SortType)(action->data().toInt());
 
     switch (type) {
-    case ByType: qSort(m_handCards.begin(), m_handCards.end(), CompareByType); break;
-    case BySuit: qSort(m_handCards.begin(), m_handCards.end(), CompareBySuit); break;
-    case ByNumber: qSort(m_handCards.begin(), m_handCards.end(), CompareByNumber); break;
-    default: Q_ASSERT(false);
+        case ByType: std::sort(m_handCards.begin(), m_handCards.end(), CompareByType); break;
+        case BySuit: std::sort(m_handCards.begin(), m_handCards.end(), CompareBySuit); break;
+        case ByNumber: std::sort(m_handCards.begin(), m_handCards.end(), CompareByNumber); break;
+        default: Q_ASSERT(false);
     }
 
     adjustCards();
@@ -956,7 +1013,10 @@ void Dashboard::enableCards()
             expandPileCards(pile);
         if (Self->hasSkill("shanji") && pile == "piao")
             expandPileCards("piao");
+        if (Self->hasSkill("chaoren") && pile == "chaoren")
+            expandPileCards("chaoren");
     }
+    expandPileCard();
 
     foreach (CardItem *card_item, m_handCards) {
         card_item->setEnabled(card_item->getCard()->isAvailable(Self));
@@ -987,27 +1047,31 @@ void Dashboard::startPending(const ViewAsSkill *skill)
     }
     if (Self->hasFlag("Global_expandpileFailed"))
         expand = true;
-    else if (Self->hasFlag("Global_cardshowFailed") || Self->hasFlag("Global_carddiscardFailed")) //we need prohibit expanding pile when show card
-        expand = false;
 
-    //retractAllSkillPileCards();
     foreach (const QString &pileName, _m_pile_expanded) {
-        if (!(pileName.startsWith("&") || pileName == "wooden_ox" || pileName == "piao"))
+        if (!(pileName.startsWith("&") || pileName == "wooden_ox" || pileName == "piao" || pileName == "chaoren"))
             retractPileCards(pileName);
+
     }
+    retractPileCard();
+
     if (expand) {
         foreach (const QString &pile, Self->getPileNames()) {
             if (pile.startsWith("&") || pile == "wooden_ox")
                 expandPileCards(pile);
             if (Self->hasSkill("shanji") && pile == "piao")
                 expandPileCards("piao");
-        }
-    } else {
-        foreach (const QString &pile, Self->getPileNames()) {
-            if (pile.startsWith("&") || pile == "wooden_ox" || pile == "piao")
-                retractPileCards(pile);
+            if (Self->hasSkill("chaoren") && pile == "chaoren")
+                expandPileCards("chaoren");
 
         }
+        expandPileCard();
+    } else {
+        foreach (const QString &pile, Self->getPileNames()) {
+            if (pile.startsWith("&") || pile == "wooden_ox" || pile == "piao" || pile == "chaoren")
+                retractPileCards(pile);
+        }
+        retractPileCard();
         if (skill && !skill->getExpandPile().isEmpty()) {
             foreach(const QString &pile_name, skill->getExpandPile().split(","))
                 expandPileCards(pile_name);
@@ -1040,9 +1104,10 @@ void Dashboard::stopPending()
     view_as_skill = NULL;
     pending_card = NULL;
     foreach (const QString &pile, Self->getPileNames()) {
-        if (pile.startsWith("&") || pile == "wooden_ox" || pile == "piao")
+        if (pile.startsWith("&") || pile == "wooden_ox" || pile == "piao" || pile == "chaoren")
             retractPileCards(pile);
     }
+    retractPileCard();
     emit card_selected(NULL);
 
     foreach (CardItem *item, m_handCards) {
@@ -1067,11 +1132,18 @@ void Dashboard::stopPending()
 
 void Dashboard::expandPileCards(const QString &pile_name)
 {
-
     if (_m_pile_expanded.contains(pile_name)) return;
     _m_pile_expanded << pile_name;
 
-    QList<int> pile = Self->getPile(pile_name);
+    QString new_name = pile_name;
+    QList<int> pile;
+    if (new_name.startsWith("%")) {
+        new_name = new_name.mid(1);
+        foreach(const Player *p, Self->getAliveSiblings())
+            pile += p->getPile(new_name);
+    } else {
+        pile = Self->getPile(new_name);
+    }
     if (pile.isEmpty()) return;
 
     QList<CardItem *> card_items = _createCards(pile);
@@ -1094,11 +1166,56 @@ void Dashboard::expandPileCards(const QString &pile_name)
     update();
 }
 
+void Dashboard::expandPileCard()
+{
+    //delete first;
+    retractPileCard();
+
+    // then expand
+    bool ok = false;
+    int id = Self->property("chaoren").toInt(&ok);
+    if (ok && id > -1) {
+        _m_id_expanded << id;
+
+        QList<CardItem *> card_items;
+        CardItem *card_item = _createCard(id);
+        card_items << card_item;
+        card_item->setPos(mapFromScene(card_item->scenePos()));
+        card_item->setParentItem(this);
+
+
+
+        _addHandCard(card_item, true, Sanguosha->translate("chaoren"));
+
+
+        adjustCards();
+        _playMoveCardsAnimation(card_items, false);
+        card_item->setAcceptedMouseButtons(Qt::LeftButton);
+        update();
+
+    }
+}
+
+
+
 void Dashboard::retractPileCards(const QString &pile_name)
 {
+
     if (!_m_pile_expanded.contains(pile_name)) return;
     _m_pile_expanded.removeOne(pile_name);
-    QList<int> pile = Self->getPile(pile_name);
+
+
+
+    QString new_name = pile_name;
+    QList<int> pile;
+    if (new_name.startsWith("%")) {
+        new_name = new_name.mid(1);
+        foreach(const Player *p, Self->getAliveSiblings())
+            pile += p->getPile(new_name);
+    } else {
+        pile = Self->getPile(new_name);
+    }
+
     if (pile.isEmpty()) return;
     CardItem *card_item;
 
@@ -1117,6 +1234,26 @@ void Dashboard::retractPileCards(const QString &pile_name)
     update();
 }
 
+
+void Dashboard::retractPileCard()
+{
+    CardItem *card_item;
+    foreach (int card_id, _m_id_expanded) {
+        card_item = CardItem::FindItem(m_handCards, card_id);
+        if (card_item == selected) selected = NULL;
+        Q_ASSERT(card_item);
+        if (card_item) {
+            m_handCards.removeOne(card_item);
+            card_item->disconnect(this);
+            delete card_item;
+            card_item = NULL;
+        }
+    }
+    adjustCards();
+    update();
+    _m_id_expanded = QList<int>();
+
+}
 
 void Dashboard::onCardItemClicked()
 {

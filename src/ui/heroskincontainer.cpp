@@ -123,10 +123,19 @@ QStringList HeroSkinContainer::getHeroSkinFiles(const QString &generalName)
 {
     if (!m_generalToSkinFiles.contains(generalName)) {
         QDir dir(HEROSKIN_PIXMAP_PATH);
+
         dir.setNameFilters(QStringList(QString("%1_*.png").arg(generalName)));
-        QStringList heroSkinFiles = dir.entryList(QDir::Files | QDir::NoDotAndDotDot);
+        QStringList tmpFiles = dir.entryList(QDir::Files | QDir::NoDotAndDotDot);
+
+        QStringList heroSkinFiles;
+        //filter files
+        foreach (const QString &file, tmpFiles) {
+            if (file.count("_") == generalName.count("_") + 1)
+                heroSkinFiles << file;
+        }
+
         if (!heroSkinFiles.isEmpty()) {
-            qSort(heroSkinFiles.begin(), heroSkinFiles.end(), caseInsensitiveLessThan);
+            std::sort(heroSkinFiles.begin(), heroSkinFiles.end(), caseInsensitiveLessThan);
             m_generalToSkinFiles[generalName] = heroSkinFiles;
         }
     }
@@ -260,7 +269,8 @@ void HeroSkinContainer::skinSelected(int skinIndex)
         m_vScrollBar->setValue(0);
     }
 
-    emit skin_changed(m_generalName);
+    emit local_skin_changed(m_generalName);//for self clinet roomscene
+    emit skin_changed(m_generalName, skinIndex); //for server notify
 }
 
 void HeroSkinContainer::swapWithSkinItemUsed(int skinIndex)

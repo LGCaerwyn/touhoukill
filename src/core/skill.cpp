@@ -10,7 +10,7 @@
 #include <QFile>
 
 Skill::Skill(const QString &name, Frequency frequency)
-    : frequency(frequency), limit_mark(QString()), default_choice("no"), attached_lord_skill(false)
+    : frequency(frequency), limit_mark(QString()), attached_lord_skill(false)
 {
     static QChar lord_symbol('$');
 
@@ -62,12 +62,7 @@ QString Skill::getNotice(int index) const
 
 bool Skill::isVisible() const
 {
-    return !objectName().startsWith("#") && !inherits("SPConvertSkill");
-}
-
-QString Skill::getDefaultChoice(ServerPlayer *) const
-{
-    return default_choice;
+    return !objectName().startsWith("#");
 }
 
 int Skill::getEffectIndex(const ServerPlayer *, const Card *) const
@@ -91,11 +86,6 @@ void Skill::initMediaSource()
         if (QFile::exists(effect_file))
             sources << effect_file;
     }
-}
-
-Skill::Location Skill::getLocation() const
-{
-    return parent() ? Right : Left;
 }
 
 void Skill::playAudioEffect(int index) const
@@ -128,14 +118,10 @@ Skill::Frequency Skill::getFrequency() const
     return frequency;
 }
 
-
-
 QString Skill::getLimitMark() const
 {
     return limit_mark;
 }
-
-
 
 QStringList Skill::getSources() const
 {
@@ -156,15 +142,14 @@ bool ViewAsSkill::isAvailable(const Player *invoker,
     CardUseStruct::CardUseReason reason,
     const QString &pattern) const
 {
-    if (!invoker->hasSkill(objectName()) && !invoker->hasLordSkill(objectName())
-        && !invoker->hasFlag(objectName())) // For Shuangxiong
+    if (!invoker->hasSkill(objectName()) && !invoker->hasLordSkill(objectName())&& !invoker->hasFlag(objectName())) // For Shuangxiong
         return false;
     switch (reason) {
-    case CardUseStruct::CARD_USE_REASON_PLAY: return isEnabledAtPlay(invoker);
-    case CardUseStruct::CARD_USE_REASON_RESPONSE:
-    case CardUseStruct::CARD_USE_REASON_RESPONSE_USE: return isEnabledAtResponse(invoker, pattern);
-    default:
-        return false;
+        case CardUseStruct::CARD_USE_REASON_PLAY: return isEnabledAtPlay(invoker);
+        case CardUseStruct::CARD_USE_REASON_RESPONSE:
+        case CardUseStruct::CARD_USE_REASON_RESPONSE_USE: return isEnabledAtResponse(invoker, pattern);
+        default:
+            return false;
     }
 }
 
@@ -260,7 +245,7 @@ FilterSkill::FilterSkill(const QString &name)
 }
 
 TriggerSkill::TriggerSkill(const QString &name)
-    : Skill(name), view_as_skill(NULL), global(false), dynamic_priority(0.0)
+    : Skill(name), view_as_skill(NULL), global(false)
 {
 }
 
@@ -274,15 +259,42 @@ QList<TriggerEvent> TriggerSkill::getTriggerEvents() const
     return events;
 }
 
-int TriggerSkill::getPriority(TriggerEvent) const
+int TriggerSkill::getPriority() const
 {
-    return (frequency == Wake) ? 3 : 2;
+    return 2;
 }
 
-bool TriggerSkill::triggerable(const ServerPlayer *target) const
+void TriggerSkill::record(TriggerEvent, Room *, QVariant &) const
 {
-    //zun triggerable?
-    return target != NULL && target->isAlive() && target->hasSkill(objectName());
+
+}
+
+QList<SkillInvokeDetail> TriggerSkill::triggerable(TriggerEvent, const Room *, const QVariant &) const
+{
+    return QList<SkillInvokeDetail>();
+}
+
+bool TriggerSkill::cost(TriggerEvent, Room *, QSharedPointer<SkillInvokeDetail> invoke, QVariant &data) const
+{
+    if (invoke->isCompulsory)
+        return true;
+    else {
+        if (invoke->invoker != NULL) {
+            //for ai
+            invoke->invoker->tag[this->objectName()] = data;
+            QVariant notify_data = data;
+            if (invoke->preferredTarget != NULL)
+                notify_data = QVariant::fromValue(invoke->preferredTarget);
+            return invoke->invoker->askForSkillInvoke(this, notify_data);
+        }
+    }
+
+    return false;
+}
+
+bool TriggerSkill::effect(TriggerEvent, Room *, QSharedPointer<SkillInvokeDetail>, QVariant &) const
+{
+    return false;
 }
 
 ScenarioRule::ScenarioRule(Scenario *scenario)
@@ -291,14 +303,14 @@ ScenarioRule::ScenarioRule(Scenario *scenario)
     setParent(scenario);
 }
 
-int ScenarioRule::getPriority(TriggerEvent) const
+int ScenarioRule::getPriority() const
 {
-    return 0;
+    return 1;
 }
 
-bool ScenarioRule::triggerable(const ServerPlayer *) const
+QList<SkillInvokeDetail> ScenarioRule::triggerable(TriggerEvent, const Room *, const QVariant &) const
 {
-    return true;
+    return QList<SkillInvokeDetail>() << SkillInvokeDetail(this, NULL, NULL, NULL, true);
 }
 
 MasochismSkill::MasochismSkill(const QString &name)
@@ -307,10 +319,21 @@ MasochismSkill::MasochismSkill(const QString &name)
     events << Damaged;
 }
 
-bool MasochismSkill::trigger(TriggerEvent, Room *, ServerPlayer *player, QVariant &data) const
+QList<SkillInvokeDetail> MasochismSkill::triggerable(TriggerEvent, const Room *room, const QVariant &data) const
 {
     DamageStruct damage = data.value<DamageStruct>();
-    onDamaged(player, damage);
+    return triggerable(room, damage);
+}
+
+QList<SkillInvokeDetail> MasochismSkill::triggerable(const Room *, const DamageStruct &) const
+{
+    return QList<SkillInvokeDetail>();
+}
+
+bool MasochismSkill::effect(TriggerEvent, Room *room, QSharedPointer<SkillInvokeDetail> invoke, QVariant &data) const
+{
+    DamageStruct damage = data.value<DamageStruct>();
+    onDamaged(room, invoke, damage);
 
     return false;
 }
@@ -321,8 +344,9 @@ PhaseChangeSkill::PhaseChangeSkill(const QString &name)
     events << EventPhaseStart;
 }
 
-bool PhaseChangeSkill::trigger(TriggerEvent, Room *, ServerPlayer *player, QVariant &) const
+bool PhaseChangeSkill::effect(TriggerEvent, Room *, QSharedPointer<SkillInvokeDetail>, QVariant &data) const
 {
+    ServerPlayer *player = data.value<ServerPlayer *>();
     return onPhaseChange(player);
 }
 
@@ -335,10 +359,11 @@ DrawCardsSkill::DrawCardsSkill(const QString &name, bool is_initial)
         events << DrawNCards;
 }
 
-bool DrawCardsSkill::trigger(TriggerEvent, Room *, ServerPlayer *player, QVariant &data) const
+bool DrawCardsSkill::effect(TriggerEvent, Room *, QSharedPointer<SkillInvokeDetail>, QVariant &data) const
 {
-    int n = data.toInt();
-    data = getDrawNum(player, n);
+    DrawNCardsStruct s = data.value<DrawNCardsStruct>();
+    s.n = getDrawNum(s);
+    data = QVariant::fromValue(s);
     return false;
 }
 
@@ -348,72 +373,10 @@ GameStartSkill::GameStartSkill(const QString &name)
     events << GameStart;
 }
 
-bool GameStartSkill::trigger(TriggerEvent, Room *, ServerPlayer *player, QVariant &) const
+bool GameStartSkill::effect(TriggerEvent, Room *, QSharedPointer<SkillInvokeDetail>, QVariant &) const
 {
-    onGameStart(player);
+    onGameStart();
     return false;
-}
-
-SPConvertSkill::SPConvertSkill(const QString &from, const QString &to)
-    : GameStartSkill(QString("cv_%1").arg(from)), from(from), to(to)
-{
-    to_list = to.split("+");
-}
-
-bool SPConvertSkill::triggerable(const ServerPlayer *target) const
-{
-    if (target == NULL) return false;
-    if (!Config.value("EnableSPConvert", true).toBool()) return false;
-    if (Config.EnableHegemony) return false;
-    if (!isNormalGameMode(Config.GameMode)) return false;
-    bool available = false;
-    foreach (QString to_gen, to_list) {
-        const General *gen = Sanguosha->getGeneral(to_gen);
-        if (gen && !Config.value("Banlist/Roles", "").toStringList().contains(to_gen)
-            && !Sanguosha->getBanPackages().contains(gen->getPackage())) {
-            available = true;
-            break;
-        }
-    }
-    return GameStartSkill::triggerable(target)
-        && (target->getGeneralName() == from || target->getGeneral2Name() == from) && available;
-}
-
-void SPConvertSkill::onGameStart(ServerPlayer *player) const
-{
-    Room *room = player->getRoom();
-    QStringList choicelist;
-    foreach (QString to_gen, to_list) {
-        const General *gen = Sanguosha->getGeneral(to_gen);
-        if (gen && !Config.value("Banlist/Roles", "").toStringList().contains(to_gen)
-            && !Sanguosha->getBanPackages().contains(gen->getPackage()))
-            choicelist << to_gen;
-    }
-    QString data = choicelist.join("\\,\\");
-    if (choicelist.length() >= 2)
-        data.replace("\\,\\" + choicelist.last(), "\\or\\" + choicelist.last());
-    if (player->askForSkillInvoke(objectName(), data)) {
-        QString to_cv;
-        AI *ai = player->getAI();
-        if (ai)
-            to_cv = room->askForChoice(player, objectName(), choicelist.join("+"));
-        else
-            to_cv = choicelist.length() == 1 ? choicelist.first() : room->askForGeneral(player, choicelist.join("+"));
-        bool isSecondaryHero = (player->getGeneralName() != from && player->getGeneral2Name() == from);
-
-        LogMessage log;
-        log.type = player->getGeneral2() ? "#TransfigureDual" : "#Transfigure";
-        log.from = player;
-        log.arg = to_cv;
-        log.arg2 = player->getGeneral2() ? (isSecondaryHero ? "GeneralB" : "GeneralA") : QString();
-        room->sendLog(log);
-        room->setPlayerProperty(player, isSecondaryHero ? "general2" : "general", to_cv);
-
-        const General *general = Sanguosha->getGeneral(to_cv);
-        const QString kingdom = general->getKingdom();
-        if (!isSecondaryHero && kingdom != "god" && kingdom != player->getKingdom())
-            room->setPlayerProperty(player, "kingdom", kingdom);
-    }
 }
 
 int MaxCardsSkill::getExtra(const Player *) const
@@ -499,104 +462,95 @@ FakeMoveSkill::FakeMoveSkill(const QString &name)
     : TriggerSkill(QString("#%1-fake-move").arg(name)), name(name)
 {
     events << BeforeCardsMove << CardsMoveOneTime;
+    frequency = Compulsory;
 }
 
-int FakeMoveSkill::getPriority(TriggerEvent) const
+int FakeMoveSkill::getPriority() const
 {
     return 10;
 }
 
-bool FakeMoveSkill::triggerable(const ServerPlayer *target) const
+bool FakeMoveSkill::effect(TriggerEvent, Room *, QSharedPointer<SkillInvokeDetail>, QVariant &) const
 {
-    return target != NULL;
+    return true;
 }
 
-bool FakeMoveSkill::trigger(TriggerEvent, Room *room, ServerPlayer *, QVariant &) const
+QList<SkillInvokeDetail> FakeMoveSkill::triggerable(TriggerEvent, const Room *room, const QVariant &) const
 {
-    QString flag = QString("%1_InTempMoving").arg(name);
-
-    foreach(ServerPlayer *p, room->getAllPlayers())
-        if (p->hasFlag(flag)) return true;
-
-    return false;
-}
-
-DetachEffectSkill::DetachEffectSkill(const QString &skillname, const QString &pilename)
-    : TriggerSkill(QString("#%1-clear").arg(skillname)), name(skillname), pile_name(pilename)
-{
-    events << EventLoseSkill;
-}
-
-bool DetachEffectSkill::triggerable(const ServerPlayer *target) const
-{
-    return target != NULL;
-}
-
-bool DetachEffectSkill::trigger(TriggerEvent, Room *room, ServerPlayer *player, QVariant &data) const
-{
-    if (data.toString() == name) {
-        if (!pile_name.isEmpty())
-            player->clearOnePrivatePile(pile_name);
-        else
-            onSkillDetached(room, player);
+    ServerPlayer *owner = NULL;
+    foreach (ServerPlayer *p, room->getAllPlayers()) {
+        if (p->hasSkill(this)) {
+            owner = p;
+            break;
+        }
     }
-    return false;
+
+    QString flag = QString("%1_InTempMoving").arg(name);
+    foreach (ServerPlayer *p, room->getAllPlayers()) {
+        if (p->hasFlag(flag))
+            return QList<SkillInvokeDetail>() << SkillInvokeDetail(this, owner, p, NULL, true);
+    }
+
+    return QList<SkillInvokeDetail>();
 }
 
-void DetachEffectSkill::onSkillDetached(Room *, ServerPlayer *) const
+EquipSkill::EquipSkill(const QString &name)
+    : TriggerSkill(name)
 {
+
+}
+
+bool EquipSkill::equipAvailable(const Player *p, EquipCard::Location location, const QString &equipName, const Player *to /*= NULL*/)
+{
+    if (p == NULL)
+        return false;
+
+    if (p->getMark("Equips_Nullified_to_Yourself") > 0)
+        return false;
+
+    if (to != NULL && to->getMark("Equips_of_Others_Nullified_to_You") > 0)
+        return false;
+
+    switch (location) {
+        case EquipCard::WeaponLocation:
+            if (!p->hasWeapon(equipName))
+                return false;
+            break;
+        case EquipCard::ArmorLocation:
+            if (!p->hasArmorEffect(equipName))
+                return false;
+            break;
+        case EquipCard::TreasureLocation:
+            if (!p->hasTreasure(equipName))
+                return false;
+            break;
+        default:
+            break; // shenmegui?
+    }
+
+    return true;
+}
+
+bool EquipSkill::equipAvailable(const Player *p, const EquipCard *card, const Player *to /*= NULL*/)
+{
+    if (card == NULL)
+        return false;
+
+    return equipAvailable(p, card->location(), card->objectName(), to);
 }
 
 WeaponSkill::WeaponSkill(const QString &name)
-    : TriggerSkill(name)
+    : EquipSkill(name)
 {
-}
-
-bool WeaponSkill::triggerable(const ServerPlayer *target) const
-{
-    if (target == NULL) return false;
-    if (target->getMark("Equips_Nullified_to_Yourself") > 0) return false;
-    return target->hasWeapon(objectName());
 }
 
 ArmorSkill::ArmorSkill(const QString &name)
-    : TriggerSkill(name)
+    : EquipSkill(name)
 {
 }
-
-bool ArmorSkill::triggerable(const ServerPlayer *target) const
-{
-    if (target == NULL || target->getArmor() == NULL)
-        return false;
-    return target->hasArmorEffect(objectName());
-}
-
 
 TreasureSkill::TreasureSkill(const QString &name)
-    : TriggerSkill(name)
+    : EquipSkill(name)
 {
-}
-
-int TreasureSkill::getPriority(TriggerEvent) const
-{
-    return 2;
-}
-
-bool TreasureSkill::triggerable(const ServerPlayer *target) const
-{
-    if (target == NULL)
-        return false;
-    return target->hasTreasure(objectName());
-}
-
-
-MarkAssignSkill::MarkAssignSkill(const QString &mark, int n)
-    : GameStartSkill(QString("#%1-%2").arg(mark).arg(n)), mark_name(mark), n(n)
-{
-}
-
-void MarkAssignSkill::onGameStart(ServerPlayer *player) const
-{
-    player->getRoom()->setPlayerMark(player, mark_name, player->getMark(mark_name) + n);
 }
 

@@ -26,6 +26,7 @@ private:
     int m_number;
     QSize m_size;
 
+
 signals:
     void clicked();
 };
@@ -48,6 +49,7 @@ public slots:
 protected:
     qreal _m_posX, _m_posY;
     QString _m_fixedRole;
+
 
 private:
     QList<RoleComboBoxItem *> items;

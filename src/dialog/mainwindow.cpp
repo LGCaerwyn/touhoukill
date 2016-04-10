@@ -52,7 +52,7 @@ public:
             if (newSceneRect != room_scene->sceneRect())
                 fitInView(room_scene->sceneRect(), Qt::KeepAspectRatio);
             else
-                this->resetTransform();
+                resetTransform();
             main_window->setBackgroundBrush(false);
             return;
         } else if (scene()->inherits("StartScene")) {
@@ -74,6 +74,8 @@ MainWindow::MainWindow(QWidget *parent)
 {
     ui->setupUi(this);
     scene = NULL;
+
+    setWindowTitle(tr("TouhouSatsu") + "    " + Sanguosha->getVersionName());
 
     connection_dialog = new ConnectionDialog(this);
     connect(ui->actionStart_Game, SIGNAL(triggered()), connection_dialog, SLOT(exec()));
@@ -161,7 +163,8 @@ void MainWindow::gotoScene(QGraphicsScene *scene)
     this->scene = scene;
     view->setScene(scene);
     /* @todo: Need a better way to replace the magic number '4' */
-    QResizeEvent e(QSize(view->size().width() - 4, view->size().height() - 4), view->size());
+    //QResizeEvent e(QSize(view->size().width() - 4, view->size().height() - 4), view->size());
+    QResizeEvent e(QSize(view->size().width(), view->size().height()), view->size());
     view->resizeEvent(&e);
     changeBackground();
 }
@@ -170,7 +173,7 @@ void MainWindow::on_actionExit_triggered()
 {
     QMessageBox::StandardButton result;
     result = QMessageBox::question(this,
-        tr("Sanguosha"),
+        tr("TouhouSatsu"),
         tr("Are you sure to exit?"),
         QMessageBox::Ok | QMessageBox::Cancel);
     if (result == QMessageBox::Ok) {
@@ -201,7 +204,7 @@ void MainWindow::on_actionStart_Server_triggered()
     if (start_scene) {
         start_scene->switchToServer(server);
         if (Config.value("EnableMinimizeDialog", false).toBool())
-            this->on_actionMinimize_to_system_tray_triggered();
+            on_actionMinimize_to_system_tray_triggered();
     }
 }
 
@@ -725,7 +728,7 @@ void MainWindow::on_actionReplay_file_convert_triggered()
             tosave.append(".txt");
 
             // png to txt
-            QByteArray data = Replayer::PNG2TXT(filename);
+            QByteArray data = Recorder::PNG2TXT(filename);
 
             QFile tosave_file(tosave);
             if (tosave_file.open(QIODevice::WriteOnly))

@@ -62,9 +62,9 @@ Photo::Photo() : PlayerCardContainer()
     _createControls();
 }
 
-void Photo::refresh(bool killed)
+void Photo::refresh()
 {
-    PlayerCardContainer::refresh(killed);
+    PlayerCardContainer::refresh();
     if (!m_player) return;
     QString state_str = m_player->getState();
     if (!state_str.isEmpty() && state_str != "online") {
@@ -183,9 +183,9 @@ void Photo::tremble()
     QTimer::singleShot(1000, this, SLOT(hideSkillName()));
     }*/
 
-//void Photo::hideSkillName() {
-//    _m_skillNameItem->hide();
-//}
+    //void Photo::hideSkillName() {
+    //    _m_skillNameItem->hide();
+    //}
 
 void Photo::hideEmotion()
 {

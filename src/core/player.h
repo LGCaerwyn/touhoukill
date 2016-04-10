@@ -21,6 +21,8 @@ class Player : public QObject
 
     Q_PROPERTY(QString screenname READ screenName WRITE setScreenName)
     Q_PROPERTY(int hp READ getHp WRITE setHp)
+    Q_PROPERTY(int renhp READ getRenHp WRITE setRenHp)
+    Q_PROPERTY(int linghp READ getLingHp WRITE setLingHp)
     Q_PROPERTY(int maxhp READ getMaxHp WRITE setMaxHp)
     Q_PROPERTY(QString kingdom READ getKingdom WRITE setKingdom)
     Q_PROPERTY(bool wounded READ isWounded STORED false)
@@ -69,9 +71,11 @@ public:
 
     // property setters/getters
     int getHp() const;
-    int getLingHp() const;//for banling  lingttili
-    int getRenHp() const;//for banling  rentili
+    int getRenHp() const;//for banling
+    int getLingHp() const;
     void setHp(int hp);
+    void setRenHp(int renhp);
+    void setLingHp(int linghp);
     int getMaxHp() const;
     void setMaxHp(int max_hp);
     int getLostHp() const;
@@ -146,10 +150,20 @@ public:
     void detachAllSkills();
     virtual void addSkill(const QString &skill_name);
     virtual void loseSkill(const QString &skill_name);
-    bool hasSkill(const QString &skill_name, bool include_lose = false, bool include_invalidity = false) const;
-    bool hasSkills(const QString &skill_name, bool include_lose = false, bool include_invalidity = false) const;
+    bool hasSkill(const QString &skill_name, bool include_lose = false) const;
+    bool hasSkill(const Skill *skill, bool include_lose = false) const;
+    bool hasSkills(const QString &skill_name, bool include_lose = false) const;
     bool hasInnateSkill(const QString &skill_name) const;
-    bool hasLordSkill(const QString &skill_name, bool include_lose = false, bool include_invalidity = false) const;
+    bool hasInnateSkill(const Skill *skill) const;
+    bool hasLordSkill(const QString &skill_name, bool include_lose = false) const;
+    bool hasLordSkill(const Skill *skill, bool include_lose = false) const;
+
+    void setSkillInvalidity(const Skill *skill, bool invalidity);
+    void setSkillInvalidity(const QString &skill_name, bool invalidity);
+
+    bool isSkillInvalid(const Skill *skill) const;
+    bool isSkillInvalid(const QString &skill_name) const;
+
     virtual QString getGameMode() const = 0;
 
     void setEquip(WrappedCard *equip);
@@ -176,8 +190,8 @@ public:
     QList<const Card *> getEquips() const;
     const EquipCard *getEquip(int index) const;
 
-    bool hasWeapon(const QString &weapon_name) const;
-    bool hasArmorEffect(const QString &armor_name) const;
+    bool hasWeapon(const QString &weapon_name, bool selfOnly = false) const;
+    bool hasArmorEffect(const QString &armor_name, bool selfOnly = false) const;
     bool hasTreasure(const QString &treasure_name) const;
 
     bool isKongcheng() const;
@@ -207,6 +221,7 @@ public:
 
     bool pileOpen(const QString &pile_name, const QString &player) const;
     void setPileOpen(const QString &pile_name, const QString &player);
+    QList<int> getHandPile() const;
 
     void addHistory(const QString &name, int times = 1);
     void clearHistory();
@@ -260,6 +275,7 @@ protected:
     QStringList skills;
     QSet<QString> flags;
     QHash<QString, int> history;
+    QStringList skill_invalid;
 
 private:
     QString screen_name;
@@ -267,6 +283,7 @@ private:
     const General *general, *general2;
     General::Gender m_gender;
     int hp, max_hp;
+    int renhp, linghp;//for banling
     QString kingdom;
     QString role;
     bool role_shown;

@@ -1,6 +1,8 @@
 #ifndef _LUA_WRAPPER_H
 #define _LUA_WRAPPER_H
 
+#include "util.h"
+#pragma message WARN("todo_Fs: the new Lua interface of triggerskill")
 #include "skill.h"
 #include "standard.h"
 
@@ -336,14 +338,14 @@ public:
         else {
             if (Card::isKindOf(cardType)) return true;
             switch (subclass) {
-            case TypeSingleTargetTrick: return strcmp(cardType, "SingleTargetTrick") == 0; break;
-            case TypeDelayedTrick: return strcmp(cardType, "DelayedTrick") == 0; break;
-            case TypeAOE: return strcmp(cardType, "AOE") == 0; break;
-            case TypeGlobalEffect: return strcmp(cardType, "GlobalEffect") == 0; break;
-            case TypeNormal:
-            default:
-                return false;
-                break;
+                case TypeSingleTargetTrick: return strcmp(cardType, "SingleTargetTrick") == 0; break;
+                case TypeDelayedTrick: return strcmp(cardType, "DelayedTrick") == 0; break;
+                case TypeAOE: return strcmp(cardType, "AOE") == 0; break;
+                case TypeGlobalEffect: return strcmp(cardType, "GlobalEffect") == 0; break;
+                case TypeNormal:
+                default:
+                    return false;
+                    break;
             }
         }
     }
@@ -431,11 +433,11 @@ private:
     QString class_name;
 };
 
-
-/*class LuaTreasure: public Treasure {
+class LuaTreasure : public Treasure
+{
     Q_OBJECT
 
-    public:
+public:
     Q_INVOKABLE LuaTreasure(Card::Suit suit, int number, const char *obj_name, const char *class_name);
     LuaTreasure *clone(Card::Suit suit = Card::SuitToBeDecided, int number = -1) const;
 
@@ -445,20 +447,21 @@ private:
     virtual void onInstall(ServerPlayer *player) const;
     virtual void onUninstall(ServerPlayer *player) const;
 
-    inline virtual QString getClassName() const{ return class_name; }
-    inline virtual bool isKindOf(const char *cardType) const{
-    if (strcmp(cardType, "LuaCard") == 0 || QString(cardType) == class_name)
-    return true;
-    else
-    return Card::isKindOf(cardType);
+    inline virtual QString getClassName() const { return class_name; }
+    inline virtual bool isKindOf(const char *cardType) const
+    {
+        if (strcmp(cardType, "LuaCard") == 0 || QString(cardType) == class_name)
+            return true;
+        else
+            return Card::isKindOf(cardType);
     }
 
     // the lua callbacks
     LuaFunction on_install;
     LuaFunction on_uninstall;
 
-    private:
+private:
     QString class_name;
-    };*/
+};
 
 #endif

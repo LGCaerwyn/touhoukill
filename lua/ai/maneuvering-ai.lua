@@ -13,6 +13,7 @@ sgs.ai_card_intention.ThunderSlash = sgs.ai_card_intention.Slash
 sgs.ai_use_value.ThunderSlash = 4.55
 sgs.ai_keep_value.ThunderSlash = 3.66
 sgs.ai_use_priority.ThunderSlash = 2.5
+sgs.dynamic_value.damage_card.ThunderSlash = true
 
 function SmartAI:useCardFireSlash(...)
 	self:useCardSlash(...)
@@ -23,6 +24,7 @@ sgs.ai_card_intention.FireSlash = sgs.ai_card_intention.Slash
 sgs.ai_use_value.FireSlash = 4.6
 sgs.ai_keep_value.FireSlash = 3.63
 sgs.ai_use_priority.FireSlash = 2.5
+sgs.dynamic_value.damage_card.FireSlash = true
 
 sgs.weapon_range.Fan = 4
 sgs.ai_use_priority.Fan = 2.655
@@ -140,7 +142,7 @@ function SmartAI:shouldUseAnaleptic(target, slash)
 	--【战操对策】
 	local shrx=self.room:findPlayerBySkillName("zhancao")
 	if shrx and self:isEnemy(shrx) then
-		if self:isFriend(shrx,target) and shrx:inMyAttackRange(target) then
+		if self:isFriend(shrx,target) and (shrx:inMyAttackRange(target) or shrx:objectName() == target:objectName()) then
 			return false 
 		end
 	end
@@ -156,6 +158,7 @@ function SmartAI:shouldUseAnaleptic(target, slash)
 	end
 	
 	if target:hasSkill("zhenlie") then return false end
+	if target:hasSkill("zheshe") and target:canDiscard(target, "h") then return false end
 	if target:hasSkill("xiangle") then
 		local basicnum = 0
 		for _, acard in sgs.qlist(self.player:getHandcards()) do
@@ -175,7 +178,8 @@ function SmartAI:shouldUseAnaleptic(target, slash)
 	local hcard = target:getHandcardNum()
 	if self.player:hasSkill("liegong") and self.player:getPhase() == sgs.Player_Play and (hcard >= self.player:getHp() or hcard <= self.player:getAttackRange()) then return true end
 	if self.player:hasSkill("kofliegong") and self.player:getPhase() == sgs.Player_Play and hcard >= self.player:getHp() then return true end
-	if self.player:hasSkill("tieji") then return true end
+	--if self.player:hasSkill("tieji") then return true end
+	if self.player:hasWeapon("Blade") and self:invokeTouhouJudge() then return true end
 	--勇仪主动吃酒
 	if  self:canGuaili(slash) then 
 		return true 
@@ -187,8 +191,7 @@ function SmartAI:shouldUseAnaleptic(target, slash)
 		end
 	end
 	
-	if self.player:hasWeapon("axe") and self.player:getCards("he"):length() > 4 then return true end
-	--if target:hasFlag("dahe") then return true end
+	if self.player:hasWeapon("Axe") and self.player:getCards("he"):length() > 4 then return true end
 
 	if ((self.player:hasSkill("roulin") and target:isFemale()) or (self.player:isFemale() and target:hasSkill("roulin"))) or self.player:hasSkill("wushuang") then
 		if getKnownCard(target, player, "Jink", true, "he") >= 2 then return false end
@@ -348,7 +351,7 @@ function SmartAI:useCardSupplyShortage(card, use)
 		if self:hasSkills(sgs.cardneed_skill,enemy) or self:hasSkills("zhaolie|qinyin|yanxiao|zhaoxin|toudu|renjie",enemy) --tianxiang
 			then value = value + 5
 		end
-		if self:hasSkills("yingzi|shelie|xuanhuo|buyi|jujian|jiangchi|mizhao|hongyuan|chongzhen|duoshi",enemy) then value = value + 1 end
+		if self:hasSkills("yingzi|shelie|xuanhuo|buyi|jujian|jiangchi|mizhao|hongyuan|duoshi",enemy) then value = value + 1 end
 		if enemy:hasSkill("zishou") then value = value + enemy:getLostHp() end
 		if self:isWeak(enemy) then value = value + 5 end
 		if enemy:isLord() then value = value + 3 end
@@ -414,6 +417,15 @@ sgs.ai_card_intention.SupplyShortage = function(self, card, from, tos)
 	
 end
 sgs.dynamic_value.control_usecard.SupplyShortage = true
+sgs.ai_judge_model.supply_shortage = function(self, who)
+	local judge = sgs.JudgeStruct()
+    judge.who = who
+	judge.pattern = ".|club"
+    judge.good = true
+    judge.reason = "supply_shortage"
+	return judge
+end
+
 
 function SmartAI:getChainedFriends(player)
 	player = player or self.player
@@ -933,4 +945,4 @@ sgs.dynamic_value.damage_card.FireAttack = true
 
 sgs.ai_card_intention.FireAttack = 80
 
-sgs.dynamic_value.damage_card.FireAttack = true
+

@@ -26,6 +26,7 @@ public:
     QFont AppFont;
     QFont UIFont;
     QColor TextEditColor;
+    QColor ToolTipBackgroundColor;
 
     // server side
     QString ServerName;
@@ -41,10 +42,7 @@ public:
     bool DisableChat;
     bool FreeAssignSelf;
     bool Enable2ndGeneral;
-    bool EnableScene;    //changjing
     bool EnableSame;
-    bool EnableBasara;
-    bool EnableHegemony;
     int MaxHpScheme;
     int Scheme0Subtraction;
     bool PreventAwakenBelow3;

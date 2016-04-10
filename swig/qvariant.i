@@ -52,7 +52,7 @@ public:
     }
 
     const Card *toCard() const{
-        return $self->value<CardStar>();
+        return $self->value<const Card *>();
     }
 
     void setValue(ServerPlayer *player) {
@@ -60,7 +60,7 @@ public:
     }
 
     ServerPlayer *toPlayer() const{
-        return $self->value<PlayerStar>();
+        return $self->value<ServerPlayer *>();
     }
 
     void setValue(DyingStruct *dying) {
@@ -92,7 +92,7 @@ public:
     }
 
     JudgeStruct *toJudge() const{
-        return $self->value<JudgeStar>();
+        return $self->value<JudgeStruct *>();
     }
 
     void setValue(PindianStruct *pindian) {
@@ -100,7 +100,7 @@ public:
     }
 
     PindianStruct *toPindian() const{
-        return $self->value<PindianStar>();
+        return $self->value<PindianStruct *>();
     }
 
     void setValue(PhaseChangeStruct *phase) {
@@ -117,6 +117,22 @@ public:
 
     CardsMoveOneTimeStruct toMoveOneTime() const{
         return $self->value<CardsMoveOneTimeStruct>();
+    }
+
+    void setValue(ChoiceMadeStruct *choice) {
+        $self->setValue(QVariant::fromValue(*choice));
+    }
+
+    ChoiceMadeStruct toChoiceMade() const{
+        return $self->value<ChoiceMadeStruct>();
+    }
+
+    void setValue(CardAskedStruct *ask) {
+        $self->setValue(QVariant::fromValue(*ask));
+    }
+
+    CardAskedStruct toCardAsked() const{
+        return $self->value<CardAskedStruct>();
     }
 
     void setValue(CardResponseStruct *resp) {

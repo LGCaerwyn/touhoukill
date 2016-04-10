@@ -1,6 +1,5 @@
---function SmartAI:isWeak
---SmartAI:ableToSave-- 【远吠】的问题
-function sgs.ai_cardsview_valuable.skltkexuepeach(self, class_name, player)
+
+function sgs.ai_cardsview_valuable.skltkexue_attach(self, class_name, player)
 	if class_name == "Peach" and player:getHp()>1 then
 		local dying = player:getRoom():getCurrentDyingPlayer()
 		if not dying or not dying:hasSkill("skltkexue") or self:isEnemy(dying, player) or dying:objectName() == player:objectName() then return nil end
@@ -16,13 +15,13 @@ function sgs.ai_cardsview_valuable.skltkexuepeach(self, class_name, player)
 				end
 				if others_hp >= need_hp then return nil end
 			end
-			return "@skltkexueCard=." 
+			return "@SkltKexueCard=." 
 		end
 		return nil
 	end
 end
-sgs.ai_card_intention.skltkexueCard = sgs.ai_card_intention.Peach
-sgs.ai_use_priority.skltkexueCard = sgs.ai_use_priority.Peach + 0.1
+sgs.ai_card_intention.SkltKexueCard = sgs.ai_card_intention.Peach
+sgs.ai_use_priority.SkltKexueCard = sgs.ai_use_priority.Peach + 0.1
 function SmartAI:canKexue(player)
     if not player:hasSkill("skltkexue") then
 		return false
@@ -124,24 +123,22 @@ sgs.ai_skillProperty.mingyun = function(self)
 	return "wizard_harm"
 end
 
-sgs.ai_skill_playerchosen.xueyi = function(self, targets)
-	target_table =sgs.QList2Table(targets)
-	if #target_table==0 then return false end
-	for _,target in pairs(target_table) do	
-		if  self:isFriend(target) then
-			return target
+
+
+sgs.ai_skill_invoke.xueyi = function(self, data)
+        local to =data:toPlayer()
+		return self:isFriend(to)
+end
+sgs.ai_choicemade_filter.skillInvoke.xueyi = function(self, player, promptlist)
+	local to=player:getTag("xueyi-target"):toPlayer()
+	if to then 
+		if promptlist[#promptlist] == "yes" then
+		    sgs.updateIntention(player, to, -60)
+	    else
+		    sgs.updateIntention(player, to, 60)
 		end
 	end
-	return nil
 end
-sgs.ai_playerchosen_intention.xueyi = -80
-sgs.ai_no_playerchosen_intention.xueyi =function(self, from)
-	local lord = self.room:getLord()
-	if lord then
-		sgs.updateIntention(from, lord, 10)
-	end
-end
-
 
 function SmartAI:pohuaiBenefit(player)
 	local value=0
@@ -184,7 +181,14 @@ end
 sgs.ai_skillProperty.pohuai = function(self)
 	return "cause_judge"
 end
-
+sgs.ai_judge_model.pohuai = function(self, who)
+	local judge = sgs.JudgeStruct()
+    judge.who = who
+    judge.pattern = "Slash"
+    judge.good = true
+    judge.reason = "pohuai"
+	return judge
+end
 
 sgs.yuxue_keep_value = {
 	Peach 			= 5.5,
@@ -237,10 +241,10 @@ local suoding_skill = {}
 suoding_skill.name = "suoding"
 table.insert(sgs.ai_skills, suoding_skill)
 function suoding_skill.getTurnUseCard(self)
-        if self.player:hasUsed("suodingCard") then return nil end
-		return sgs.Card_Parse("@suodingCard=.")
+        if self.player:hasUsed("SuodingCard") then return nil end
+		return sgs.Card_Parse("@SuodingCard=.")
 end
-sgs.ai_skill_use_func.suodingCard = function(card, use, self)
+sgs.ai_skill_use_func.SuodingCard = function(card, use, self)
         self:sort(self.enemies, "handcard")
 		over=math.min(self:getOverflow(),3)
 		enemy_check=false;
@@ -277,16 +281,16 @@ sgs.ai_skill_use_func.suodingCard = function(card, use, self)
 		if  use.to  and enemy_check and use.to:length() >= 1 then return end
 end
 
-sgs.ai_use_value.suodingCard = 8
-sgs.ai_use_priority.suodingCard =7
-sgs.ai_card_intention.suodingCard = 20
+sgs.ai_use_value.SuodingCard = 8
+sgs.ai_use_priority.SuodingCard =7
+sgs.ai_card_intention.SuodingCard = 20
 
 
 sgs.ai_skill_invoke.huisu = function(self)
 	return self:invokeTouhouJudge()
 end
 sgs.ai_need_damaged.huisu = function(self, attacker, player)
-	if self.player:getHp()>1 then 
+	if self.player:getLostHp() < 1 then 
 		return self:needtouhouDamageJudge()
 	end
 	return false
@@ -296,6 +300,10 @@ sgs.ai_skillProperty.huisu = function(self)
 end
 
 sgs.ai_skill_invoke.bolan = function(self)
+	local current = self.room:getCurrent()
+	if current and current:hasSkill("souji") and not self:isFriend(current) then
+		return self.player:getPile("yao_mark"):length() + self.player:getHandcardNum() <= self.player:getMaxHp()
+	end
 	if self.player:getPile("yao_mark"):length()>0 then
 		return true
 	else
@@ -321,7 +329,6 @@ function sgs.ai_cardsview_valuable.qiyao(self, class_name, player)
 		
 		local hand_trick={}
 		local real_peach={}
-		local others={}
 		local cards = self.player:getHandcards()
 		cards=self:touhouAppendExpandPileToList(self.player,cards)
 	
@@ -330,8 +337,6 @@ function sgs.ai_cardsview_valuable.qiyao(self, class_name, player)
 				table.insert(real_peach,c)
 			elseif c:isNDTrick()then
 				table.insert(hand_trick,c)
-			else
-				table.insert(others,c)
 			end
 		end
 		
@@ -339,14 +344,10 @@ function sgs.ai_cardsview_valuable.qiyao(self, class_name, player)
 			return nil
 		end
 	
-		local ids=self.player:getPile("yao_mark")
 		local card
 		if #hand_trick>0 then
 			self:sortByKeepValue(hand_trick)
 			card=hand_trick[1]
-		elseif #others>0 and ids:length()>0 then
-			self:sortByKeepValue(others)
-			card=others[1]
 		end
 		if card then
 			local suit = card:getSuitString()
@@ -502,20 +503,24 @@ end
 
 
 sgs.ai_skill_invoke.dongjie = function(self, data)
-        local damage =self.player:getTag("dongjie_damage"):toDamage()
-        local to =data:toPlayer()
-		if damage.damage > 1 and self:isEnemy(to) then return false end 
+        local damage =self.player:getTag("dongjie"):toDamage()
+        local to = damage.to
+		local final_damage = self:touhouDamage(damage, self.player, to, 2)
+		local needAvoidAttack = self:touhouNeedAvoidAttack(damage,self.player,to,true, 2)
+		if self:isEnemy(to) and needAvoidAttack then
+			if final_damage.damage > 1  or final_damage.damage >= to:getHp()  then return false end
+		end
         return self:isFriend(to) ~= to:faceUp()
 end
-sgs.ai_choicemade_filter.skillInvoke.dongjie = function(self, player, promptlist)
+sgs.ai_choicemade_filter.skillInvoke.dongjie = function(self, player, args)
 	local to=player:getTag("dongjie_damage"):toDamage().to
 	if to then 
 		if to:faceUp() then
-			if promptlist[#promptlist] == "yes" then
+			if args[#args] == "yes" then
 				sgs.updateIntention(player, to, 60)
 			end
 		else
-			if promptlist[#promptlist] == "yes" then
+			if args[#args] == "yes" then
 				sgs.updateIntention(player, to, -60)
 			else
 				sgs.updateIntention(player, to, 60)
@@ -623,14 +628,6 @@ sgs.ai_slash_prohibit.anyu = function(self, from, to, card)
 
 	if self:isFriend(from, to) then return false end
 	return not self:isWeak(to) and not to:faceUp() 
-
-	--local turnFriend =false
-	--for _,p in pairs (self.friends) do
-	--	if not p:faceUp() then
-	--		turnFriend = true
-	--	end
-	--end
-	--return not self:isWeak(to) and turnFriend
 end
 
 
@@ -652,7 +649,16 @@ end
 sgs.ai_skill_invoke.qiyue = function(self,data)
 	local current=self.room:getCurrent()
 	if self:isEnemy(current) then
-		if self.player:getMaxHp()==1 then return false end
+		if self.player:getMaxHp()== 1 then 
+			if current:hasSkill("weiya") then
+				return false 
+			end
+			local recover =  getCardsNum("Analeptic", self.player, self.player)
+			for _,p in ipairs(self.friends) do
+				recover = recover + getCardsNum("Peach", p, self.player)
+			end
+			return recover > 0
+		end
 		if self.player:getMaxHp()<3 or self.player:getHp()<3 then return true end 
 		if #self.enemies<3 then return false end
 		enemyseat= current:getSeat()
@@ -673,14 +679,14 @@ sgs.ai_skill_invoke.qiyue = function(self,data)
 end
 sgs.ai_skill_choice.qiyue=function(self)
 	if self.player:getMaxHp()>self.player:getHp() then
-		return "maxhp_moxue"
+		return "maxhp"
 	else
-		return "hp_moxue"
+		return "hp"
 	end
 end
-sgs.ai_choicemade_filter.skillInvoke.qiyue = function(self, player, promptlist)
+sgs.ai_choicemade_filter.skillInvoke.qiyue = function(self, player, args)
 	local to=self.room:getCurrent()
-	if promptlist[#promptlist] == "yes" then
+	if args[#args] == "yes" then
 		if self:willSkipPlayPhase(to) and self:getOverflow(to,to:getMaxCards())>1 then
 			sgs.updateIntention(player, to, -20)
 		else
@@ -721,10 +727,10 @@ table.insert(sgs.ai_skills, banyue_skill)
 function banyue_skill.getTurnUseCard(self)
         if self.player:getHp() <= 2 and not self.player:hasSkill("juxian") then return nil end
 		if self.player:getHp() == 2 and self.player:hasSkill("juxian") then return nil end
-		if self.player:hasUsed("banyueCard") then return nil end
-		return sgs.Card_Parse("@banyueCard=.")
+		if self.player:hasUsed("BanyueCard") then return nil end
+		return sgs.Card_Parse("@BanyueCard=.")
 end
-sgs.ai_skill_use_func.banyueCard = function(card, use, self)
+sgs.ai_skill_use_func.BanyueCard = function(card, use, self)
         if #self.friends < 2 then return end
 		self:sort(self.friends)
         for _, p in ipairs(self.friends) do
@@ -736,9 +742,9 @@ sgs.ai_skill_use_func.banyueCard = function(card, use, self)
         end
 end
 
-sgs.ai_use_value.banyueCard = 3
-sgs.ai_use_priority.banyueCard =6
-sgs.ai_card_intention.banyueCard = function(self, card, from, tos)
+sgs.ai_use_value.BanyueCard = 3
+sgs.ai_use_priority.BanyueCard =6
+sgs.ai_card_intention.BanyueCard = function(self, card, from, tos)
 	sgs.updateIntentions(from, tos, -40)
 	if #tos <3 then
 		local lord = self.room:getLord()

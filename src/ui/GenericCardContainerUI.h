@@ -69,7 +69,7 @@ class PlayerCardContainer : public GenericCardContainer
 public:
     PlayerCardContainer();
     virtual void showProgressBar(QSanProtocol::Countdown countdown);
-    void hideProgressBar();
+    virtual void hideProgressBar();
     void hideAvatars();
     //const ClientPlayer *getPlayer() const;
     const ClientPlayer *getPlayer() const
@@ -108,6 +108,8 @@ public:
     virtual void startHuaShen(QString generalName, QString skillName);
     virtual void stopHuaShen();
     virtual void updateAvatarTooltip();
+    virtual void setRoleShown(bool shown = false);
+
 
     static void _paintPixmap(QGraphicsPixmapItem *&item, const QRect &rect,
         const QPixmap &pixmap, QGraphicsItem *parent);
@@ -144,7 +146,7 @@ public slots:
     void updateVotes(bool need_select = true, bool display_1 = false);
     void updateReformState();
     void showDistance();
-    virtual void refresh(bool killed = false);
+    virtual void refresh();
     void hideSkillName();
 protected:
     // overrider parent functions
@@ -178,11 +180,11 @@ protected:
     void _paintPixmap(QGraphicsPixmapItem *&item, const QRect &rect, const QString &key);
     void _paintPixmap(QGraphicsPixmapItem *&item, const QRect &rect, const QString &key, QGraphicsItem *parent);
     void _paintPixmap(QGraphicsPixmapItem *&item, const QRect &rect, const QPixmap &pixmap);
-    //±ä³Épublic
+    //public
     //void _paintPixmap(QGraphicsPixmapItem *&item, const QRect &rect, const QPixmap &pixmap, QGraphicsItem *parent);
     void _clearPixmap(QGraphicsPixmapItem *item);
-    QPixmap _getPixmap(const QString &key);
-    QPixmap _getPixmap(const QString &key, const QString &arg);
+    QPixmap _getPixmap(const QString &key, bool cache = false);
+    QPixmap _getPixmap(const QString &key, const QString &arg, bool cache = false);
     QPixmap _getEquipPixmap(const EquipCard *equip);
     virtual void _adjustComponentZValues(bool killed = false);
     void _updateFloatingArea();
@@ -251,6 +253,7 @@ protected:
     MagatamasBoxItem *_m_hpBox;
     MagatamasBoxItem *_m_sub_hpBox;
     RoleComboBox *_m_roleComboBox;
+    QGraphicsPixmapItem *_m_roleShownIcon;
     QSanCommandProgressBar *_m_progressBar;
     QGraphicsProxyWidget *_m_progressBarItem;
 

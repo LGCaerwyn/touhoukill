@@ -97,10 +97,10 @@ void QSanButton::setEnabled(bool enabled)
 void QSanButton::setState(QSanButton::ButtonState state, bool ignore_change)
 {
     if (ignore_change) {
-        this->_m_state = state;
+        _m_state = state;
         update();
-    } else if (this->_m_state != state) {
-        this->_m_state = state;
+    } else if (_m_state != state) {
+        _m_state = state;
         update();
     }
 }
@@ -117,7 +117,8 @@ void QSanButton::hoverEnterEvent(QGraphicsSceneHoverEvent *event)
     if (_m_mouseEntered || !insideButton(point)) return; // fake event;
 
 
-
+    if (_m_state == S_STATE_HOVER)//when askforSkillInvoke 
+        return;
     Q_ASSERT(_m_state != S_STATE_HOVER);
 
     _m_mouseEntered = true;
@@ -233,8 +234,7 @@ void QSanSkillButton::setSkill(const Skill *skill)
 
     Skill::Frequency freq = skill->getFrequency();
     if (freq == Skill::Frequent
-        || (freq == Skill::NotFrequent && skill->inherits("TriggerSkill") && !skill->inherits("WeaponSkill")
-        && !skill->inherits("ArmorSkill") && _m_viewAsSkill == NULL)) {
+        || (freq == Skill::NotFrequent && skill->inherits("TriggerSkill") && !skill->inherits("EquipSkill") && _m_viewAsSkill == NULL)) {
         setStyle(QSanButton::S_STYLE_TOGGLE);
         setState(freq == Skill::Frequent ? QSanButton::S_STATE_DOWN : QSanButton::S_STATE_UP);
         _setSkillType(QSanInvokeSkillButton::S_SKILL_FREQUENT);
@@ -251,7 +251,6 @@ void QSanSkillButton::setSkill(const Skill *skill)
         else
             _setSkillType(QSanInvokeSkillButton::S_SKILL_PROACTIVE);
 
-
         setStyle(QSanButton::S_STYLE_TOGGLE);
 
         _m_emitDeactivateSignal = true;
@@ -266,7 +265,7 @@ void QSanSkillButton::setSkill(const Skill *skill)
         _m_emitDeactivateSignal = false;
         _m_canEnable = true;
         _m_canDisable = true;
-    } else if (freq == Skill::Compulsory || freq == Skill::Eternal) { //  we have to set it in such way for WeiDi
+    } else if (freq == Skill::Compulsory || freq == Skill::Eternal || freq == Skill::NotCompulsory) { //  we have to set it in such way for WeiDi
         setState(QSanButton::S_STATE_UP);
         setStyle(QSanButton::S_STYLE_PUSH);
         _setSkillType(QSanInvokeSkillButton::S_SKILL_COMPULSORY);
@@ -301,6 +300,45 @@ void QSanInvokeSkillButton::_repaint()
 void QSanInvokeSkillButton::paint(QPainter *painter, const QStyleOptionGraphicsItem *, QWidget *)
 {
     painter->drawPixmap(0, 0, _m_bgPixmap[(int)_m_state]);
+    if (_m_skillType == S_SKILL_ATTACHEDLORD) {
+        int nline = _m_skill->objectName().indexOf("-");
+        if (nline == -1)
+            nline = _m_skill->objectName().indexOf("_");
+        QString engskillname = _m_skill->objectName().left(nline);
+        QString generalName = "";
+
+        foreach (const Player *p, Self->getSiblings()) {
+            const General* general = p->getGeneral();
+            if (general->hasSkill(engskillname)) {
+                generalName = general->objectName();
+                break;
+            }
+        }
+        if (generalName == "") {
+            const General* general = Self->getGeneral();
+            if (general && general->hasSkill(engskillname))
+                generalName = general->objectName();
+        }
+        if (generalName != "") {
+            QString path = G_ROOM_SKIN.getButtonPixmapPath(G_ROOM_SKIN.S_SKIN_KEY_BUTTON_SKILL, getSkillTypeString(_m_skillType), _m_state);
+            int n = path.lastIndexOf("/");
+            path = path.left(n + 1) + generalName + ".png";
+            QPixmap pixmap = G_ROOM_SKIN.getPixmapFromFileName(path);
+            if (!pixmap.isNull()) {
+                int h = pixmap.height() - _m_bgPixmap[(int)_m_state].height();
+                painter->drawPixmap(0, -h, pixmap.width(), pixmap.height(), pixmap);
+            }
+        }
+    }
+
+    if (Self->isSkillInvalid(_m_skill->objectName())) {
+        painter->setRenderHints(QPainter::HighQualityAntialiasing);
+        QPen pen(Qt::red);
+        pen.setWidth(3);
+        painter->setPen(pen);
+        painter->drawLine(25, 6, _m_size.width() - 6, 20);
+        painter->drawLine(25, 20, _m_size.width() - 6, 6);
+    }
 }
 
 QSanSkillButton *QSanInvokeSkillDock::addSkillButtonByName(const QString &skillName)
@@ -337,10 +375,7 @@ void QSanInvokeSkillDock::update()
 {
     if (!_m_buttons.isEmpty()) {
         QList<QSanInvokeSkillButton *> regular_buttons, lordskill_buttons, all_buttons;
-        int banling_fix = 0;
         foreach (QSanInvokeSkillButton *btn, _m_buttons) {
-            if (btn->getSkill()->objectName() == "banling")
-                banling_fix = 5;
             if (!btn->getSkill()->shouldBeVisible(Self)) {
                 btn->setVisible(false);
                 continue;
@@ -397,11 +432,11 @@ void QSanInvokeSkillDock::update()
         for (int i = 0; i < rows; i++) {
             int rowTop = (RoomSceneInstance->m_skillButtonSank) ? (-rowH - 2 * (rows - i - 1)) :
                 ((-rows + i) * rowH);
-            int btnWidth = (_m_width - 10) / btnNum[i];
+            int btnWidth = (_m_width - 20) / btnNum[i];
             for (int j = 0; j < btnNum[i]; j++) {
                 QSanInvokeSkillButton *button = regular_buttons[m++];//all_buttons[m++];
                 button->setButtonWidth((QSanInvokeSkillButton::SkillButtonWidth)(btnNum[i] - 1));
-                button->setPos(btnWidth * j + banling_fix, rowTop);
+                button->setPos(btnWidth * j, rowTop);
             }
 
         }
@@ -423,8 +458,9 @@ void QSanInvokeSkillDock::update()
                 if (btntype == 0)
                     btntype = 1;
                 button->setButtonWidth((QSanInvokeSkillButton::SkillButtonWidth)(btntype));
-                button->setPos(0 - btnWidth * (j + 1) - 15, rowTop - G_DASHBOARD_LAYOUT.m_normalHeight);
-                //-G_DASHBOARD_LAYOUT.m_rightWidth
+                //button->setPos(0 - btnWidth * (j + 1) - 15, rowTop - G_DASHBOARD_LAYOUT.m_normalHeight);
+                button->setPos(0 - btnWidth * (j + 1) - G_DASHBOARD_LAYOUT.m_rightWidth + 45, rowTop - G_DASHBOARD_LAYOUT.m_normalHeight);
+                //
             }
 
         }

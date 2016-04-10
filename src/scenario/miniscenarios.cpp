@@ -25,10 +25,13 @@ void MiniSceneRule::assign(QStringList &generals, QStringList &roles) const
     }
 }
 
-bool MiniSceneRule::trigger(TriggerEvent triggerEvent, Room *room, ServerPlayer *player, QVariant &) const
+bool MiniSceneRule::effect(TriggerEvent, Room *, QSharedPointer<SkillInvokeDetail>, QVariant &) const
 {
+    return false;
+    
+    /*
     if (triggerEvent == EventPhaseStart) {
-        if (player == room->getTag("Starter").value<PlayerStar>()) {
+        if (player == room->getTag("Starter").value<ServerPlayer *>()) {
             if (player->getPhase() == Player::Start) {
                 room->setTag("Round", room->getTag("Round").toInt() + 1);
 
@@ -36,7 +39,7 @@ bool MiniSceneRule::trigger(TriggerEvent triggerEvent, Room *room, ServerPlayer 
                     if (ex_options["beforeStartRound"].toInt() == room->getTag("Round").toInt())
                         room->gameOver(ex_options["beforeStartRoundWinner"].toString());
                 }
-            } else if (player->getPhase() == Player::NotActive) {
+            } else if (!player->isCurrent()) {
                 if (!ex_options["afterRound"].isNull()) {
                     if (ex_options["afterRound"].toInt() == room->getTag("Round").toInt())
                         room->gameOver(ex_options["afterRoundWinner"].toString());
@@ -44,25 +47,25 @@ bool MiniSceneRule::trigger(TriggerEvent triggerEvent, Room *room, ServerPlayer 
             }
         }
 
-        if (player->getPhase() == Player::RoundStart && this->players.first()["beforeNext"] != QString()) {
+        if (player->getPhase() == Player::RoundStart && players.first()["beforeNext"] != QString()) {
             if (player->tag["playerHasPlayed"].toBool())
-                room->gameOver(this->players.first()["beforeNext"]);
+                room->gameOver(players.first()["beforeNext"]);
             else player->tag["playerHasPlayed"] = true;
         }
 
-        if (player->getPhase() != Player::NotActive) return false;
-        if (player->getState() == "robot" || this->players.first()["singleTurn"] == QString())
+        if (player->isCurrent()) return false;
+        if (player->getState() == "robot" || players.first()["singleTurn"] == QString())
             return false;
-        room->gameOver(this->players.first()["singleTurn"]);
+        room->gameOver(players.first()["singleTurn"]);
         return true;
     } else if (triggerEvent == FetchDrawPileCard) {
-        if (this->players.first()["endedByPile"] != QString()) {
+        if (players.first()["endedByPile"] != QString()) {
             const QList<int> &drawPile = room->getDrawPile();
             foreach (int id, m_fixedDrawCards) {
                 if (drawPile.contains(id))
                     return false;
             }
-            room->gameOver(this->players.first()["endedByPile"]);
+            room->gameOver(players.first()["endedByPile"]);
             return true;
         }
         return false;
@@ -263,7 +266,7 @@ bool MiniSceneRule::trigger(TriggerEvent triggerEvent, Room *room, ServerPlayer 
         room->updateStateItem();
         return true;
     } else
-        return false;
+        return false;*/
 }
 
 void MiniSceneRule::addNPC(QString feature)
@@ -342,7 +345,7 @@ void MiniScene::setupCustom(QString name) const
     name.prepend("etc/customScenes/");
     name.append(".txt");
 
-    MiniSceneRule *arule = qobject_cast<MiniSceneRule *>(this->getRule());
+    MiniSceneRule *arule = qobject_cast<MiniSceneRule *>(getRule());
     arule->loadSetting(name);
 }
 

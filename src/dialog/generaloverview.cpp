@@ -271,9 +271,10 @@ GeneralOverview::GeneralOverview(QWidget *parent)
     ui->skillTextEdit->setProperty("description", true);
     if (ServerInfo.DuringGame && ServerInfo.EnableCheat) {
         ui->changeGeneralButton->show();
-        ui->changeGeneral2Button->show();
+        //ui->changeGeneral2Button->show();
+        ui->changeGeneral2Button->hide();
         connect(ui->changeGeneralButton, SIGNAL(clicked()), this, SLOT(askTransfiguration()));
-        connect(ui->changeGeneral2Button, SIGNAL(clicked()), this, SLOT(askTransfiguration()));
+        //connect(ui->changeGeneral2Button, SIGNAL(clicked()), this, SLOT(askTransfiguration()));
     } else {
         ui->changeGeneralButton->hide();
         ui->changeGeneral2Button->hide();
@@ -309,7 +310,10 @@ void GeneralOverview::fillGenerals(const QList<const General *> &generals, bool 
         QString general_name = general->objectName();
         QString name, kingdom, gender, max_hp, package;
 
-        name = Sanguosha->translate(general_name);
+        //we show full name here, since long name cannot be  displayed clearly on carditem
+        name = Sanguosha->translate("!" + general->objectName());
+        if (name.startsWith("!"))
+            name = Sanguosha->translate(general->objectName());
         kingdom = Sanguosha->translate(general->getKingdom());
         gender = general->isMale() ? tr("Male") : (general->isFemale() ? tr("Female") : tr("NoGender"));
         max_hp = QString::number(general->getMaxHp());
@@ -361,66 +365,17 @@ void GeneralOverview::fillGenerals(const QList<const General *> &generals, bool 
             package_item->setToolTip(tr("<font color=#FFFF33>This is an Lua extension</font>"));
         }
         //add color for touhou kingdoms and packages.
-        if (general->getPackage() == "protagonist")
-            package_item->setBackgroundColor(QColor(138, 43, 226));
-        if (general->getKingdom() == "zhu")
-            kingdom_item->setBackgroundColor(QColor(138, 43, 226));
-
-        if (general->getPackage() == "th06")
-            package_item->setBackgroundColor(QColor(255, 80, 1));
-        if (general->getKingdom() == "hmx")
-            kingdom_item->setBackgroundColor(QColor(255, 80, 1));
-
-        if (general->getPackage() == "th07")
-            package_item->setBackgroundColor(QColor(102, 102, 255));
-        if (general->getKingdom() == "yym")
-            kingdom_item->setBackgroundColor(QColor(102, 102, 255));
-
-        if (general->getPackage() == "th08")
-            package_item->setBackgroundColor(QColor(102, 102, 102));
-        if (general->getKingdom() == "yyc")
-            kingdom_item->setBackgroundColor(QColor(102, 102, 102));
-
-        if (general->getPackage() == "th09")
-            package_item->setBackgroundColor(QColor(51, 204, 0));
-        if (general->getKingdom() == "zhan")
-            kingdom_item->setBackgroundColor(QColor(51, 204, 0));
-
-        if (general->getPackage() == "th10")
-            package_item->setBackgroundColor(QColor(139, 69, 19));
-        if (general->getKingdom() == "fsl")
-            kingdom_item->setBackgroundColor(QColor(139, 69, 19));
-
-        if (general->getPackage() == "th11")
-            package_item->setBackgroundColor(QColor(255, 102, 153));
-        if (general->getKingdom() == "dld")
-            kingdom_item->setBackgroundColor(QColor(255, 102, 153));
-
-        if (general->getPackage() == "th12")
-            package_item->setBackgroundColor(QColor(32, 178, 170));
-        if (general->getKingdom() == "xlc")
-            kingdom_item->setBackgroundColor(QColor(32, 178, 170));
-
-        if (general->getPackage() == "th13")
-            package_item->setBackgroundColor(QColor(0, 102, 0));
-        if (general->getKingdom() == "slm")
-            kingdom_item->setBackgroundColor(QColor(0, 102, 0));
-
-        if (general->getPackage() == "th14")
-            package_item->setBackgroundColor(QColor(138, 43, 226));
-        if (general->getKingdom() == "hzc")
-            kingdom_item->setBackgroundColor(QColor(138, 43, 226));
-
-
-        if (general->getPackage() == "th99")
-            package_item->setBackgroundColor(QColor(255, 165, 0));
-        if (general->getKingdom() == "wai")
-            kingdom_item->setBackgroundColor(QColor(255, 165, 0));
-
-        if (general->getPackage() == "touhougod")
-            package_item->setBackgroundColor(QColor(238, 238, 0));
-        if (general->getKingdom() == "touhougod")
-            kingdom_item->setBackgroundColor(QColor(238, 238, 0));
+        QColor kingdomColor = Sanguosha->getKingdomColor(general->getKingdom());
+        package_item->setBackgroundColor(kingdomColor);
+        kingdom_item->setBackgroundColor(kingdomColor);
+        if ((11 * kingdomColor.blue() + 30 * kingdomColor.red() + 59 * kingdomColor.green()) / 100 <= 0x7f) {
+            QBrush b = package_item->foreground();
+            b.setColor(Qt::white);
+            package_item->setForeground(b);
+            QBrush b2 = kingdom_item->foreground();
+            b2.setColor(Qt::white);
+            kingdom_item->setForeground(b2);
+        }
 
         ui->tableWidget->setItem(i, 0, nickname_item);
         ui->tableWidget->setItem(i, 1, name_item);
@@ -484,7 +439,23 @@ QString GeneralOverview::getIllustratorInfo(const QString &general_name)
         if (!illustrator_text.startsWith("illustrator:"))
             return illustrator_text;
         else
-            return Sanguosha->translate("DefaultIllustrator");
+            return tr("Unknown");
+    }
+}
+
+QString GeneralOverview::getOriginInfo(const QString &general_name)
+{
+    int skin_index = Config.value(QString("HeroSkin/%1").arg(general_name), 0).toInt();
+    QString suffix = (skin_index > 0) ? QString("_%1").arg(skin_index) : QString();
+    QString illustrator_text = Sanguosha->translate(QString("origin:%1%2").arg(general_name).arg(suffix));
+    if (!illustrator_text.startsWith("origin:"))
+        return illustrator_text;
+    else {
+        illustrator_text = Sanguosha->translate("origin:" + general_name);
+        if (!illustrator_text.startsWith("origin:"))
+            return illustrator_text;
+        else
+            return tr("Unknown");
     }
 }
 
@@ -627,7 +598,7 @@ void GeneralOverview::on_tableWidget_itemSelectionChanged()
     if (!designer_text.startsWith("designer:"))
         ui->designerLineEdit->setText(designer_text);
     else
-        ui->designerLineEdit->setText(tr("Official"));
+        ui->designerLineEdit->setText(tr("TouhouSatsu Design Team"));
 
     QString cv_text = Sanguosha->translate("cv:" + general->objectName());
     if (cv_text.startsWith("cv:"))
@@ -635,14 +606,15 @@ void GeneralOverview::on_tableWidget_itemSelectionChanged()
     if (!cv_text.startsWith("cv:"))
         ui->cvLineEdit->setText(cv_text);
     else
-        ui->cvLineEdit->setText(tr("Official"));
+        ui->cvLineEdit->setText(tr("Temporily None"));
 
     ui->illustratorLineEdit->setText(getIllustratorInfo(general->objectName()));
+    ui->originLineEdit->setText(getOriginInfo(general->objectName()));
 
     button_layout->addStretch();
     ui->skillTextEdit->append(general->getSkillDescription(true, false));
     ui->changeGeneralButton->setEnabled(Self && Self->getGeneralName() != general->objectName());
-    ui->changeGeneral2Button->setEnabled(Self && Self->getGeneral2Name() != general->objectName());
+    //ui->changeGeneral2Button->setEnabled(Self && Self->getGeneral2Name() != general->objectName());
 }
 
 void GeneralOverview::playAudioEffect()
@@ -657,16 +629,17 @@ void GeneralOverview::playAudioEffect()
 
 void GeneralOverview::askTransfiguration()
 {
-    QPushButton *button = qobject_cast<QPushButton *>(sender());
-    bool isSecondaryHero = (button && button->objectName() == ui->changeGeneral2Button->objectName());
+    //QPushButton *button = qobject_cast<QPushButton *>(sender());
+    //bool isSecondaryHero = (button && button->objectName() == ui->changeGeneral2Button->objectName());
     if (ServerInfo.EnableCheat && Self) {
-        if (isSecondaryHero)
-            ui->changeGeneral2Button->setEnabled(false);
-        else
-            ui->changeGeneralButton->setEnabled(false);
+        //if (isSecondaryHero)
+        //    ui->changeGeneral2Button->setEnabled(false);
+        //else
+        //    ui->changeGeneralButton->setEnabled(false);
         int row = ui->tableWidget->currentRow();
         QString general_name = ui->tableWidget->item(row, 0)->data(Qt::UserRole).toString();
-        ClientInstance->requestCheatChangeGeneral(general_name, isSecondaryHero);
+        //ClientInstance->requestCheatChangeGeneral(general_name, isSecondaryHero);
+        ClientInstance->requestCheatChangeGeneral(general_name, false);
     }
 }
 

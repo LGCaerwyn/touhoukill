@@ -3,35 +3,25 @@
 
 config = {
 	developers = {
-		"Yanguam" ,
-		"Fsu0413" ,
-		"Fu Nima" ,
-		"0147certainly" ,
-		"忧郁の月兔" ,
-		"lwtmusou",
 	} ,
 
 	kingdoms = { 
-	"zhu", "hmx","yym","yyc","zhan","fsl","dld","xlc","slm","hzc","wai","touhougod" ,
-	"wei", "shu", "wu", "qun", "god" 
+	 "zhu", "pc98", "hmx","yym","yyc","zhan","fsl","dld","xlc","slm","hzc", "gzz","wai","touhougod" ,
 	},
 	kingdom_colors = {
-		wei = "#547998",
-		shu = "#D0796C",
-		wu = "#4DB873",
-		qun = "#8A807A",
-		god = "#96943D",
-		zhu ="#6b21b6",--"#CC00FF",
-		hmx = "#cb0b0b",--"red",
-		yym = "#2121b9",--"#547998",
-		yyc = "#6b6b6b",--"#8A807A",
-		zhan = "#21b621",--"Green",
-		fsl = "#b68121",--"yellow",
-		dld = "#b6216e",--"#D0796C",
-		xlc = "#21b9b9",--"LightSeaGreen",
-		slm = "#37a46b",--"#4DB873",
-		hzc ="purple",
-		wai = "#cf6c0b",--"orange",
+		pc98 = "#0000ff";
+		zhu ="#853dcc",
+		hmx = "#cc1414",
+		yym = "#3d3dcc",
+		yyc = "#999999",
+		zhan = "#3dcc3d",
+		fsl = "#cc9c3d",
+		dld = "#cc3d85",
+		xlc = "#3dcccc",
+		slm ="#66cc99",
+		hzc ="#aacc66",
+		gzz = "#202020" ,
+		wai = "#cc7014",
 		touhougod = "#96943D",
 	},
 
@@ -44,22 +34,25 @@ config = {
 		"touhoucard",
 		
 		--武将包
-		"protagonist",
-		"th06",
-		"th07",
-		"th08",
-		"th09",
-		"th10",
-		"th11",
-		"th12",
-		"th13",
-		"th14",
-		"th99",
-		"thxwm",
-		"thndj",
-		"touhougod",
+		"Protagonist",
+		"TH0105",
+		"TH06",
+		"TH07",
+		"TH08",
+		"TH09",
+		"TH10",
+		"TH11",
+		"TH12",
+		"TH13",
+		"TH14",
+		--"TH15", --0.8不对应
+		"TH99",
+		"THXWM",
+		"THNDJ",
+		"TouhouGod",
 		"Standard", --此包内带pattern的定义 不能屏蔽。。。
 		"Test",	
+		
 	},
 
 	surprising_generals = {
@@ -127,9 +120,6 @@ config = {
 	},
 
 	roles_ban = { 
-		"zhan010",
-		"shen011",  
-		"shen020"
 	},
 
 	kof_ban = {
@@ -151,5 +141,26 @@ config = {
 	},
 
 	convert_pairs = {
+	},
+	
+	bgm_convert_pairs = {
+		"kosuzu->akyuu",
+		"tokiko->rinnosuke",
+		"yatsuhashi->benben",
+		"aya_xwm->aya",
+		"eirin_god->eirin",
+		"unzan->ichirin",
+		"kaguya_god->kaguya",
+		"mokou_sp->mokou",
+		"nue_slm->nue",
+		"remilia_xwm->remilia_god",
+		"sanae_slm|sanae_sp->sanae",
+		"satori_xwm->satori",
+		"shikieiki_god->shikieiki",
+		"moukou_xwm->shirasawa",
+		"yorihime->toyohime",
+		"youmu_ndj|youmu_slm->youmu",
+		"yukari_sp->yukari",
+		"yuyuko_sp->yuyuko"
 	}
 }

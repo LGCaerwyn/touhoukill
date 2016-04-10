@@ -3,49 +3,60 @@
 
 #include "package.h"
 #include "card.h"
-#include "generaloverview.h" //for zun?
 
-class hongwuCard : public SkillCard
+class HongwuCard : public SkillCard
 {
     Q_OBJECT
 
 public:
-    Q_INVOKABLE hongwuCard();
+    Q_INVOKABLE HongwuCard();
 
     virtual void use(Room *room, ServerPlayer *source, QList<ServerPlayer *> &targets) const;
 };
 
 
-class shenqiangCard : public SkillCard
+class ShenqiangCard : public SkillCard
 {
     Q_OBJECT
 
 public:
-    Q_INVOKABLE shenqiangCard();
+    Q_INVOKABLE ShenqiangCard();
 
     virtual void use(Room *room, ServerPlayer *source, QList<ServerPlayer *> &targets) const;
 };
 
-class huimieCard : public SkillCard
+class HuimieCard : public SkillCard
 {
     Q_OBJECT
 
 public:
-    Q_INVOKABLE huimieCard();
+    Q_INVOKABLE HuimieCard();
 
     virtual bool targetFilter(const QList<const Player *> &targets, const Player *to_select, const Player *Self) const;
     virtual void use(Room *room, ServerPlayer *source, QList<ServerPlayer *> &targets) const;
 };
 
-class shenshouCard : public SkillCard
+class ShenshouCard : public SkillCard
 {
     Q_OBJECT
 
 public:
-    Q_INVOKABLE shenshouCard();
+    Q_INVOKABLE ShenshouCard();
 
     virtual void use(Room *room, ServerPlayer *source, QList<ServerPlayer *> &targets) const;
 };
+
+class FengyinCard : public SkillCard
+{
+    Q_OBJECT
+
+public:
+    Q_INVOKABLE FengyinCard();
+
+    virtual bool targetFilter(const QList<const Player *> &targets, const Player *to_select, const Player *Self) const;
+    virtual void use(Room *room, ServerPlayer *source, QList<ServerPlayer *> &targets) const;
+};
+
 
 class HuaxiangCard : public SkillCard
 {
@@ -62,60 +73,45 @@ public:
     virtual const Card *validateInResponse(ServerPlayer *user) const;
 };
 
-
-
-class chaorenpreventrecast : public SkillCard
+class ZiwoCard : public SkillCard
 {
     Q_OBJECT
 
 public:
-    Q_INVOKABLE chaorenpreventrecast();
-
-    virtual bool targetFilter(const QList<const Player *> &targets, const Player *to_select, const Player *Self) const;
-    virtual bool targetsFeasible(const QList<const Player *> &targets, const Player *Self) const;
-    virtual const Card *validate(CardUseStruct &card_use) const;
-
-};
-
-class ziwoCard : public SkillCard
-{
-    Q_OBJECT
-
-public:
-    Q_INVOKABLE ziwoCard();
+    Q_INVOKABLE ZiwoCard();
 
     virtual void use(Room *room, ServerPlayer *source, QList<ServerPlayer *> &targets) const;
 };
 
-class chaowoCard : public SkillCard
+class ChaowoCard : public SkillCard
 {
     Q_OBJECT
 
 public:
-    Q_INVOKABLE chaowoCard();
+    Q_INVOKABLE ChaowoCard();
 
     virtual bool targetFilter(const QList<const Player *> &targets, const Player *to_select, const Player *Self) const;
     virtual void use(Room *room, ServerPlayer *source, QList<ServerPlayer *> &targets) const;
 };
 
 
-class wendaoCard : public SkillCard
+class WendaoCard : public SkillCard
 {
     Q_OBJECT
 
 public:
-    Q_INVOKABLE wendaoCard();
+    Q_INVOKABLE WendaoCard();
 
     virtual bool targetFilter(const QList<const Player *> &targets, const Player *to_select, const Player *Self) const;
     virtual void use(Room *room, ServerPlayer *source, QList<ServerPlayer *> &targets) const;
 };
 
-class touhougodPackage : public Package
+class TouhouGodPackage : public Package
 {
     Q_OBJECT
 
 public:
-    touhougodPackage();
+    TouhouGodPackage();
 };
 
 #endif
