@@ -151,7 +151,7 @@ bool PindianStruct::isSuccess() const
 
 JudgeStruct::JudgeStruct()
     : who(NULL), card(NULL), pattern("."), good(true), time_consuming(false),
-    negative(false), play_animation(true), retrial_by_response(NULL), _m_result(TRIAL_RESULT_UNKNOWN)
+    negative(false), play_animation(true), retrial_by_response(NULL), relative_player(NULL), _m_result(TRIAL_RESULT_UNKNOWN)
 {
 }
 
@@ -348,7 +348,7 @@ bool SkillInvokeDetail::operator <(const SkillInvokeDetail &arg2) const // the o
             RoomThread *thread = qobject_cast<RoomThread *>(skill->thread());
             if (thread == NULL)
                 return NULL;
-            
+
             return thread->getRoom();
         }
 
@@ -516,5 +516,10 @@ DrawNCardsStruct::DrawNCardsStruct()
 
 SkillInvalidStruct::SkillInvalidStruct()
     : player(NULL), skill(NULL), invalid(false)
+{
+}
+
+ExtraTurnStruct::ExtraTurnStruct()
+    : player(NULL), set_phases(QList<Player::Phase>()), reason(QString()), extraTarget(NULL)
 {
 }

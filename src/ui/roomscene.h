@@ -150,6 +150,7 @@ class RoomScene : public QGraphicsScene
 
 public:
     RoomScene(QMainWindow *main_window);
+    ~RoomScene();
     void changeTextEditBackground();
     void adjustItems();
     void showIndicator(const QString &from, const QString &to);
@@ -309,6 +310,8 @@ private:
     QGraphicsPixmapItem *m_rolesBox;
     QGraphicsTextItem *m_pileCardNumInfoTextBox;
     QGraphicsPixmapItem *m_tableBg;
+    QString image_path;
+    QString bgm_path;
     int m_tablew;
     int m_tableh;
 

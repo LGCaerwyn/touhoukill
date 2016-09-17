@@ -96,9 +96,9 @@ public:
     const Card *pendingCard() const;
 
     void expandPileCards(const QString &pile_name);
-    void expandPileCard();
+    void expandSpecialCard();
     void retractPileCards(const QString &pile_name);
-    void retractPileCard();
+    void retractSpecialCard();
     inline const QStringList &getPileExpanded() const
     {
         return _m_pile_expanded;
@@ -126,6 +126,8 @@ public:
 
 public slots:
     virtual void updateAvatar();
+    void updateChaoren();
+    void updateShown();
 
     void sortCards();
     void beginSorting();
@@ -247,8 +249,8 @@ protected:
     const ViewAsSkill *view_as_skill;
     const FilterSkill *filter;
     QStringList _m_pile_expanded;
-    QList<int> _m_id_expanded;
-    
+    QList<int> _m_id_expanded; //just for chaoren
+
     // for equip skill/selections
     PixmapAnimation *_m_equipBorders[5];
     QSanSkillButton *_m_equipSkillBtns[5];

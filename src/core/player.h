@@ -24,6 +24,8 @@ class Player : public QObject
     Q_PROPERTY(int renhp READ getRenHp WRITE setRenHp)
     Q_PROPERTY(int linghp READ getLingHp WRITE setLingHp)
     Q_PROPERTY(int maxhp READ getMaxHp WRITE setMaxHp)
+    Q_PROPERTY(int chaoren READ getChaoren WRITE setChaoren)
+    //Q_PROPERTY(QList<int> shown_handcards READ getShownHandcards WRITE setShownHandcards)
     Q_PROPERTY(QString kingdom READ getKingdom WRITE setKingdom)
     Q_PROPERTY(bool wounded READ isWounded STORED false)
     Q_PROPERTY(QString role READ getRole WRITE setRole)
@@ -70,6 +72,12 @@ public:
     QString screenName() const;
 
     // property setters/getters
+    int getChaoren() const;//for chaoren
+    void setChaoren(int chaoren);
+    QList<int> getShownHandcards() const;
+    void setShownHandcards(QList<int> ids);
+    bool isShownHandcard(int id);
+
     int getHp() const;
     int getRenHp() const;//for banling
     int getLingHp() const;
@@ -276,6 +284,7 @@ protected:
     QSet<QString> flags;
     QHash<QString, int> history;
     QStringList skill_invalid;
+    QList<int> shown_handcards;
 
 private:
     QString screen_name;
@@ -284,6 +293,7 @@ private:
     General::Gender m_gender;
     int hp, max_hp;
     int renhp, linghp;//for banling
+    int chaoren;
     QString kingdom;
     QString role;
     bool role_shown;
@@ -309,6 +319,8 @@ signals:
     void kingdom_changed();
     void phase_changed();
     void owner_changed(bool owner);
+    void chaoren_changed();
+    void showncards_changed();
 };
 
 #endif

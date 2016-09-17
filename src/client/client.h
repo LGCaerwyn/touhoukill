@@ -132,7 +132,7 @@ public:
     void setCardFlag(const QVariant &pattern_str);
     void updateCard(const QVariant &arg);
     void setPlayerSkillInvalidity(const QVariant &arg);
-
+    void setShownHandCards(const QVariant &card_str);
 
     void fillAG(const QVariant &cards_str);
     void takeAG(const QVariant &take_str);
@@ -208,7 +208,6 @@ public:
         return available_cards;
     }
     void clearHighlightSkillName();
-    void clearLordInfo();
     // public fields
     bool m_isDiscardActionRefusable;
     bool m_canDiscardEquip;
@@ -218,7 +217,6 @@ public:
     int min_num;
     QString skill_name;
     QString highlight_skill_name; //for highlighting skill button when client is asked to use skill
-    QString lord_kingdom; //for playing touhou bgm
     QString lord_name;
 
     QList<const Card *> discarded_list;

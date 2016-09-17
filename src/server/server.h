@@ -75,7 +75,6 @@ class ServerDialog : public QDialog
 
 public:
     ServerDialog(QWidget *parent);
-    void ensureEnableAI();
     bool config();
 
 private:
@@ -137,6 +136,7 @@ private:
     QCheckBox *ai_delay_altered_checkbox;
     QSpinBox *ai_delay_ad_spinbox;
     QCheckBox *ai_prohibit_blind_attack_checkbox;
+    QCheckBox *limit_robot_checkbox;
     QCheckBox *surrender_at_death_checkbox;
     QLabel *luck_card_label;
     QSpinBox *luck_card_spinbox;
@@ -156,7 +156,6 @@ private:
     QButtonGroup *mode_group;
 
 private slots:
-    //void setMaxHpSchemeBox();
 
     void onOkButtonClicked();
     void onDetectButtonClicked();

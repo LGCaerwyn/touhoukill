@@ -109,7 +109,7 @@ public:
     virtual bool isEnabledAtResponse(const Player *player, const QString &pattern) const
     {
         return Sanguosha->currentRoomState()->getCurrentCardUseReason() == CardUseStruct::CARD_USE_REASON_RESPONSE_USE
-            && pattern == "slash" && EquipSkill::equipAvailable(player, EquipCard::WeaponLocation, objectName());
+            && matchAvaliablePattern("slash", pattern) && EquipSkill::equipAvailable(player, EquipCard::WeaponLocation, objectName());
     }
 
     virtual const Card *viewAs(const Card *originalCard) const
@@ -174,6 +174,32 @@ GudingBlade::GudingBlade(Suit suit, int number)
 
 
 
+
+class IronArmorSkill : public ProhibitSkill
+{
+public:
+    IronArmorSkill() : ProhibitSkill("IronArmor")
+    {
+    }
+
+    virtual bool isProhibited(const Player *from, const Player *to, const Card *card, const QList<const Player *> &) const
+    {
+        if (EquipSkill::equipAvailable(to, EquipCard::ArmorLocation, objectName())) {
+            return card->isKindOf("FireAttack")
+                || card->isKindOf("IronChain")
+                || card->isKindOf("NatureSlash");
+        }
+        return false;
+    }
+};
+
+IronArmor::IronArmor(Suit suit, int number)
+    : Armor(suit, number)
+{
+    setObjectName("IronArmor");
+}
+
+
 class VineSkill : public ArmorSkill
 {
 public:
@@ -189,11 +215,13 @@ public:
             SlashEffectStruct effect = data.value<SlashEffectStruct>();
             if (equipAvailable(effect.to, EquipCard::ArmorLocation, objectName()) && effect.nature == DamageStruct::Normal)
                 return QList<SkillInvokeDetail>() << SkillInvokeDetail(this, effect.to, effect.to, NULL, true);
-        } else if (triggerEvent == CardEffected) {
+        }
+        else if (triggerEvent == CardEffected) {
             CardEffectStruct effect = data.value<CardEffectStruct>();
             if (equipAvailable(effect.to, EquipCard::ArmorLocation, objectName()) && effect.card != NULL && (effect.card->isKindOf("SavageAssault") || effect.card->isKindOf("ArcheryAttack")))
                 return QList<SkillInvokeDetail>() << SkillInvokeDetail(this, effect.to, effect.to, NULL, true);
-        } else if (triggerEvent == DamageInflicted) {
+        }
+        else if (triggerEvent == DamageInflicted) {
             DamageStruct damage = data.value<DamageStruct>();
             if (equipAvailable(damage.to, EquipCard::ArmorLocation, objectName()) && damage.nature == DamageStruct::Fire)
                 return QList<SkillInvokeDetail>() << SkillInvokeDetail(this, damage.to, damage.to, NULL, true);
@@ -217,7 +245,8 @@ public:
 
             effect.to->setFlags("Global_NonSkillNullify");
             return true;
-        } else if (triggerEvent == CardEffected) {
+        }
+        else if (triggerEvent == CardEffected) {
             CardEffectStruct effect = data.value<CardEffectStruct>();
             room->setEmotion(invoke->invoker, "armor/vine");
             LogMessage log;
@@ -229,7 +258,8 @@ public:
 
             effect.to->setFlags("Global_NonSkillNullify");
             return true;
-        } else if (triggerEvent == DamageInflicted) {
+        }
+        else if (triggerEvent == DamageInflicted) {
             DamageStruct damage = data.value<DamageStruct>();
             room->setEmotion(invoke->invoker, "armor/vineburn");
             LogMessage log;
@@ -251,6 +281,7 @@ Vine::Vine(Suit suit, int number)
 {
     setObjectName("Vine");
 }
+
 
 class SilverLionSkill : public ArmorSkill
 {
@@ -276,7 +307,9 @@ public:
                 if (move.from_places[i] != Player::PlaceEquip) continue;
                 const Card *card = Sanguosha->getEngineCard(move.card_ids[i]);
                 if (card->objectName() == objectName()) {
-                    if (!move.from->isWounded()) {
+                    // function  equipAvailable()    need armor remained in equip area
+                    if (!move.from->isWounded() || !move.from->tag["Qinggang"].toStringList().isEmpty() || move.from->getMark("Armor_Nullified") > 0
+                        || move.from->getMark("Equips_Nullified_to_Yourself") > 0){
                         move.from->setFlags("-SilverLionRecover");
                         return QList<SkillInvokeDetail>();
                     }
@@ -449,14 +482,18 @@ void IronChain::onUse(Room *room, const CardUseStruct &card_use) const
 
 void IronChain::onEffect(const CardEffectStruct &effect) const
 {
+    //an alternative approach
+    effect.to->getRoom()->setPlayerProperty(effect.to, "chained", !effect.to->isChained());
+    //original method
+    /*
     effect.to->setChained(!effect.to->isChained());
 
     Room *room = effect.to->getRoom();
-
+    
     room->broadcastProperty(effect.to, "chained");
     room->setEmotion(effect.to, "chain");
     QVariant v = QVariant::fromValue(effect.to);
-    room->getThread()->trigger(ChainStateChanged, room, v);
+    room->getThread()->trigger(ChainStateChanged, room, v);*/
 }
 
 SupplyShortage::SupplyShortage(Card::Suit suit, int number)
@@ -495,9 +532,9 @@ ManeuveringPackage::ManeuveringPackage()
     QList<Card *> cards;
 
     // spade
-    cards //<< new IceSlash(Card::Spade, 4)
-        << new GudingBlade(Card::Spade, 1)
-        << new Vine(Card::Spade, 2)
+    cards << new GudingBlade(Card::Spade, 1)
+        //<< new Vine(Card::Spade, 2)
+        << new IronArmor(Card::Spade, 2)
         << new Analeptic(Card::Spade, 3)
         << new ThunderSlash(Card::Spade, 4)
         << new ThunderSlash(Card::Spade, 5)
@@ -562,7 +599,7 @@ ManeuveringPackage::ManeuveringPackage()
         card->setParent(this);
 
     skills << new GudingBladeSkill << new FanSkill
-        << new VineSkill << new SilverLionSkill;
+        << new VineSkill << new SilverLionSkill << new IronArmorSkill;
 }
 
 ADD_PACKAGE(Maneuvering)

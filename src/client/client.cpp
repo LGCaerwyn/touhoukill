@@ -82,7 +82,7 @@ Client::Client(QObject *parent, const QString &filename)
     m_callbacks[S_COMMAND_SYNCHRONIZE_DISCARD_PILE] = &Client::synchronizeDiscardPile;
     m_callbacks[S_COMMAND_CARD_FLAG] = &Client::setCardFlag;
     m_callbacks[S_COMMAND_SET_SKILL_INVALIDITY] = &Client::setPlayerSkillInvalidity;
-
+    m_callbacks[S_COMMAND_SET_SHOWN_HANDCARD] = &Client::setShownHandCards;
 
 
     // interactive methods
@@ -220,6 +220,22 @@ void Client::setPlayerSkillInvalidity(const QVariant &arg)
         emit skill_invalidity_changed(player);
     }
 }
+
+void Client::setShownHandCards(const QVariant &card_var)
+{
+    JsonArray card_str = card_var.value<JsonArray>();
+    if (card_str.size() != 2) return;
+    if (!JsonUtils::isString(card_str[0])) return;
+
+    QString who = card_str[0].toString();
+    QList<int> card_ids;
+    JsonUtils::tryParse(card_str[1], card_ids);
+
+    ClientPlayer *player = getPlayer(who);
+    player->setShownHandcards(card_ids);
+    player->changePile("shown_card", true, card_ids);
+}
+
 
 void Client::signup()
 {
@@ -653,9 +669,10 @@ void Client::startGame(const QVariant &arg)
 {
     Sanguosha->registerRoom(this);
     _m_roomState.reset();
+
     JsonArray arr = arg.value<JsonArray>();
     lord_name = arr[0].toString();
-    lord_kingdom = arr[1].toString();
+
     QList<ClientPlayer *> players = findChildren<ClientPlayer *>();
     alive_count = players.count();
 
@@ -712,20 +729,24 @@ Client::Status Client::getStatus() const
 void Client::cardLimitation(const QVariant &limit)
 {
     JsonArray args = limit.value<JsonArray>();
-    if (args.size() != 4) return;
+    if (args.size() != 5) return;
+
+    QString object_name = args[4].toString();
+    ClientPlayer *player = getPlayer(object_name);
+    if (!player) return;
 
     bool set = args[0].toBool();
     bool single_turn = args[3].toBool();
     if (args[1].isNull() && args[2].isNull()) {
-        Self->clearCardLimitation(single_turn);
+        player->clearCardLimitation(single_turn);
     } else {
         if (!JsonUtils::isString(args[1]) || !JsonUtils::isString(args[2])) return;
         QString limit_list = args[1].toString();
         QString pattern = args[2].toString();
         if (set)
-            Self->setCardLimitation(limit_list, pattern, single_turn);
+            player->setCardLimitation(limit_list, pattern, single_turn);
         else
-            Self->removeCardLimitation(limit_list, pattern);
+            player->removeCardLimitation(limit_list, pattern);
     }
 }
 
@@ -818,9 +839,10 @@ QString Client::getSkillNameToInvoke() const
 
 void Client::onPlayerInvokeSkill(bool invoke)
 {
-    if (skill_name == "surrender")
+    if (skill_name == "surrender") {
         replyToServer(S_COMMAND_SURRENDER, invoke);
-    else
+        skill_name.clear();
+    } else
         replyToServer(S_COMMAND_INVOKE_SKILL, invoke);
     setStatus(NotActive);
 }
@@ -873,13 +895,8 @@ void Client::askForCardOrUseCard(const QVariant &cardUsage)
     _m_roomState.setCurrentCardUsePattern(card_pattern);
     QString textsString = usage[1].toString();
     QStringList texts = textsString.split(":");
-    int index = -1; 
-    int skillnameindex = 3;
-    if (usage.size() >= 4 && JsonUtils::isNumber(usage[3]) && usage[3].toInt() > 0) {
-        index = usage[3].toInt();
-        skillnameindex = 4;
-    }
-    highlight_skill_name = usage.value(skillnameindex).toString();
+    int index = usage[3].toInt();
+    highlight_skill_name = usage.value(4).toString();
 
     if (texts.isEmpty())
         return;
@@ -2116,11 +2133,6 @@ void Client::clearHighlightSkillName()
     highlight_skill_name = "";
 }
 
-void Client::clearLordInfo()
-{
-    lord_kingdom = "";
-    lord_name = "";
-}
 
 void Client::changeSkin(QString name, int index)
 {

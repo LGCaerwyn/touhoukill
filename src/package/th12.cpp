@@ -143,19 +143,13 @@ public:
                 logto.removeOne(invoke->invoker);
                 room->touhouLogmessage("#fahua_change", use.from, use.card->objectName(), logto);
 
-                if (use.card->isKindOf("DelayedTrick")) {
-                    CardsMoveStruct move;
-                    move.card_ids << use.card->getId();
-                    move.to_place = Player::PlaceDelayedTrick;
-                    move.to = p;
-                    room->moveCardsAtomic(move, true);
-                } else if (use.card->isKindOf("Collateral")) {
+                if (use.card->isKindOf("Collateral")) {
                     QList<ServerPlayer *> listt;
                     foreach (ServerPlayer *victim, room->getOtherPlayers(p)) {
                         if (p->canSlash(victim))
                             listt << victim;
                     }
-                    //the list will not be empty since we utilizing targetFilter 
+                    //the list will not be empty since we utilizing targetFilter
                     ServerPlayer *newVictim = room->askForPlayerChosen(use.from, listt, objectName(), "@fahuaCollateral:" + p->objectName(), false, false);
                     CardUseStruct new_use;
                     new_use.from = use.from;
@@ -241,7 +235,7 @@ public:
     Weizhuang() : TriggerSkill("weizhuang")
     {
         frequency = Compulsory;
-        events << TargetConfirming;
+        events << TargetConfirmed;
     }
 
     QList<SkillInvokeDetail> triggerable(TriggerEvent, const Room *, const QVariant &data) const
@@ -284,7 +278,7 @@ class Zhengyi : public TriggerSkill
 public:
     Zhengyi() : TriggerSkill("zhengyi")
     {
-        events << TargetConfirming;
+        events << TargetConfirmed;
     }
 
     QList<SkillInvokeDetail> triggerable(TriggerEvent, const Room *, const QVariant &data) const
@@ -294,7 +288,7 @@ public:
             QList<SkillInvokeDetail> d;
             foreach (ServerPlayer *p, use.to) {
                 if (p->hasSkill(this)) {
-                    bool invoke = p->isKongcheng();
+                    bool invoke = !p->isKongcheng();
                     if (!invoke) {
                         foreach (const Card *card, p->getEquips()) {
                             if (card->isRed()) {
@@ -422,7 +416,7 @@ class Shuinan : public TriggerSkill
 public:
     Shuinan() : TriggerSkill("shuinan")
     {
-        events << TargetConfirming;
+        events << TargetConfirmed;
     }
 
     QList<SkillInvokeDetail> triggerable(TriggerEvent, const Room *, const QVariant &data) const
@@ -433,7 +427,7 @@ public:
 
         QList<SkillInvokeDetail> d;
         foreach (ServerPlayer *p, use.to) {
-            if (p->hasSkill(this) && use.from != p && p->canDiscard(use.from, "h"))
+            if (p->hasSkill(this) && use.from != p && p->canDiscard(use.from, "hs"))
                 d << SkillInvokeDetail(this, p, p, NULL, false, use.from);
         }
 
@@ -451,7 +445,7 @@ public:
     {
         CardUseStruct use = data.value<CardUseStruct>();
         room->doAnimate(QSanProtocol::S_ANIMATE_INDICATE, invoke->invoker->objectName(), use.from->objectName());
-        int id = room->askForCardChosen(invoke->invoker, use.from, "h", objectName(), false, Card::MethodDiscard);
+        int id = room->askForCardChosen(invoke->invoker, use.from, "hs", objectName(), false, Card::MethodDiscard);
         room->throwCard(id, use.from, invoke->invoker);
         return false;
     }
@@ -506,7 +500,7 @@ public:
     QList<SkillInvokeDetail> triggerable(TriggerEvent, const Room *, const QVariant &data) const
     {
         DamageStruct damage = data.value<DamageStruct>();
-        if (damage.from->hasSkill(this))
+        if (damage.from != NULL && damage.from->hasSkill(this))
             return QList<SkillInvokeDetail>() << SkillInvokeDetail(this, damage.from, damage.from, NULL, false, damage.to);
 
         return QList<SkillInvokeDetail>();
@@ -525,7 +519,7 @@ public:
     Yunshang() : TriggerSkill("yunshang")
     {
         frequency = Compulsory;
-        events << TargetConfirming;
+        events << TargetConfirmed;
     }
 
     QList<SkillInvokeDetail> triggerable(TriggerEvent, const Room *, const QVariant &data) const
@@ -565,38 +559,51 @@ public:
 
 //case1.1 while provideCard went to discar pile , like skill Tianren
     //if the provider is self,it should not trigger skill
-//case2 while retrial card went to discard pile, we consdier the move.from as the responser, not judge.who!!!   
+//case2 while retrial card went to discard pile, we consdier the move.from as the responser, not judge.who!!!
     //if responser(move.from) is self, it could not trigger skill.
 //case 3 if the card went to DiscardPile from PlaceTable,shoud chcek whether it was from private pile, like woodenOx. This case should not trigger skill.
 
     void record(TriggerEvent, Room *room, QVariant &data) const
     {
+        ServerPlayer *nazurin = room->getCurrent();
+        if (nazurin == NULL || !nazurin->hasSkill(objectName()) || nazurin->isDead())
+            return;
+
         CardsMoveOneTimeStruct move = data.value<CardsMoveOneTimeStruct>();
-        bool deleteRecord = false;
         if (move.to_place == Player::PlaceTable) {
-            //record room Tag("UseOrResponseFromPile")  for case 3
+            //record "soujiExcept"  for case 3
             if ((move.reason.m_reason & CardMoveReason::S_MASK_BASIC_REASON) == CardMoveReason::S_REASON_USE
                 || (move.reason.m_reason & CardMoveReason::S_MASK_BASIC_REASON) == CardMoveReason::S_REASON_RESPONSE) {
-                QVariantList record_ids = room->getTag("UseOrResponseFromPile").toList();
+                QVariantList record_ids = nazurin->tag["soujiExcept"].toList();
                 foreach (int id, move.card_ids) {
                     if (move.from_places.at(move.card_ids.indexOf(id)) != Player::PlaceHand && move.from_places.at(move.card_ids.indexOf(id)) != Player::PlaceEquip) {
                         if (!record_ids.contains(id))
                             record_ids << id;
                     }
                 }
-                room->setTag("UseOrResponseFromPile", record_ids);
+                nazurin->tag["soujiExcept"] = record_ids;
+                return;
             }
-        } else if (move.to_place == Player::DiscardPile) {
-            deleteRecord = true;
-            ServerPlayer *nazurin = room->getCurrent();
+        } else if (move.to_place == Player::PlaceJudge) {
+            QVariantList record_ids = nazurin->tag["soujiExcept"].toList();
+            foreach(int id, move.card_ids) {
+                if (move.from_places.at(move.card_ids.indexOf(id)) != Player::PlaceHand && move.from_places.at(move.card_ids.indexOf(id)) != Player::PlaceEquip) {
+                    if (!record_ids.contains(id))
+                        record_ids << id;
+                }
+            }
+            nazurin->tag["soujiExcept"] = record_ids;
+            return;
+        }
+
+        if (move.to_place == Player::DiscardPile) {
             ServerPlayer *from = qobject_cast<ServerPlayer *>(move.from);
             //find the real fromer of some cases, such as retrial or provide
             if (move.reason.m_extraData.value<ServerPlayer *>() != NULL)
                 from = move.reason.m_extraData.value<ServerPlayer *>();
-            if (move.reason.m_provider.value<ServerPlayer *>() != NULL)
-                from = move.reason.m_provider.value<ServerPlayer *>();
 
-            if (nazurin && from != NULL && nazurin != from && nazurin->hasSkill(objectName()) && nazurin->isCurrent() && nazurin->isAlive()) {
+
+            if (from != NULL && nazurin != from) {
                 QVariantList obtain_ids;
                 foreach(int id, move.card_ids) {
                     if (room->getCardPlace(id) != Player::DiscardPile)
@@ -608,13 +615,16 @@ public:
                     case Player::PlaceJudge:
                     {//case of retrial, need check rebyre
                         ServerPlayer *rebyre = move.reason.m_extraData.value<ServerPlayer *>();
-                        if (!rebyre || rebyre != nazurin)
-                            obtain_ids << id;
+                        if (rebyre && rebyre != nazurin) {
+                            QVariantList record_ids = nazurin->tag["soujiExcept"].toList();
+                            if (!record_ids.contains(id))
+                                obtain_ids << id;
+                        }
                         break;
                     }
                     case Player::PlaceTable:
-                    {//case of UseOrResponseFromPile, remove these ids.
-                        QVariantList record_ids = room->getTag("UseOrResponseFromPile").toList();
+                    {
+                        QVariantList record_ids = nazurin->tag["soujiExcept"].toList();
                         if (!record_ids.contains(id))
                             obtain_ids << id;
                         break;
@@ -625,18 +635,16 @@ public:
                 }
                 nazurin->tag["souji"] = obtain_ids;
             }
-        } else 
-            deleteRecord = true;
-
-        // delete record: UseOrResponseFromPile
-        if (deleteRecord) {
-            QVariantList record_ids = room->getTag("UseOrResponseFromPile").toList();
-            foreach (int id, move.card_ids) {
-                if (record_ids.contains(id))
-                    record_ids.removeOne(id);
-            }
-            room->setTag("UseOrResponseFromPile", record_ids);
         }
+
+        // delete record: soujiExcept
+        QVariantList record_ids = nazurin->tag["soujiExcept"].toList();
+        foreach(int id, move.card_ids) {
+            if (record_ids.contains(id))
+                record_ids.removeOne(id);
+        }
+        nazurin->tag["soujiExcept"] = record_ids;
+
     }
 
     QList<SkillInvokeDetail> triggerable(TriggerEvent, const Room *room, const QVariant &data) const
@@ -748,12 +756,10 @@ public:
             if (!wound)
                 return QList<SkillInvokeDetail>();
 
-            QList<SkillInvokeDetail> d;
             foreach (Player::Place place, move.from_places) {
                 if (place == Player::PlaceEquip)
-                    d << SkillInvokeDetail(this, ko, ko);
+                    return QList<SkillInvokeDetail>() << SkillInvokeDetail(this, ko, ko);
             }
-            return d;
         }
 
         return QList<SkillInvokeDetail>();
@@ -802,7 +808,7 @@ public:
         bool invoke = false;
         do {
             if (damage.to->isAlive() && damage.to->hasSkill(this)) {
-                if (damage.from != NULL && damage.to->canDiscard(damage.from, "he")) {
+                if (damage.from != NULL && damage.to->canDiscard(damage.from, "hes")) {
                     invoke = true;
                     break;
                 }
@@ -835,7 +841,7 @@ public:
     {
         DamageStruct damage = data.value<DamageStruct>();
         QStringList select;
-        if (damage.from != NULL && damage.to->canDiscard(damage.from, "he"))
+        if (damage.from != NULL && damage.to->canDiscard(damage.from, "hes"))
             select << "discard";
 
         QList<ServerPlayer *> fieldcard;
@@ -874,10 +880,14 @@ public:
         room->notifySkillInvoked(player, objectName());
         if (choice == "discard") {
             for (int i = 0; i < 2; i++) {
-                if (!player->canDiscard(damage.from, "he"))
+                if (!player->canDiscard(damage.from, "hes"))
                     return;
-                int card_id = room->askForCardChosen(player, damage.from, "he", objectName(), false, Card::MethodDiscard);
-                room->throwCard(card_id, damage.from, player);
+                if (damage.from == player)
+                    room->askForDiscard(player, "jingxia", 1, 1, false, true);
+                else {
+                    int card_id = room->askForCardChosen(player, damage.from, "hes", objectName(), false, Card::MethodDiscard);
+                    room->throwCard(card_id, damage.from, player);
+                }
             }
         } else if (choice == "discardfield") {
             ServerPlayer *player1 = room->askForPlayerChosen(player, fieldcard, objectName(), "@jingxia-discardfield");
@@ -888,7 +898,7 @@ public:
                 if (player->canDiscard(p, "ej"))
                     fieldcard2 << p;
             }
-            if (fieldcard2.length() == 0)
+            if (fieldcard2.length() == 0 || !player->isAlive())
                 return;
             ServerPlayer *player2 = room->askForPlayerChosen(player, fieldcard2, objectName(), "@jingxia-discardfield2", true);
             if (player2 != NULL) {
@@ -992,7 +1002,7 @@ public:
         events << CardsMoveOneTime << EventPhaseChanging;
     }
 
-    void record(TriggerEvent triggerEvent, Room *room, QVariant &data) const
+    void record(TriggerEvent triggerEvent, Room *room, QVariant &) const
     {
         if (triggerEvent == EventPhaseChanging) {
             foreach (ServerPlayer *p, room->getAllPlayers())
@@ -1062,6 +1072,78 @@ ShuxinCard::ShuxinCard()
 
 }
 
+bool ShuxinCard::targetFilter(const QList<const Player *> &targets, const Player *, const Player *) const
+{
+    return targets.isEmpty();
+}
+
+void ShuxinCard::onEffect(const CardEffectStruct &effect) const
+{
+    bool hasBlack = false;
+    Room *room = effect.to->getRoom();
+    foreach (const Card *c, effect.to->getCards("hs")) {
+        if (c->isBlack() && !effect.to->isJilei(c)) {
+            hasBlack = true;
+            break;
+        }
+    }
+    QString pattern = hasBlack ? "@@shuxinVS!" : "@@shuxinVS";
+    const Card *card = room->askForCard(effect.to, pattern, "@shuxin");
+    if (hasBlack && card ==NULL) {
+        // force discard!!!
+        QList<const Card *> hc = effect.to->getCards("hes");
+        foreach(const Card *c, hc) {
+            if (effect.to->isJilei(c) || !c->isBlack())
+                hc.removeOne(c);
+        }
+
+        if (hc.length() > 0) {
+            int x = qrand() % hc.length();
+            const Card *c = hc.value(x);
+            card = c;
+            room->throwCard(c, effect.to);
+        }
+    }
+    
+    if (card) {
+        if (card->subcardsLength() >= effect.to->getHp())
+            room->recover(effect.to, RecoverStruct());
+    } else if (!effect.to->isKongcheng()) {
+            room->showAllCards(effect.to);
+            room->getThread()->delay(1000);
+            room->clearAG();
+    }
+}
+
+
+class ShuxinVS : public ViewAsSkill
+{
+public:
+    ShuxinVS() : ViewAsSkill("shuxinVS")
+    {
+    }
+
+    virtual bool viewFilter(const QList<const Card *> &, const Card *to_select) const
+    {
+        return !Self->isJilei(to_select) && to_select->isBlack();
+    }
+
+    virtual bool isEnabledAtResponse(const Player *, const QString &pattern) const
+    {
+        return pattern.startsWith("@@shuxinVS");
+    }
+
+    virtual const Card *viewAs(const QList<const Card *> &cards) const
+    {
+        if (cards.length() > 0) {
+            DummyCard *dc = new DummyCard;
+            dc->addSubcards(cards);
+            return dc;
+        }
+        return NULL;
+    }
+};
+/*
 bool ShuxinCard::targetFilter(const QList<const Player *> &targets, const Player *to_select, const Player *) const
 {
     if (!targets.isEmpty())
@@ -1111,7 +1193,7 @@ void ShuxinCard::onEffect(const CardEffectStruct &effect) const
         room->clearAG(effect.from);
         if (id == -1)
             break;
-        
+
         card_ids.removeOne(id);
         selected << id;
     }
@@ -1129,7 +1211,7 @@ void ShuxinCard::onEffect(const CardEffectStruct &effect) const
     const Card *card2 = Sanguosha->getCard(selected.last());
     if (card1 != NULL && card2 != NULL && card1->getSuit() != card2->getSuit())
         room->recover(effect.to, RecoverStruct());
-}
+}*/
 
 class Shuxin : public ZeroCardViewAsSkill
 {
@@ -1197,7 +1279,7 @@ TH12Package::TH12Package()
     addMetaObject<NuhuoCard>();
     addMetaObject<ShuxinCard>();
 
-    skills << new FahuaDistance;
+    skills << new FahuaDistance << new ShuxinVS;
 }
 
 ADD_PACKAGE(TH12)

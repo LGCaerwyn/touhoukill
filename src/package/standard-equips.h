@@ -11,6 +11,26 @@ public:
     Q_INVOKABLE Crossbow(Card::Suit suit, int number = 1);
 };
 
+
+class Triblade : public Weapon
+{
+    Q_OBJECT
+
+public:
+    Q_INVOKABLE Triblade(Card::Suit suit, int number = 1);
+};
+
+class TribladeSkillCard : public SkillCard
+{
+    Q_OBJECT
+
+public:
+    Q_INVOKABLE TribladeSkillCard();
+    virtual bool targetFilter(const QList<const Player *> &targets, const Player *to_select, const Player *Self) const;
+    virtual void use(Room *room, ServerPlayer *source, QList<ServerPlayer *> &targets) const;
+};
+
+
 class DoubleSword : public Weapon
 {
     Q_OBJECT
@@ -73,6 +93,14 @@ class EightDiagram : public Armor
 
 public:
     Q_INVOKABLE EightDiagram(Card::Suit suit, int number = 2);
+};
+
+class BreastPlate : public Armor
+{
+    Q_OBJECT
+
+public:
+    Q_INVOKABLE BreastPlate(Card::Suit suit = Card::Club, int number = 2);
 };
 
 class IceSword : public Weapon

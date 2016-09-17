@@ -63,7 +63,7 @@ void RoomScene::resetPiles()
 #include "qsanbutton.h"
 
 RoomScene::RoomScene(QMainWindow *main_window)
-    : main_window(main_window), game_started(false)
+    : main_window(main_window), game_started(false), image_path(QString()), bgm_path(QString())
 {
     m_choiceDialog = NULL;
     RoomSceneInstance = this;
@@ -200,7 +200,7 @@ RoomScene::RoomScene(QMainWindow *main_window)
 
 
 
-    card_container = new CardContainer();
+    card_container = new CardContainer;
     card_container->hide();
     addItem(card_container);
     card_container->setZValue(9.0);
@@ -361,7 +361,7 @@ RoomScene::RoomScene(QMainWindow *main_window)
 
     connect(return_to_main_menu, SIGNAL(clicked()), this, SIGNAL(return_to_start()));
     control_panel->show();
-    animations = new EffectAnimation();
+    animations = new EffectAnimation(this);
 
     pausing_item = new QGraphicsRectItem;
     pausing_text = new QGraphicsSimpleTextItem(tr("Paused ..."));
@@ -390,6 +390,12 @@ RoomScene::RoomScene(QMainWindow *main_window)
 
     pindian_from_card = NULL;
     pindian_to_card = NULL;
+}
+
+RoomScene::~RoomScene()
+{
+    if (RoomSceneInstance ==  this)
+        RoomSceneInstance = NULL;
 }
 
 void RoomScene::handleGameEvent(const QVariant &args)
@@ -480,12 +486,7 @@ void RoomScene::handleGameEvent(const QVariant &args)
             container->updateAvatarTooltip();
             if (ClientInstance->getStatus() == Client::Playing && skill_name == "shanji")
                 dashboard->expandPileCards("piao");
-            if (skill_name == "chaoren")
-                dashboard->expandPileCards("chaoren");
-            //if (ClientInstance->getStatus() == Client::Playing && skill_name == "feitou")
-            //    dashboard->expandPileCards("feitou");
-            //if (ClientInstance->getStatus() == Client::Playing && skill_name == "shende")
-            //    dashboard->expandPileCards("shende");
+            dashboard->expandSpecialCard();//for chaoren
             break;
         }
         case S_GAME_EVENT_ADD_SKILL:
@@ -512,12 +513,8 @@ void RoomScene::handleGameEvent(const QVariant &args)
             container->updateAvatarTooltip();
             if (skill_name == "shanji")
                 dashboard->retractPileCards("piao");
-            if (skill_name == "chaoren")
-                dashboard->retractPileCards("chaoren");
-            //if (skill_name == "feitou")
-            //    dashboard->retractPileCards("feitou");
-            //if (skill_name == "shende")
-            //    dashboard->retractPileCards("shende");
+
+            dashboard->expandSpecialCard();//for chaoren
             break;
         }
         case S_GAME_EVENT_PREPARE_SKILL:
@@ -528,6 +525,7 @@ void RoomScene::handleGameEvent(const QVariant &args)
             dashboard->updateAvatarTooltip();
             if (eventType == S_GAME_EVENT_PREPARE_SKILL)
                 updateSkillButtons();
+            dashboard->expandSpecialCard();//for chaoren
             break;
         }
         case S_GAME_EVENT_CHANGE_GENDER:
@@ -561,9 +559,6 @@ void RoomScene::handleGameEvent(const QVariant &args)
                 }
                 log_box->appendLog(type, player->objectName(), QStringList(), QString(), newHeroName, arg2);
             }
-            if (player->getGeneralName() == "shenlvbu1" && newHeroName == "shenlvbu2"
-                && player->getMark("secondMode") > 0)
-                Sanguosha->playSystemAudioEffect("stagechange");
             if (player != Self) break;
             const General* oldHero = isSecondaryHero ? player->getGeneral2() : player->getGeneral();
             const General* newHero = Sanguosha->getGeneral(newHeroName);
@@ -660,6 +655,9 @@ void RoomScene::handleGameEvent(const QVariant &args)
             QString player_name = arg[1].toString();
             QString general_name = arg[2].toString();
             int skinIndex = arg[3].toInt();
+            int old_skin_index =  Config.value(QString("HeroSkin/%1").arg(general_name), 0).toInt();
+            if (skinIndex == old_skin_index)
+                break;
 
             ClientPlayer *player = ClientInstance->getPlayer(player_name);
 
@@ -678,8 +676,8 @@ void RoomScene::handleGameEvent(const QVariant &args)
                 //const QString &heroSkinGeneralName = heroSkinContainer->getGeneralName();
                 if (noSkin)
                     break;
-                if (general_name == playerCardContainer->getPlayer()->getGeneralName()) { // check container which changed skin 
-                    if (player->getGeneralName() == general_name && Self != player) { // check this roomscene instance of the players who need notify 
+                if (general_name == playerCardContainer->getPlayer()->getGeneralName()) { // check container which changed skin
+                    if (player->getGeneralName() == general_name && Self != player) { // check this roomscene instance of the players who need notify
                         QString generalIconPath;
                         QRect clipRegion;
                         G_ROOM_SKIN.getHeroSkinContainerGeneralIconPathAndClipRegion(general_name,
@@ -702,20 +700,6 @@ void RoomScene::handleGameEvent(const QVariant &args)
                     }
                 }
             }
-            break;
-        }
-        case S_GAME_EVENT_EXPAND_PILE_CARDS:
-        {
-            //QString pile_name = arg[1].asCString(); 
-            //int id = arg[1].asInt(); 
-            dashboard->expandPileCard();
-            break;
-        }
-        case S_GAME_EVENT_RETRACT_PILE_CARDS:
-        {
-            //QString pile_name = arg[1].asCString(); 
-            //int id = arg[1].asInt(); 
-            dashboard->retractPileCard();
             break;
         }
         case S_GAME_ROLE_STATUS_CHANGED:
@@ -994,30 +978,12 @@ void RoomScene::adjustItems()
     padding -= _m_roomLayout->m_photoRoomPadding;
     m_tablew = displayRegion.width();
     m_tableh = displayRegion.height();
-    //m_tablew = displayRegion.width()- _m_infoPlane.width();
-    //m_tableh = displayRegion.height() - dashboard->boundingRect().height();
-
-
-    QString image_path;
-
-    QString lord_kingdom = ClientInstance->lord_kingdom;
-    QString lord_name = ClientInstance->lord_name;
-    if (lord_kingdom != NULL && lord_name != NULL
-        && Sanguosha->TouhouKingdoms.contains(lord_kingdom)) {
-        image_path = "backdrop/" + lord_name + ".jpg";
-    }
 
     if ((image_path == NULL) || !QFile::exists(image_path)) {
         image_path = Config.TableBgImage;
     }
+    changeTableBg(image_path);
 
-    QPixmap tableBg = QPixmap(image_path)
-        .scaled(m_tablew, m_tableh, Qt::IgnoreAspectRatio, Qt::SmoothTransformation);
-    m_tableh -= _m_roomLayout->m_photoDashboardPadding;
-    //m_tableBg->setPos(padding, padding);
-    m_tableBg->setPos(0, 0);
-    m_tableBg->setPixmap(tableBg);
-    updateTable();
     updateRolesBox();
     setChatBoxVisible(chat_box_widget->isVisible());
     QMapIterator<QString, BubbleChatBox *> iter(m_bubbleChatBoxs);
@@ -1420,8 +1386,10 @@ void RoomScene::enableTargets(const Card *card)
             animations->effectOut(animationTarget);
             item->setFlag(QGraphicsItem::ItemIsSelectable, false);
         }
-
-        ok_button->setEnabled(true);
+        if ((card->isKindOf("SavageAssault") || card->isKindOf("ArcheryAttack")) && status == Client::RespondingUse)
+            ok_button->setEnabled(card->isAvailable(Self));
+        else
+            ok_button->setEnabled(true);
         return;
     }
 
@@ -2979,7 +2947,7 @@ void RoomScene::onSkillActivated()
         cancel_button->setEnabled(true);
 
         const Card *card = dashboard->pendingCard();
-        if (card && card->targetFixed() && card->isAvailable(Self)) {
+        if (card && card->targetFixed() && card->isAvailable(Self) && !Self->hasFlag("Global_InstanceUse_Failed")) {
             bool instance_use = skill->inherits("ZeroCardViewAsSkill");
             if (!instance_use) {
                 QList<const Card *> cards;
@@ -3167,9 +3135,7 @@ void RoomScene::changeTableBg(const QString &tableBgImage_path)
     QPixmap tableBg = QPixmap(tableBgImage_path)
         .scaled(displayRegion.width(), displayRegion.height(),
         Qt::IgnoreAspectRatio, Qt::SmoothTransformation);
-    //QPixmap tableBg = QPixmap(tableBgImage_path)
-   //     .scaled(displayRegion.width()- _m_infoPlane.width(), displayRegion.height() - dashboard->boundingRect().height(),
-    //    Qt::IgnoreAspectRatio, Qt::SmoothTransformation);
+
     m_tableh -= _m_roomLayout->m_photoDashboardPadding;
     m_tableBg->setPos(0, 0);
     m_tableBg->setPixmap(tableBg);
@@ -3316,7 +3282,6 @@ void RoomScene::onGameOver()
     fillTable(winner_table, winner_list);
     fillTable(loser_table, loser_list);
 
-    //ClientInstance->clearLordInfo();
 
     addRestartButton(dialog);
     m_roomMutex.unlock();
@@ -3327,31 +3292,29 @@ void RoomScene::onGameOver()
 void RoomScene::addRestartButton(QDialog *dialog)
 {
     dialog->resize(main_window->width() / 2, dialog->height());
-    bool goto_next = false;
-    if (ServerInfo.GameMode.contains("_mini_") && Self->property("win").toBool())
-        goto_next = (_m_currentStage < Sanguosha->getMiniSceneCounts());
 
-    QPushButton *restart_button;
-    restart_button = new QPushButton(goto_next ? tr("Next Stage") : tr("Restart Game"));
-    QPushButton *return_button = new QPushButton(tr("Return to main menu"));
     QHBoxLayout *hlayout = new QHBoxLayout;
     hlayout->addStretch();
-    hlayout->addWidget(restart_button);
 
-    QPushButton *save_button = new QPushButton(tr("Save record"));
-    hlayout->addWidget(save_button);
+    if (ClientInstance->findChild<Replayer *>() == NULL) {
+        bool goto_next = false;
+        if (ServerInfo.GameMode.contains("_mini_") && Self->property("win").toBool())
+            goto_next = (_m_currentStage < Sanguosha->getMiniSceneCounts());
+        QPushButton *restart_button = new QPushButton(goto_next ? tr("Next Stage") : tr("Restart Game"));
+        connect(restart_button, SIGNAL(clicked()), dialog, SLOT(accept()));
+        connect(restart_button, SIGNAL(clicked()), this, SIGNAL(restart()));
+        hlayout->addWidget(restart_button);
+        QPushButton *save_button = new QPushButton(tr("Save record"));
+        connect(save_button, SIGNAL(clicked()), this, SLOT(saveReplayRecord()));
+        hlayout->addWidget(save_button);
+    }
+    QPushButton *return_button = new QPushButton(tr("Return to main menu"));
+    connect(return_button, SIGNAL(clicked()), dialog, SLOT(accept()));
+    connect(return_button, SIGNAL(clicked()), this, SIGNAL(return_to_start()));
     hlayout->addWidget(return_button);
 
     QVBoxLayout *layout = qobject_cast<QVBoxLayout *>(dialog->layout());
     if (layout) layout->addLayout(hlayout);
-
-    connect(restart_button, SIGNAL(clicked()), dialog, SLOT(accept()));
-    connect(return_button, SIGNAL(clicked()), dialog, SLOT(accept()));
-
-    connect(save_button, SIGNAL(clicked()), this, SLOT(saveReplayRecord()));
-    //connect(dialog, SIGNAL(accepted()), this, SIGNAL(restart()));
-    connect(restart_button, SIGNAL(clicked()), this, SIGNAL(restart()));
-    connect(return_button, SIGNAL(clicked()), this, SIGNAL(return_to_start()));
 }
 
 void RoomScene::saveReplayRecord()
@@ -4034,24 +3997,24 @@ void RoomScene::onGameStart()
     connect(Self, SIGNAL(skill_state_changed(QString)), this, SLOT(skillStateChange(QString)));
     trust_button->setEnabled(true);
 #ifdef AUDIO_SUPPORT
-    QString bgmusic_path = Config.value("BackgroundMusic", "audio/title/main.ogg").toString();
-    QString image_path = "";
-    QString lord_kingdom = ClientInstance->lord_kingdom;
+
+    //intialize default path
+    bgm_path = Config.value("BackgroundMusic", "audio/title/main.ogg").toString();
+    image_path = Config.TableBgImage;
     QString lord_name = ClientInstance->lord_name;
-    if (lord_kingdom != NULL && lord_name != NULL
-        && Sanguosha->TouhouKingdoms.contains(lord_kingdom)) {
+    if (lord_name != NULL) {
         bool changeBGM = Config.value("UseLordBGM", true).toBool();
         bool changeBackdrop = Config.value("UseLordBackdrop", true).toBool();
         if (changeBGM) {
-            bgmusic_path = "audio/bgm/" + lord_name + ".ogg";
-            if ((bgmusic_path == "") || !QFile::exists(bgmusic_path)) {
+            bgm_path = "audio/bgm/" + lord_name + ".ogg";
+            if ((bgm_path == NULL) || !QFile::exists(bgm_path)) {
                 foreach (QString cv_pair, Sanguosha->LordBGMConvertList) {
                     bool shouldBreak = false;
                     QStringList pairs = cv_pair.split("->");
                     QStringList cv_from = pairs.at(0).split("|");
                     foreach (QString from, cv_from) {
                         if (from == lord_name) {
-                            bgmusic_path = "audio/bgm/" + pairs.at(1) + ".ogg";
+                            bgm_path = "audio/bgm/" + pairs.at(1) + ".ogg";
                             shouldBreak = true;
                             break;
                         }
@@ -4065,13 +4028,12 @@ void RoomScene::onGameStart()
             image_path = "backdrop/" + lord_name + ".jpg";
     }
 
-    if ((image_path != "") && QFile::exists(image_path)) {
-
+    if ((image_path != NULL) && QFile::exists(image_path))
         changeTableBg(image_path);
-    }
+
     if (Config.EnableBgMusic) {
         // start playing background music
-        Audio::playBGM(bgmusic_path);
+        Audio::playBGM(bgm_path);
 
         Audio::setBGMVolume(Config.BGMVolume);
     }

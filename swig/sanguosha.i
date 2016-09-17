@@ -79,12 +79,16 @@ public:
     QString screenName() const;
 
     // property setters/getters
+    int getChaoren() const;//for chaoren
+    void setChaoren(int chaoren);
+    QList<int> getShownHandcards() const;
+    bool isShownHandcard(int id);
     int getHp() const;
-	int getRenHp() const;
-	int getLingHp() const;
+    int getRenHp() const;
+    int getLingHp() const;
     void setHp(int hp);
-	void setRenHp(int renhp);
-	void setLingHp(int linghp);
+    void setRenHp(int renhp);
+    void setLingHp(int linghp);
     int getMaxHp() const;
     void setMaxHp(int max_hp);
     int getLostHp() const;
@@ -160,7 +164,7 @@ public:
     bool hasInnateSkill(const char *skill_name) const;
     bool hasLordSkill(const char *skill_name, bool include_lose = false) const;
     virtual QString getGameMode() const = 0;
-    
+
     void setSkillInvalidity(const Skill *skill, bool invalidity);
     void setSkillInvalidity(const char *skill_name, bool invalidity);
 
@@ -223,7 +227,7 @@ public:
     bool pileOpen(const char *pile_name, const char *player) const;
     void setPileOpen(const char *pile_name, const char *player);
     QList<int> getHandPile() const;
-	
+
     void addHistory(const char *name, int times = 1);
     void clearHistory();
     bool hasUsed(const char *card_class) const;
@@ -360,7 +364,7 @@ public:
     void addToPile(const char *pile_name, const Card *card, bool open = true);
     void addToPile(const char *pile_name, int card_id, bool open = true);
     void addToPile(const char *pile_name, QList<int> card_ids, bool open = true);
-    void addToPile(const char *pile_name, QList<int> card_ids, bool open, CardMoveReason reason);
+    void addToPile(const char *pile_name, QList<int> card_ids, bool open, CardMoveReason reason, QList<ServerPlayer *> open_players = QList<ServerPlayer *>());
     void gainAnExtraTurn();
 
     void copyFrom(ServerPlayer *sp);
@@ -491,8 +495,8 @@ struct CardEffectStruct {
 
     ServerPlayer *from;
     ServerPlayer *to;
-	bool multiple;
-	bool nullified;
+    bool multiple;
+    bool nullified;
 };
 
 struct SlashEffectStruct {
@@ -509,8 +513,8 @@ struct SlashEffectStruct {
     int drank;
 
     DamageStruct::Nature nature;
-	bool multiple;
-	bool nullified;
+    bool multiple;
+    bool nullified;
 };
 
 struct CardUseStruct {
@@ -574,22 +578,28 @@ struct CardsMoveOneTimeStruct {
     bool is_last_handcard;
 };
 
-struct DyingStruct {
+struct DyingStruct
+{
     DyingStruct();
 
     ServerPlayer *who; // who is ask for help
     DamageStruct *damage; // if it is NULL that means the dying is caused by losing hp
-    ServerPlayer *nowAskingForPeaches; // who is asking for peaches 
+    ServerPlayer *nowAskingForPeaches; // who is asking for peaches
 };
 
-struct DeathStruct {
+struct DeathStruct
+{
     DeathStruct();
 
-    ServerPlayer *who; // who is ask for help
+    ServerPlayer *who; // who is dead
     DamageStruct *damage; // if it is NULL that means the dying is caused by losing hp
+
+    ServerPlayer *viewAsKiller;
+    bool useViewAsKiller;
 };
 
-struct RecoverStruct {
+struct RecoverStruct
+{
     RecoverStruct();
 
     int recover;
@@ -597,27 +607,6 @@ struct RecoverStruct {
     ServerPlayer *to;
     const Card *card;
     QString reason;
-};
-
-struct JudgeStruct {
-    JudgeStruct();
-    bool isGood() const;
-    bool isBad() const;
-    bool isEffected() const;
-    void updateResult();
-
-    bool isGood(const Card *card) const; // For AI
-
-    bool negative;
-    bool play_animation;
-    ServerPlayer *who;
-    const Card *card;
-    QString pattern;
-    bool good;
-    QString reason;
-    bool time_consuming;
-    ServerPlayer *retrial_by_response; // record whether the current judge card is provided by a response retrial
-
 };
 
 struct PindianStruct {
@@ -633,22 +622,54 @@ struct PindianStruct {
     bool success;
 };
 
-struct PhaseChangeStruct {
+struct JudgeStruct {
+    JudgeStruct();
+    bool isGood() const;
+    bool isBad() const;
+    bool isEffected() const;
+    void updateResult();
+
+    bool isGood(const Card *card) const; // For AI
+
+    ServerPlayer *who;
+    const Card *card;
+    QString pattern;
+    bool good;
+    QString reason;
+    bool time_consuming;
+    bool negative;
+    bool play_animation;
+    ServerPlayer *retrial_by_response; // record whether the current judge card is provided by a response retrial
+    ServerPlayer *relative_player; // record relative player like skill owner of "huazhong", for processing the case like "huazhong -> dizhen -> huazhong"
+};
+
+struct PhaseChangeStruct
+{
     PhaseChangeStruct();
 
     Player::Phase from;
     Player::Phase to;
+    ServerPlayer *player;
+};
+
+struct PhaseSkippingStruct
+{
+    PhaseSkippingStruct();
+
+    Player::Phase phase;
+    ServerPlayer *player;
+    bool isCost;
 };
 
 struct CardResponseStruct {
-    CardResponseStruct();
+    CardResponseStruct(const Card *card = NULL, ServerPlayer *who = NULL, bool isuse = false, bool isRetrial = false, bool isProvision = false, ServerPlayer *from = NULL);
 
     const Card *m_card;
     ServerPlayer *m_who;
     bool m_isUse;
     bool m_isRetrial;
     bool m_isProvision;
-	bool m_isHandcard;
+    bool m_isHandcard;
     ServerPlayer *m_from;
     bool m_isNullified;
 };
@@ -659,6 +680,105 @@ struct MarkChangeStruct{
     int num;
     QString name;
     ServerPlayer *player;
+};
+
+struct SkillAcquireDetachStruct
+{
+    SkillAcquireDetachStruct();
+
+    const Skill *skill;
+    ServerPlayer *player;
+    bool isAcquire;
+};
+
+struct CardAskedStruct
+{
+    CardAskedStruct();
+
+    QString pattern;
+    QString prompt;
+    ServerPlayer *player;
+    Card::HandlingMethod method;
+};
+
+struct SkillInvokeDetail
+{
+    explicit SkillInvokeDetail(const TriggerSkill *skill = NULL, ServerPlayer *owner = NULL, ServerPlayer *invoker = NULL, QList<ServerPlayer *> targets = QList<ServerPlayer *>(), bool isCompulsory = false, ServerPlayer *preferredTarget = NULL);
+    SkillInvokeDetail(const TriggerSkill *skill, ServerPlayer *owner, ServerPlayer *invoker, ServerPlayer *target, bool isCompulsory = false, ServerPlayer *preferredTarget = NULL);
+
+    const TriggerSkill *skill; // the skill
+    ServerPlayer *owner; // skill owner. 2 structs with the same skill and skill owner are treated as of a same skill.
+    ServerPlayer *invoker; // skill invoker. When invoking skill, we sort firstly according to the priority, then the seat of invoker, at last weather it is a skill of an equip.
+    QList<ServerPlayer *> targets; // skill targets.
+    bool isCompulsory; // judge the skill is compulsory or not. It is set in the skill's triggerable
+    bool triggered; // judge whether the skill is triggered
+    ServerPlayer *preferredTarget; // the preferred target of a certain skill
+
+
+    bool sameSkill(const SkillInvokeDetail &arg2) const; // the operator ==. it only judge the skill name, the skill invoker, and the skill owner. it don't judge the skill target because it is chosen by the skill invoker
+    bool sameTimingWith(const SkillInvokeDetail &arg2) const; // used to judge 2 skills has the same timing. only 2 structs with the same priority and the same invoker and the same "whether or not it is a skill of equip"
+    bool preferredTargetLess(const SkillInvokeDetail &arg2) const;
+};
+
+%extend SkillInvokeDetail {
+    QVariant getTag(const char *key)
+    {
+        return $self->tag.value(QString(key));
+    }
+
+    void setTag(const char *key, QVariant *value)
+    {
+        $self->tag[QString(key)] = *value;
+    }
+
+    void removeTag(const char *key)
+    {
+        $self->tag.remove(QString(key));
+    }
+
+    bool lessThan(SkillInvokeDetail *arg2)
+    {
+        return *$self < *arg2;
+    }
+
+    void addTarget(ServerPlayer *target)
+    {
+        $self->targets << target;
+    }
+};
+
+struct HpLostStruct
+{
+    HpLostStruct();
+
+    ServerPlayer *player;
+    int num;
+};
+
+struct JinkEffectStruct
+{
+    JinkEffectStruct();
+
+    SlashEffectStruct slashEffect;
+    const Card *jink;
+};
+
+struct DrawNCardsStruct
+{
+    DrawNCardsStruct();
+
+    ServerPlayer *player;
+    int n;
+    bool isInitial;
+};
+
+struct SkillInvalidStruct
+{
+    SkillInvalidStruct();
+
+    ServerPlayer *player;
+    const Skill *skill;
+    bool invalid;
 };
 
 struct ChoiceMadeStruct
@@ -699,18 +819,8 @@ struct ChoiceMadeStruct
     QStringList args;
 };
 
-struct CardAskedStruct
+enum TriggerEvent
 {
-    CardAskedStruct();
-
-    QString pattern;
-    QString prompt;
-    ServerPlayer *player;
-    Card::HandlingMethod method;
-};
-
-
-enum TriggerEvent {
     NonTrigger,
 
     GameStart,
@@ -723,8 +833,8 @@ enum TriggerEvent {
 
     DrawNCards,
     AfterDrawNCards,
-    DrawInitialCards ,
-    AfterDrawInitialCards ,
+    DrawInitialCards,
+    AfterDrawInitialCards,
 
     PreHpRecover,
     HpRecover,
@@ -736,6 +846,7 @@ enum TriggerEvent {
 
     EventLoseSkill,
     EventAcquireSkill,
+    EventSkillInvalidityChange,
 
     StartJudge,
     AskForRetrial,
@@ -769,6 +880,7 @@ enum TriggerEvent {
     BeforeGameOverJudge,
     GameOverJudge,
     GameFinished,
+    Revive,
 
     SlashEffected,
     SlashProceed,
@@ -786,28 +898,30 @@ enum TriggerEvent {
     CardUsed,
     TargetSpecifying,
     TargetConfirming,
-	TargetSpecified,
+    TargetSpecified,
     TargetConfirmed,
     CardEffect, // for AI to filter events only
     CardEffected,
     PostCardEffected,
     CardFinished,
     TrickCardCanceling,
+    TrickEffect,
 
-    PreMarkChange ,
-    MarkChanged ,
+    PreMarkChange,
+    MarkChanged,
 
     ChoiceMade,
 
-    StageChange, // For hulao pass only
     FetchDrawPileCard, // For miniscenarios only
     ActionedReset, // For 3v3 only
     Debut, // For 1v1 only
 
     TurnBroken, // For the skill 'DanShou'. Do not use it to trigger events
 
-    //new events for touhoukill, 
+    //new events for touhoukill,
     DrawPileSwaped,//like qiannian
+    AfterGuanXing,
+    KingdomChanged,
 
     NumOfEvents
 };
@@ -1103,7 +1217,7 @@ public:
     TriggerSkill(const char *name);
     const ViewAsSkill *getViewAsSkill() const;
     QList<TriggerEvent> getTriggerEvents() const;
-    
+
     virtual int getPriority() const;
 
     bool isGlobal() const;

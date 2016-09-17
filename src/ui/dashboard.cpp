@@ -63,6 +63,10 @@ Dashboard::Dashboard(QGraphicsItem *widget) //QGraphicsPixmapItem *widget
     _m_sort_menu = new QMenu(RoomSceneInstance->mainWindow());
     //_m_carditem_context_menu = NULL;
 
+
+    connect(Self, SIGNAL(chaoren_changed()), this, SLOT(updateChaoren()));
+    connect(Self, SIGNAL(showncards_changed()), this, SLOT(updateShown()));
+
 #ifdef Q_OS_WIN
     taskbarButton = new QWinTaskbarButton(this);
     taskbarButton->setWindow(RoomSceneInstance->mainWindow()->windowHandle());
@@ -204,7 +208,7 @@ int Dashboard::width()
 
 
 void Dashboard::_createRight()
-{   //40 equals diff bettween middlefarme and rightframe 
+{   //40 equals diff bettween middlefarme and rightframe
     QRect rect = QRect(_m_width - G_DASHBOARD_LAYOUT.m_rightWidth, -40,
         G_DASHBOARD_LAYOUT.m_rightWidth,
         G_DASHBOARD_LAYOUT.m_normalHeight + 40);
@@ -637,10 +641,10 @@ void Dashboard::skillButtonDeactivated()
 void Dashboard::selectAll()
 {
     foreach (const QString &pile, Self->getPileNames()) {
-        if (pile.startsWith("&") || pile == "wooden_ox" || pile == "piao" || pile == "chaoren")
+        if (pile.startsWith("&") || pile == "wooden_ox" || pile == "piao")
             retractPileCards(pile);
     }
-    retractPileCard();
+    retractSpecialCard();
 
     if (view_as_skill) {
         unselectAll();
@@ -1013,10 +1017,8 @@ void Dashboard::enableCards()
             expandPileCards(pile);
         if (Self->hasSkill("shanji") && pile == "piao")
             expandPileCards("piao");
-        if (Self->hasSkill("chaoren") && pile == "chaoren")
-            expandPileCards("chaoren");
     }
-    expandPileCard();
+    expandSpecialCard();
 
     foreach (CardItem *card_item, m_handCards) {
         card_item->setEnabled(card_item->getCard()->isAvailable(Self));
@@ -1039,6 +1041,7 @@ void Dashboard::startPending(const ViewAsSkill *skill)
     pendings.clear();
     unselectAll();
 
+
     bool expand = (skill && skill->isResponseOrUse());
     if (!expand && skill && skill->inherits("ResponseSkill")) {
         const ResponseSkill *resp_skill = qobject_cast<const ResponseSkill *>(skill);
@@ -1048,12 +1051,12 @@ void Dashboard::startPending(const ViewAsSkill *skill)
     if (Self->hasFlag("Global_expandpileFailed"))
         expand = true;
 
-    foreach (const QString &pileName, _m_pile_expanded) {
-        if (!(pileName.startsWith("&") || pileName == "wooden_ox" || pileName == "piao" || pileName == "chaoren"))
-            retractPileCards(pileName);
 
+    foreach (const QString &pileName, _m_pile_expanded) {
+        if (!(pileName.startsWith("&") || pileName == "wooden_ox" || pileName == "piao"))
+            retractPileCards(pileName);
     }
-    retractPileCard();
+    retractSpecialCard();
 
     if (expand) {
         foreach (const QString &pile, Self->getPileNames()) {
@@ -1061,17 +1064,18 @@ void Dashboard::startPending(const ViewAsSkill *skill)
                 expandPileCards(pile);
             if (Self->hasSkill("shanji") && pile == "piao")
                 expandPileCards("piao");
-            if (Self->hasSkill("chaoren") && pile == "chaoren")
-                expandPileCards("chaoren");
 
         }
-        expandPileCard();
+        if (skill && skill->objectName() == "guaiqi")
+            expandPileCards("modian");
+        else
+            expandSpecialCard();
     } else {
         foreach (const QString &pile, Self->getPileNames()) {
-            if (pile.startsWith("&") || pile == "wooden_ox" || pile == "piao" || pile == "chaoren")
+            if (pile.startsWith("&") || pile == "wooden_ox" || pile == "piao")
                 retractPileCards(pile);
         }
-        retractPileCard();
+        retractSpecialCard();
         if (skill && !skill->getExpandPile().isEmpty()) {
             foreach(const QString &pile_name, skill->getExpandPile().split(","))
                 expandPileCards(pile_name);
@@ -1104,10 +1108,10 @@ void Dashboard::stopPending()
     view_as_skill = NULL;
     pending_card = NULL;
     foreach (const QString &pile, Self->getPileNames()) {
-        if (pile.startsWith("&") || pile == "wooden_ox" || pile == "piao" || pile == "chaoren")
+        if (pile.startsWith("&") || pile == "wooden_ox" || pile == "piao")
             retractPileCards(pile);
     }
-    retractPileCard();
+    retractSpecialCard();
     emit card_selected(NULL);
 
     foreach (CardItem *item, m_handCards) {
@@ -1166,11 +1170,13 @@ void Dashboard::expandPileCards(const QString &pile_name)
     update();
 }
 
-void Dashboard::expandPileCard()
+void Dashboard::expandSpecialCard()
 {
     //delete first;
-    retractPileCard();
+    retractSpecialCard();
 
+    if (!m_player->hasSkill("chaoren"))
+        return;
     // then expand
     bool ok = false;
     int id = Self->property("chaoren").toInt(&ok);
@@ -1204,8 +1210,6 @@ void Dashboard::retractPileCards(const QString &pile_name)
     if (!_m_pile_expanded.contains(pile_name)) return;
     _m_pile_expanded.removeOne(pile_name);
 
-
-
     QString new_name = pile_name;
     QList<int> pile;
     if (new_name.startsWith("%")) {
@@ -1235,7 +1239,7 @@ void Dashboard::retractPileCards(const QString &pile_name)
 }
 
 
-void Dashboard::retractPileCard()
+void Dashboard::retractSpecialCard()
 {
     CardItem *card_item;
     foreach (int card_id, _m_id_expanded) {
@@ -1253,6 +1257,16 @@ void Dashboard::retractPileCard()
     update();
     _m_id_expanded = QList<int>();
 
+}
+
+void Dashboard::updateChaoren() {
+    expandSpecialCard();
+}
+
+void Dashboard::updateShown() {
+    updatePending();
+    adjustCards();
+    update();
 }
 
 void Dashboard::onCardItemClicked()
@@ -1289,6 +1303,15 @@ void Dashboard::onCardItemClicked()
 //#include "wind.h"
 void Dashboard::updatePending()
 {
+    foreach(CardItem *item, m_handCards) {
+        if (item->getFootnote() == Sanguosha->translate("shown_card"))
+            item->hideFootnote();
+        if (Self->isShownHandcard(item->getCard()->getEffectiveId())) {
+            item->setFootnote(Sanguosha->translate("shown_card"));
+            item->showFootnote();
+        }
+    }
+
     if (!view_as_skill) return;
     QList<const Card *> cards;
     foreach(CardItem *item, pendings)

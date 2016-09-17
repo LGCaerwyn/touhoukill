@@ -5,8 +5,9 @@ config = {
 	developers = {
 	} ,
 
-	kingdoms = { 
-	 "zhu", "pc98", "hmx","yym","yyc","zhan","fsl","dld","xlc","slm","hzc", "gzz","wai","touhougod" ,
+	kingdoms = {
+	 "zhu", "pc98", "hmx","yym","yyc","zhan","fsl","dld","xlc","slm","hzc","wai","touhougod" ,
+	 --"gzz"
 	},
 	kingdom_colors = {
 		pc98 = "#0000ff";
@@ -32,7 +33,7 @@ config = {
 		"Maneuvering",
 
 		"touhoucard",
-		
+
 		--武将包
 		"Protagonist",
 		"TH0105",
@@ -47,12 +48,12 @@ config = {
 		"TH14",
 		--"TH15", --0.8不对应
 		"TH99",
-		"THXWM",
+		--"THXWM", --基于契合等问题，暂时移除
 		"THNDJ",
 		"TouhouGod",
 		"Standard", --此包内带pattern的定义 不能屏蔽。。。
-		"Test",	
-		
+		"Test",
+
 	},
 
 	surprising_generals = {
@@ -119,7 +120,7 @@ config = {
 		"罪袋" ,
 	},
 
-	roles_ban = { 
+	roles_ban = {
 	},
 
 	kof_ban = {
@@ -142,7 +143,7 @@ config = {
 
 	convert_pairs = {
 	},
-	
+
 	bgm_convert_pairs = {
 		"kosuzu->akyuu",
 		"tokiko->rinnosuke",
@@ -161,6 +162,16 @@ config = {
 		"yorihime->toyohime",
 		"youmu_ndj|youmu_slm->youmu",
 		"yukari_sp->yukari",
-		"yuyuko_sp->yuyuko"
+		"ran_sp->ran",
+		"youki->youmu",
+		"yuyuko_sp->yuyuko",
+		"myouren->byakuren_god",
+		"leira->prismriver",
+		"cirno_sp->cirno",
+		"mamizou_sp->mamizou",
+		"seiga_god->seiga",
+		"satori_god->satori",
+		"sakuya_sp->sakuya_god",
+		"yuyuko_god->yuyuko_xwm"
 	}
 }

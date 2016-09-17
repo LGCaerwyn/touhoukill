@@ -127,7 +127,7 @@ namespace QSanProtocol {
         S_COMMAND_SET_DASHBOARD_SHADOW,
         S_COMMAND_SKIN_CHANGE,
         S_COMMAND_TRIGGER_ORDER,
-		
+
         S_COMMAND_CHECK_VERSION,
         S_COMMAND_SETUP,
         S_COMMAND_NETWORK_DELAY_TEST,
@@ -143,7 +143,8 @@ namespace QSanProtocol {
         S_COMMAND_FILL_ROBOTS,
         S_COMMAND_SIGNUP,
         S_COMMAND_UPDATE_SKILL ,
-        S_COMMAND_SET_SKILL_INVALIDITY
+        S_COMMAND_SET_SKILL_INVALIDITY,
+        S_COMMAND_SET_SHOWN_HANDCARD
     };
 
     enum GameEventType
@@ -167,8 +168,6 @@ namespace QSanProtocol {
         S_GAME_EVENT_REVEAL_PINDIAN,
         //for touhoukill UI
         S_GAME_EVENT_SKIN_CHANGED,
-        S_GAME_EVENT_EXPAND_PILE_CARDS,
-        S_GAME_EVENT_RETRACT_PILE_CARDS,
         S_GAME_ROLE_STATUS_CHANGED
     };
 

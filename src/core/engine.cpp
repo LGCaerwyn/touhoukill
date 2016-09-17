@@ -81,9 +81,6 @@ Engine::Engine()
         addPackage(name);
 
     SurprisingGenerals = GetConfigFromLuaState(lua, "surprising_generals").toStringList();
-    TouhouKingdoms << "zhu" << "hmx" << "yym" << "yyc"
-        << "zhan" << "fsl" << "dld" << "xlc" << "slm" << "hzc"
-        << "wai" << "touhougod";
     LordBGMConvertList = GetConfigFromLuaState(lua, "bgm_convert_pairs").toStringList();
 
 
@@ -612,7 +609,7 @@ SkillCard *Engine::cloneSkillCard(const QString &name) const
 
 QString Engine::getVersionNumber() const
 {
-    return "20160408";
+    return "20160911";
 }
 
 QString Engine::getVersion() const
@@ -622,7 +619,7 @@ QString Engine::getVersion() const
 
 QString Engine::getVersionName() const
 {
-    return "V0.80alpha";
+    return "V0.80beta";
 }
 
 QString Engine::getMODName() const
@@ -955,8 +952,7 @@ QStringList Engine::getLimitedGeneralNames() const
         }
 
         foreach (const General *general, hulao_generals) {
-            if (isGeneralHidden(general->objectName()) || general->isTotallyHidden()
-                || general->objectName() == "shenlvbu1" || general->objectName() == "shenlvbu2")
+            if (isGeneralHidden(general->objectName()) || general->isTotallyHidden() || general->objectName() == "yuyuko_1v3")
                 continue;
             general_names << general->objectName();
         }
@@ -1250,7 +1246,7 @@ int Engine::correctCardTarget(const TargetModSkill::ModType type, const Player *
     } else if (type == TargetModSkill::ExtraTarget) {
         foreach (const TargetModSkill *skill, targetmod_skills) {
             ExpPattern p(skill->getPattern());
-            if (p.match(from, card)) {
+            if (p.match(from, card) && from->getMark("chuangshi_user") == 0) {
                 x += skill->getExtraTargetNum(from, card);
             }
         }

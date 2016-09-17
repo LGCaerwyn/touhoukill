@@ -97,6 +97,7 @@ struct CardUseStruct
     bool m_addHistory;
     bool m_isHandcard;
     bool m_isLastHandcard;
+    QList<int> m_showncards;
     QStringList nullified_list;
 };
 
@@ -222,6 +223,19 @@ struct CardsMoveOneTimeStruct
 
     QList<bool> open; // helper to prevent sending card_id to unrelevant clients
     bool is_last_handcard;
+
+    inline void removeCardIds(const QList<int> &to_remove)
+    {
+        foreach(int id, to_remove) {
+            int index = card_ids.indexOf(id);
+            if (index != -1) {
+                card_ids.removeAt(index);
+                from_places.removeAt(index);
+                from_pile_names.removeAt(index);
+                open.removeAt(index);
+            }
+        }
+    }
 };
 
 struct CardsMoveStruct
@@ -385,7 +399,7 @@ struct JudgeStruct
     bool negative;
     bool play_animation;
     ServerPlayer *retrial_by_response; // record whether the current judge card is provided by a response retrial
-
+    ServerPlayer *relative_player; // record relative player like skill owner of "huazhong", for processing the case like "huazhong -> dizhen -> huazhong"
 private:
     enum TrialResult
     {
@@ -407,7 +421,7 @@ struct PhaseChangeStruct
 struct PhaseSkippingStruct
 {
     PhaseSkippingStruct();
-    
+
     Player::Phase phase;
     ServerPlayer *player;
     bool isCost;
@@ -428,7 +442,7 @@ struct PhaseStruct
 struct CardResponseStruct
 {
     inline CardResponseStruct(const Card *card = NULL, ServerPlayer *who = NULL, bool isuse = false, bool isRetrial = false, bool isProvision = false, ServerPlayer *from = NULL)
-        : m_card(card), m_who(who), m_isUse(isuse), m_isRetrial(isRetrial), m_isProvision(isProvision), m_isHandcard(false), m_from(from), m_isNullified(false)
+        : m_card(card), m_who(who), m_isUse(isuse), m_isRetrial(isRetrial), m_isProvision(isProvision), m_isHandcard(false), m_from(from), m_isNullified(false),m_isShowncard(false)
     {
     }
 
@@ -440,6 +454,7 @@ struct CardResponseStruct
     bool m_isHandcard;
     ServerPlayer *m_from;
     bool m_isNullified;
+    bool m_isShowncard;
 };
 
 struct MarkChangeStruct
@@ -567,6 +582,17 @@ struct ChoiceMadeStruct
     QStringList args;
 };
 
+struct ExtraTurnStruct
+{
+    ExtraTurnStruct();
+
+    ServerPlayer *player;
+    QList<Player::Phase> set_phases;
+    QString reason;
+    ServerPlayer *extraTarget;//record related target  --qinlue
+};
+
+
 enum TriggerEvent
 {
     NonTrigger,
@@ -628,6 +654,7 @@ enum TriggerEvent
     BeforeGameOverJudge,
     GameOverJudge,
     GameFinished,
+    Revive,
 
     SlashEffected,
     SlashProceed,
@@ -659,16 +686,14 @@ enum TriggerEvent
 
     ChoiceMade,
 
-
-
-    StageChange, // For hulao pass only
+    // StageChange, // For hulao pass only
     FetchDrawPileCard, // For miniscenarios only
     ActionedReset, // For 3v3 only
     Debut, // For 1v1 only
 
     TurnBroken, // For the skill 'DanShou'. Do not use it to trigger events
 
-    //new events for touhoukill, 
+    //new events for touhoukill,
     DrawPileSwaped,//like qiannian
     AfterGuanXing,
     KingdomChanged,
@@ -700,5 +725,6 @@ Q_DECLARE_METATYPE(const Card *)
 Q_DECLARE_METATYPE(ServerPlayer *)
 Q_DECLARE_METATYPE(JudgeStruct *)
 Q_DECLARE_METATYPE(PindianStruct *)
+Q_DECLARE_METATYPE(ExtraTurnStruct)
 #endif
 

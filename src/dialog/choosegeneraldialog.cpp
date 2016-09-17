@@ -86,13 +86,13 @@ ChooseGeneralDialog::ChooseGeneralDialog(const QStringList &general_names, QWidg
     foreach (const General *general, generals) {
         QString caption;
         caption = Sanguosha->translate(general->objectName());
-        
+
         OptionButton *button = new OptionButton(QString(), caption);
         if (no_icon) {
             button->setIcon(QIcon("image/system/no-general-icon.png"));
             button->setIconSize(QSize(G_COMMON_LAYOUT.m_chooseGeneralBoxDenseIconSize.width(), 1));
         } else {
-            button->setIcon(QIcon(G_ROOM_SKIN.getGeneralPixmap(general->objectName(), icon_type)));
+            button->setIcon(QIcon(G_ROOM_SKIN.getGeneralPixmap(general->objectName(), icon_type, false)));
             button->setIconSize(icon_size);
         }
         button->setToolTip(general->getSkillDescription(true));
@@ -116,7 +116,7 @@ ChooseGeneralDialog::ChooseGeneralDialog(const QStringList &general_names, QWidg
             const General *lord = Sanguosha->getGeneral(lord_name);
 
             QLabel *label = new QLabel;
-            label->setPixmap(G_ROOM_SKIN.getGeneralPixmap(lord->objectName(), icon_type));
+            label->setPixmap(G_ROOM_SKIN.getGeneralPixmap(lord->objectName(), icon_type, false));
             label->setToolTip(lord->getSkillDescription(true));
             layout->addWidget(label);
         }
@@ -132,7 +132,7 @@ ChooseGeneralDialog::ChooseGeneralDialog(const QStringList &general_names, QWidg
             const General *lord = Sanguosha->getGeneral(lord_name);
 
             QLabel *label = new QLabel;
-            label->setPixmap(G_ROOM_SKIN.getCardMainPixmap(lord->objectName()));
+            label->setPixmap(G_ROOM_SKIN.getCardMainPixmap(lord->objectName(),false, false));
             label->setToolTip(lord->getSkillDescription(true));
             lord_layout->addWidget(label);
         }

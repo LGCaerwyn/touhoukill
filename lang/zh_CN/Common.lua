@@ -76,7 +76,7 @@ CommonTranslationTable = {
 
 	["use upon"] = "对",
 	["yourself"] = "你",
-	
+
 	["attack_card"] = "进攻牌",
 	["defense_card"] = "防御牌",
 	["recover_card"] = "恢复牌",
@@ -125,7 +125,7 @@ CommonTranslationTable = {
 	["$MoveCard"] = "%to 从 %from 处获得 %card",
 	["$PasteCard"] = "%from 对 %to 使用延时锦囊 %card",
 	["$LightningMove"] = "%card 从 %from 移动到 %to",
-	["$TurnOver"] = "%from 展示了牌堆顶的 %card",
+	["$TurnOver"] = "%from 亮出了牌堆顶的 %card",
 	["$DiscardCard"] = "%from 弃置了 %card",
 	["$DiscardCardWithSkill"] = "%from 发动“%arg”弃置了 %card",
 	["$DiscardCardByOther"] = "%from 弃置了 %to 的卡牌 %card",
@@ -137,6 +137,8 @@ CommonTranslationTable = {
 	["$ShowCard"] = "%from 展示了 %card",
 	["$ShowAllCards"] = "%from 展示了所有手牌 %card",
 	["$ViewAllCards"] = "%from 观看了 %to 的所有手牌 %card",
+	["$AddShownHand"] = "%from 的手牌 %card 被明置",
+	["$RemoveShownHand"] = "%from 的手牌 %card 被暗置",
 	["$ViewDrawPile"] = "%from 观看了牌堆顶的 %card",
 	["$JileiShowAllCards"] = "%from 展示了不能弃置的手牌 %card",
 	["$PutCard"] = "%from 的 %card 被置于摸牌堆",
@@ -181,17 +183,16 @@ CommonTranslationTable = {
 	["#FilterJudge"] = "%from 的“%arg”效果被触发，判定牌被改变",
 	["$CancelTarget"] = "%from 使用【%arg】的目标 %to 被取消",
 	["$CancelTargetNoUser"] = "【%arg】的目标 %to 被取消",
+	["$CancelWithoutTarget"] = "%from 使用的 【%arg】被取消",-- eg.【闪】 【无懈可击】
 	["$ViewRole"] = "%from 观看了 %to 的身份 %arg",
-	["$CancelTarget"] = "%from 使用【%arg】的目标 %to 被取消",
-	["$CancelTargetNoUser"] = "【%arg】的目标 %to 被取消",
 	["#UseLuckCard"] = "%from 使用了 <font color=\"yellow\"><b>手气卡</b></font>",
 	["#ForbidExtraTurn"] = "由于场上存在其他额外回合效果， %from 的额外回合效果被防止" ,
-    
+	["#Revive"] = "%from 复活，重新加入游戏。",
 	["TriggerOrder"] = "选择触发顺序",
 	["GameRule:TriggerOrder"] = "请选择先发动的技能",
 	["trigger_none"] = "不发动",
-	
-	
+
+
 	["cw"] = "顺时针",
 	["ccw"] = "逆时针",
 	["@3v3-action"] = "请选择行动角色",

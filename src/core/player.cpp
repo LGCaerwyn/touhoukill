@@ -7,7 +7,7 @@
 
 Player::Player(QObject *parent)
     : QObject(parent), owner(false), general(NULL), general2(NULL),
-    m_gender(General::Sexless), hp(-1), max_hp(-1), renhp(-1), linghp(-1), role_shown(false), state("online"), seat(0), alive(true),
+    m_gender(General::Sexless), hp(-1), max_hp(-1), renhp(-1), linghp(-1), chaoren(-1), role_shown(false), state("online"), seat(0), alive(true),
     phase(NotActive), weapon(NULL), armor(NULL), defensive_horse(NULL), offensive_horse(NULL), treasure(NULL),
     face_up(true), chained(false)
 {
@@ -48,18 +48,31 @@ void Player::setShownRole(bool shown)
 
 void Player::setHp(int hp)
 {
+    bool changed;
     if (this->hp != hp) {
         this->hp = hp;
-        emit hp_changed();
+        changed = true;
     }
+    if (hasSkill("banling")) {
+        if (this->renhp != hp) {
+            this->renhp = hp;
+            changed = true;
+        }
+        if (this->linghp != hp) {
+            this->linghp = hp;
+            changed = true;
+        }
+    }
+    if (changed)
+        emit hp_changed();
 }
 
 int Player::getHp() const
 {
-    if (hasSkill("huanmeng")) 
+    if (hasSkill("huanmeng"))
         return 0;
-    if (hasSkill("banling"))
-        return qMin(linghp, renhp);
+    //if (hasSkill("banling"))
+    //    return qMin(linghp, renhp);
     return hp;
 }
 
@@ -67,6 +80,8 @@ void Player::setRenHp(int renhp)
 {
     if (this->renhp != renhp) {
         this->renhp = renhp;
+        if (qMin(this->linghp, this->renhp) != this->hp)
+            this->hp = qMin(this->linghp, this->renhp);
         emit hp_changed();
     }
 }
@@ -75,6 +90,8 @@ void Player::setLingHp(int linghp)
 {
     if (this->linghp != linghp) {
         this->linghp = linghp;
+        if (qMin(this->linghp, this->renhp) != this->hp)
+            this->hp = qMin(this->linghp, this->renhp);
         emit hp_changed();
     }
 }
@@ -89,6 +106,36 @@ int Player::getLingHp() const
     return linghp;
 }
 
+int Player::getChaoren() const
+{
+    return chaoren;
+}
+
+void Player::setChaoren(int chaoren)
+{
+    if (this->chaoren != chaoren) {
+        this->chaoren = chaoren;
+        emit chaoren_changed();
+    }
+}
+
+QList<int> Player::getShownHandcards() const
+{
+    return shown_handcards;
+}
+
+void Player::setShownHandcards(QList<int> ids)
+{
+    this->shown_handcards = ids;
+    emit showncards_changed();
+}
+
+bool Player::isShownHandcard(int id)
+{
+    if (shown_handcards.isEmpty() || id < 0)
+        return false;
+    return shown_handcards.contains(id);
+}
 
 
 int Player::getMaxHp() const
@@ -265,6 +312,7 @@ int Player::distanceTo(const Player *other, int distance_fix) const
     if (this == other)
         return 0;
 
+    //point1: chuanwu is a fixed distance;
     int distance_limit = 0;
     if (hasSkill("chuanwu"))
         distance_limit = qMax(other->getHp(), 1);
@@ -275,13 +323,26 @@ int Player::distanceTo(const Player *other, int distance_fix) const
             return fixed_distance.value(other);
     }
 
-
-    int right = qAbs(seat - other->seat);
+    //point2: tianqu will change the starter while counting seat
+    bool tianqu = (hasSkill("tianqu")) ? true : false;
+    const Player *starter = this;
+    const Player *tianquStarter = NULL;
+    QList<const Player*> players = other->getAliveSiblings();
+    foreach(const Player *p, players) {
+        if (p->getMark("@road")) 
+            tianquStarter = p;
+        if (p->hasSkill("tianqu"))
+            tianqu = true;
+    }
+    if (tianquStarter != NULL && tianqu)
+        starter = tianquStarter;
+    
+    int right = qAbs(starter->seat - other->seat);
     int left = aliveCount() - right;
-    //check skill kongjian
+    //point3: skill kongjian will ignore pc98  while traversing
     if (this->hasLordSkill("kongjian")) {
-        int bigger = qMax(seat, other->seat);
-        int smaller = qMin(seat, other->seat);
+        int bigger = qMax(starter->seat, other->seat);
+        int smaller = qMin(starter->seat, other->seat);
         foreach(const Player *p, other->getAliveSiblings()) {
             if (p->getKingdom() == "pc98"  && p->getSeat() > smaller && p->getSeat() < bigger)
                 right--;
@@ -519,11 +580,19 @@ bool Player::isSkillInvalid(const Skill *skill) const
     if (skill == NULL)
         return isSkillInvalid("_ALL_SKILLS");
 
+    if (skill->getFrequency() == Skill::Eternal)
+        return false;
+
     return isSkillInvalid(skill->objectName());
 }
 
 bool Player::isSkillInvalid(const QString &skill_name) const
 {
+    if (skill_name != "_ALL_SKILLS") {
+        const Skill *skill = Sanguosha->getSkill(skill_name);
+        if (skill && skill->getFrequency() == Skill::Eternal)
+            return false;
+    }
     if (skill_invalid.contains("_ALL_SKILLS"))
         return true;
 
@@ -542,6 +611,12 @@ void Player::detachSkill(const QString &skill_name)
 
 void Player::detachAllSkills()
 {
+    /*QStringList list = acquired_skills.toList();
+    foreach(QString skill_name, list) {
+        const TriggerSkill *skill = Sanguosha->getTriggerSkill(skill_name);
+        if (skill && skill->getFrequency() != Skill::Eternal)
+            acquired_skills.remove(skill_name);
+    }*/
     acquired_skills.clear();
 }
 
@@ -855,7 +930,16 @@ bool Player::canDiscard(const Player *to, const QString &flags, QString reason) 
     static QChar equip_flag('e');
     static QChar judging_flag('j');
 
-    if (flags.contains(handcard_flag) && !to->isKongcheng()) return true;
+    if (flags.contains("s") && flags.contains("h")) {
+        if (!to->isKongcheng())
+            return true;
+    } else if (flags.contains("s")) {
+        if (!to->getShownHandcards().isEmpty())
+            return true;
+    } else if (flags.contains("h")) {
+        if ((to->getHandcardNum() - to->getShownHandcards().length()) > 0)
+            return true;
+    }
     if (flags.contains(judging_flag) && !to->getJudgingArea().isEmpty()) return true;
     if (flags.contains(equip_flag)) {
         QSet<QString> Equips;
@@ -1165,10 +1249,8 @@ QString Player::getSkillDescription(bool yellow) const
         if (skill->isAttachedLordSkill() || !hasSkill(skill->objectName()))
             continue;
         //remove lord skill Description
-        if (skill->isLordSkill()) {
-            if (!hasLordSkill(skill->objectName()))
-                continue;
-        }
+        if (skill->isLordSkill() && !hasLordSkill(skill->objectName()))
+            continue;
 
 
         QString skill_name = Sanguosha->translate(skill->objectName());

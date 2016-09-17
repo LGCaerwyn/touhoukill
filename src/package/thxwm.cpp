@@ -23,7 +23,7 @@ public:
         if (player->getPhase() == Player::Play) {
             foreach (ServerPlayer *satori, room->findPlayersBySkillName(objectName())) {
                 if (satori->getHandcardNum() < 5 && player->getHandcardNum() > satori->getHandcardNum())
-                    d << SkillInvokeDetail(this, satori, satori, false, true);
+                    d << SkillInvokeDetail(this, satori, satori, NULL, true);
             }
         }
         return d;
@@ -138,11 +138,12 @@ public:
 
 
 
-class Beisha : public PhaseChangeSkill
+class Beisha : public TriggerSkill
 {
 public:
-    Beisha() :PhaseChangeSkill("beisha")
+    Beisha() :TriggerSkill("beisha")
     {
+        events << EventPhaseStart;
     }
 
     QList<SkillInvokeDetail> triggerable(TriggerEvent, const Room *room, const QVariant &data) const
@@ -162,39 +163,38 @@ public:
         return QList<SkillInvokeDetail>();
     }
 
-    virtual bool onPhaseChange(ServerPlayer *player) const
+    bool cost(TriggerEvent, Room *room, QSharedPointer<SkillInvokeDetail> invoke, QVariant &) const
     {
-        Room *room = player->getRoom();
-        QList<ServerPlayer *> slashlist;
-        QList<ServerPlayer *> losehplist;
         QList<ServerPlayer *> listt;
-        int num = player->getHandcardNum();
-        foreach (ServerPlayer *p, room->getAllPlayers()) {
-            if (p->getHandcardNum() <= num && player->canSlash(p, NULL, false)) {
-                slashlist << p;
+        int num = invoke->invoker->getHandcardNum();
+        foreach(ServerPlayer *p, room->getOtherPlayers(invoke->invoker)) {
+            if (p->getHandcardNum() <= num && invoke->invoker->canSlash(p, NULL, false))
                 listt << p;
-            }
-            if (p->getHandcardNum() <= (num / 2)) {
-                losehplist << p;
-                if (!listt.contains(p))
-                    listt << p;
-            }
+            else if (p->getHandcardNum() <= (num / 2))
+                listt << p;
         }
 
-        ServerPlayer *target = room->askForPlayerChosen(player, listt, objectName(), "@beisha", true, true);
-        if (target == NULL)
-            return false;
+        ServerPlayer *target = room->askForPlayerChosen(invoke->invoker, listt, objectName(), "@beisha", true, true);
+        if (target != NULL)
+        invoke->targets << target;
+        return target != NULL;
+    }
 
+    bool effect(TriggerEvent, Room *room, QSharedPointer<SkillInvokeDetail> invoke, QVariant &) const
+    {
+        ServerPlayer *target = invoke->targets.first();
+        int num = invoke->invoker->getHandcardNum();
         QStringList choices;
-        if (slashlist.contains(target))
+        if (target->getHandcardNum() <= num && invoke->invoker->canSlash(target, NULL, false))
             choices << "useslash";
-        if (losehplist.contains(target))
+        if (target->getHandcardNum() <= (num / 2))
             choices << "losehp";
-        QString choice = room->askForChoice(player, objectName(), choices.join("+"));
+
+        QString choice = room->askForChoice(invoke->invoker, objectName(), choices.join("+"));
         if (choice == "useslash") {
             Slash *slash = new Slash(Card::NoSuit, 0);
             slash->setSkillName("_" + objectName());
-            room->useCard(CardUseStruct(slash, player, target));
+            room->useCard(CardUseStruct(slash, invoke->invoker, target));
         } else
             room->loseHp(target);
 
@@ -255,7 +255,7 @@ public:
         if (!damage.to->hasSkill(this) || damage.to->isDead())
             return QList<SkillInvokeDetail>();
         foreach (ServerPlayer *p, room->getAllPlayers()) {
-            if (damage.to->canDiscard(p, "h"))
+            if (damage.to->canDiscard(p, "hs"))
                 return QList<SkillInvokeDetail>() << SkillInvokeDetail(this, damage.to, damage.to);
         }
         return QList<SkillInvokeDetail>();
@@ -266,38 +266,45 @@ public:
         DamageStruct damage = data.value<DamageStruct>();
         QList<ServerPlayer *> targets;
         foreach(ServerPlayer *p, room->getAllPlayers()) {
-            if (damage.to->canDiscard(p, "h"))
+            if (damage.to->canDiscard(p, "hs"))
                 targets << p;
         }
 
         ServerPlayer *victim = room->askForPlayerChosen(damage.to, targets, objectName(), "@jubao-select", true, true);
         if (victim) {
-            int id = room->askForCardChosen(damage.to, victim, "h", objectName(), false, Card::MethodDiscard);
-            room->throwCard(id, victim, damage.to);
             invoke->targets << victim;
-            damage.to->tag["xijian_id"] = QVariant::fromValue(id);
             return true;
         }
         return false;
     }
 
-    void onDamaged(Room *room, QSharedPointer<SkillInvokeDetail> invoke, const DamageStruct &) const
+    void onDamaged(Room *room, QSharedPointer<SkillInvokeDetail> invoke, const DamageStruct &damage) const
     {
         ServerPlayer *victim = invoke->targets.first();
-        int id = invoke->invoker->tag["jubao_id"].toInt();
-        invoke->invoker->tag.remove("jubao_id");
+        const Card *jubaoCard = NULL;
+        if (victim == damage.to) {
+            jubaoCard = room->askForCard(victim, ".!", "@jubao-dis", QVariant(), QString());
+            if (jubaoCard == NULL) {
+                jubaoCard = victim->getRandomHandCard();
+                room->throwCard(jubaoCard, victim);
+            }
+        } else {
+            int id = room->askForCardChosen(damage.to, victim, "hs", objectName(), false, Card::MethodDiscard);
+            room->throwCard(id, victim, damage.to);
+            jubaoCard = Sanguosha->getCard(id);
+        }
         DummyCard dummy;
         int count = 0;
         foreach(const Card *c, victim->getEquips()) {
-            if (invoke->invoker->canDiscard(victim, c->getEffectiveId()) && c->isRed() == Sanguosha->getCard(id)->isRed()) {
+            if (invoke->invoker->canDiscard(victim, c->getEffectiveId()) && c->sameColorWith(jubaoCard)) {
                 dummy.addSubcard(c);
                 count = count + 1;
             }
         }
         if (count > 0)
-            room->throwCard(&dummy, victim, invoke->invoker);
+            room->throwCard(&dummy, victim, invoke->invoker == victim ? NULL : invoke->invoker);
     }
-        
+
 };
 
 class Haidi : public TriggerSkill

@@ -382,12 +382,16 @@ QWidget *ServerDialog::createMiscTab()
     ai_prohibit_blind_attack_checkbox->setToolTip(tr("<font color=#FFFF33>ai will not blindly attack,if this is checked</font>"));
     ai_prohibit_blind_attack_checkbox->setChecked(Config.AIProhibitBlindAttack);
 
+    limit_robot_checkbox = new QCheckBox(tr("Limit AI"));
+    limit_robot_checkbox->setToolTip(tr("<font color=#FFFF33>Prohibit add AI when the player num is less than 4 and there is no more than a half of them are human</font>"));
+    limit_robot_checkbox->setChecked(Config.LimitRobot);
+
     layout->addWidget(ai_enable_checkbox);
     layout->addLayout(HLay(new QLabel(tr("AI delay")), ai_delay_spinbox));
     layout->addWidget(ai_delay_altered_checkbox);
     layout->addLayout(HLay(new QLabel(tr("AI delay After Death")), ai_delay_ad_spinbox));
     layout->addWidget(ai_prohibit_blind_attack_checkbox);
-
+    layout->addWidget(limit_robot_checkbox);
 
 
 
@@ -406,11 +410,6 @@ QWidget *ServerDialog::createMiscTab()
     QWidget *widget = new QWidget;
     widget->setLayout(tablayout);
     return widget;
-}
-
-void ServerDialog::ensureEnableAI()
-{
-    ai_enable_checkbox->setChecked(true);
 }
 
 void ServerDialog::updateButtonEnablility(QAbstractButton *button)
@@ -1070,6 +1069,7 @@ bool ServerDialog::config()
     Config.AIDelayAD = ai_delay_ad_spinbox->value();
     Config.AlterAIDelayAD = ai_delay_altered_checkbox->isChecked();
     Config.AIProhibitBlindAttack = ai_prohibit_blind_attack_checkbox->isChecked();
+    Config.LimitRobot = limit_robot_checkbox->isChecked();
     Config.ServerPort = port_edit->text().toInt();
     Config.DisableLua = disable_lua_checkbox->isChecked();
     Config.SurrenderAtDeath = surrender_at_death_checkbox->isChecked();
@@ -1119,6 +1119,7 @@ bool ServerDialog::config()
     Config.setValue("AlterAIDelayAD", ai_delay_altered_checkbox->isChecked());
     Config.setValue("AIDelayAD", Config.AIDelayAD);
     Config.setValue("AIProhibitBlindAttack", Config.AIProhibitBlindAttack);
+    Config.setValue("LimitRobot", Config.LimitRobot);
 
     Config.setValue("SurrenderAtDeath", Config.SurrenderAtDeath);
     Config.setValue("LuckCardLimitation", Config.LuckCardLimitation);
@@ -1133,11 +1134,11 @@ bool ServerDialog::config()
     //Config.setValue("OfficialRule", official_3v3_ComboBox->itemData(official_3v3_ComboBox->currentIndex()).toString());
     Config.endGroup();
 
-    Config.beginGroup("1v1");
-    Config.setValue("Rule", official_1v1_ComboBox->itemData(official_1v1_ComboBox->currentIndex()).toString());
-    //Config.setValue("UsingExtension", kof_using_extension_checkbox->isChecked());
-    //Config.setValue("UsingCardExtension", kof_card_extension_checkbox->isChecked());
-    Config.endGroup();
+     Config.beginGroup("1v1");
+     Config.setValue("Rule", official_1v1_ComboBox->itemData(official_1v1_ComboBox->currentIndex()).toString());
+     //Config.setValue("UsingExtension", kof_using_extension_checkbox->isChecked());
+     //Config.setValue("UsingCardExtension", kof_card_extension_checkbox->isChecked());
+     Config.endGroup();
 
     //Config.beginGroup("XMode");
     //Config.setValue("RoleChooseX", role_choose_xmode_ComboBox->itemData(role_choose_xmode_ComboBox->currentIndex()).toString());
@@ -1248,7 +1249,6 @@ void Server::processRequest(const char *request)
 {
     ClientSocket *socket = qobject_cast<ClientSocket *>(sender());
     socket->disconnect(this, SLOT(processRequest(const char *)));
-
 
     Packet signup;
     if (!signup.parse(request) || signup.getCommandType() != S_COMMAND_SIGNUP) {

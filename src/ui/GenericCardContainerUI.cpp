@@ -189,10 +189,6 @@ void PlayerCardContainer::showProgressBar(Countdown countdown)
     _m_progressBar->show();
 }
 
-/*QPixmap PlayerCardContainer::_getAvatarIcon(QString heroName) {
-    int avatarSize = m_player->getGeneral2() ? _m_layout->m_primaryAvatarSize : _m_layout->m_avatarSize;
-    return G_ROOM_SKIN.getGeneralPixmap(heroName, (QSanRoomSkin::GeneralIconSize)avatarSize);
-    }*/
 
 void PlayerCardContainer::updateAvatar()
 {
@@ -217,7 +213,7 @@ void PlayerCardContainer::updateAvatar()
             QString());
     }
 
-    
+
     if (general != NULL) {
         _m_avatarArea->setToolTip(m_player->getSkillDescription());
         QString name = general->objectName();
@@ -237,8 +233,8 @@ void PlayerCardContainer::updateAvatar()
 
 
             //@todo
-            //we want this mask to start at zero piont of logbox width, 
-            //and keep the height to equal with the diff between middleFrame and rightFrame 
+            //we want this mask to start at zero piont of logbox width,
+            //and keep the height to equal with the diff between middleFrame and rightFrame
             _paintPixmap(_m_dashboardKingdomColorMaskIcon, _m_layout->m_dashboardKingdomMaskArea,
                 G_ROOM_SKIN.getPixmap(QSanRoomSkin::S_SKIN_KEY_DASHBOARD_KINGDOM_COLOR_MASK, kingdom), _getAvatarParent());
 
@@ -372,7 +368,12 @@ void PlayerCardContainer::updatePile(const QString &pile_name)
     QString treasure_name;
     if (player->getTreasure()) treasure_name = player->getTreasure()->objectName();
 
-    const QList<int> &pile = player->getPile(pile_name);
+    QList<int> pile;
+    if (pile_name == "shown_card")
+        pile = player->getShownHandcards();
+    else
+        pile = player->getPile(pile_name);
+
     if (pile.size() == 0) {
         if (_m_privatePiles.contains(pile_name)) {
             delete _m_privatePiles[pile_name];
@@ -388,6 +389,8 @@ void PlayerCardContainer::updatePile(const QString &pile_name)
             button->setObjectName(pile_name);
             if (treasure_name == pile_name)
                 button->setProperty("treasure", "true");
+            else if (pile_name == "shown_card")
+                button->setProperty("shown_card", "true");
             else
                 button->setProperty("private_pile", "true");
             QGraphicsProxyWidget *button_widget = new QGraphicsProxyWidget(_getPileParent());
@@ -407,6 +410,8 @@ void PlayerCardContainer::updatePile(const QString &pile_name)
         menu = new QMenu(button);
         if (treasure_name == pile_name)
             menu->setProperty("treasure", "true");
+        else if (pile_name == "shown_card")
+            menu->setProperty("shown_card", "true");
         else
             menu->setProperty("private_pile", "true");
 
@@ -515,7 +520,7 @@ void PlayerCardContainer::refresh()
         if (_m_faceTurnedIcon) _m_faceTurnedIcon->setVisible(!m_player->faceUp());
         if (_m_chainIcon) _m_chainIcon->setVisible(m_player->isChained());
         if (_m_actionIcon) _m_actionIcon->setVisible(m_player->hasFlag("actioned"));
-        if (_m_deathIcon && !(ServerInfo.GameMode == "04_1v3" && m_player->getGeneralName() != "shenlvbu2"))
+        if (_m_deathIcon && !(ServerInfo.GameMode == "04_1v3" && m_player->getGeneralName() != "yuyuko_1v32"))
             _m_deathIcon->setVisible(m_player->isDead());
     }
     updateHandcardNum();
