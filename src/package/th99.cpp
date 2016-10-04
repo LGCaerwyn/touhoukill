@@ -1037,7 +1037,7 @@ public:
         events << EventPhaseChanging; // << EventLoseSkill << Death
     }
 
-    QList<SkillInvokeDetail> triggerable(TriggerEvent triggerEvent, const Room *, const QVariant &data) const
+    QList<SkillInvokeDetail> triggerable(TriggerEvent, const Room *, const QVariant &data) const
     {
         /*if (triggerEvent == EventLoseSkill) {
             SkillAcquireDetachStruct ad = data.value<SkillAcquireDetachStruct>();
@@ -1912,7 +1912,7 @@ class Xunshi : public TriggerSkill
 public:
     Xunshi() : TriggerSkill("xunshi")
     {
-        events << TargetConfirming;
+        events << TargetSpecifying;
         frequency = Compulsory;
     }
 
@@ -1923,7 +1923,7 @@ public:
         if (use.card->isKindOf("Peach") || use.card->isKindOf("Slash") || use.card->isNDTrick()) {
             use.card->setFlags("xunshi");
             foreach(ServerPlayer *p, room->findPlayersBySkillName(objectName())) {
-                if (use.from->isAlive() && p != use.from && !use.to.contains(p)
+                if (use.from->isAlive() && p != use.from && !use.to.contains(p) && !use.to.isEmpty()
                     && (p->getHandcardNum() < use.from->getHandcardNum() || p->getHp() < use.from->getHp())
                     && !use.from->isProhibited(p, use.card)) {
                     if (use.card->isKindOf("Peach") && use.card->isAvailable(p))
@@ -2018,14 +2018,14 @@ public:
     bool cost(TriggerEvent, Room *room, QSharedPointer<SkillInvokeDetail> invoke, QVariant &data) const
     {
         CardUseStruct use = data.value<CardUseStruct>();
-        QString type = use.card->getType();
-        QString pattern = QString("%1Card|.|.|hand").arg(type.left(1).toUpper() + type.right(type.length() - 1));
+        //QString type = use.card->getType();
+        //QString pattern = QString("%1Card|.|.|hand").arg(type.left(1).toUpper() + type.right(type.length() - 1));
         QStringList prompt_list;
         prompt_list << "jidong-discard" << use.card->objectName()
-            << use.from->objectName() << use.card->getType();
+            << use.from->objectName() << "basic";// use.card->getType();
         QString prompt = prompt_list.join(":");
 
-        const Card *card = room->askForCard(invoke->invoker, pattern, prompt, data, Card::MethodDiscard, NULL, false, objectName());
+        const Card *card = room->askForCard(invoke->invoker, ".Basic", prompt, data, Card::MethodDiscard, NULL, false, objectName());
         if (card)
             invoke->invoker->tag["jidong_card"] = QVariant::fromValue(card);
         return card != NULL;

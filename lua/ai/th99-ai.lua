@@ -111,7 +111,8 @@ end
 
 
 function choose_xiufuId(self, card_ids)
-
+	self.player:removeTag("xiufu_equipid")
+	self.player:removeTag("xiufu_target")
 	local weapons={}
 	local armors={}
 	local dhorses={}
@@ -1179,7 +1180,8 @@ sgs.ai_skill_cardask["jidong-discard"] = function(self, data)
 	
 	local cards = {} 
 	for _,c in sgs.qlist(self.player:getCards("hs")) do
-		if c:getTypeId() == use.card:getTypeId() then
+		--if c:getTypeId() == use.card:getTypeId() then
+		if c:isKindOf("BasicCard") then
 			table.insert(cards, c)
 		end	
 	end
