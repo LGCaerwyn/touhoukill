@@ -1,10 +1,10 @@
 #include "QSanSelectableItem.h"
 #include "uiUtils.h"
 
-#include <QPainter>
 #include <QGraphicsColorizeEffect>
-#include <QMessageBox>
 #include <QImageReader>
+#include <QMessageBox>
+#include <QPainter>
 
 QSanSelectableItem::QSanSelectableItem(const QString &filename, bool center_as_origin)
 {
@@ -32,8 +32,7 @@ bool QSanSelectableItem::_load(const QString &filename, QSize size, bool useNewS
     if (!success) {
         QImageReader reader(filename);
         QString error_string = reader.errorString();
-        QString warning = tr("Can not load image %1[%2], error string is %3")
-            .arg(filename).arg(metaObject()->className()).arg(error_string);
+        QString warning = tr("Can not load image %1[%2], error string is %3").arg(filename).arg(metaObject()->className()).arg(error_string);
         QMessageBox::warning(NULL, tr("Warning"), warning);
     } else {
         if (useNewSize) {
@@ -59,7 +58,8 @@ void QSanSelectableItem::setPixmap(const QPixmap &pixmap)
 }
 
 QSanSelectableItem::QSanSelectableItem(bool center_as_origin)
-    : markable(false), marked(false)
+    : markable(false)
+    , marked(false)
 {
     if (center_as_origin) {
         resetTransform();
@@ -132,4 +132,3 @@ void QSanSelectableItem::setMarkable(bool markable)
 {
     this->markable = markable;
 }
-

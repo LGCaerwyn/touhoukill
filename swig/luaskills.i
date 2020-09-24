@@ -86,14 +86,14 @@ class ProhibitSkill: public Skill {
 public:
     ProhibitSkill(const char *name);
 
-    virtual bool isProhibited(const Player *from, const Player *to, const Card *card, const QList<const Player *> &others = QList<const Player *>()) const = 0;
+    virtual bool isProhibited(const Player *from, const Player *to, const Card *card, const QList<const Player *> &others = QList<const Player *>(), bool include_hidden =false) const = 0;
 };
 
 class LuaProhibitSkill: public ProhibitSkill {
 public:
     LuaProhibitSkill(const char *name);
 
-    virtual bool isProhibited(const Player *from, const Player *to, const Card *card, const QList<const Player *> &others = QList<const Player *>()) const;
+    virtual bool isProhibited(const Player *from, const Player *to, const Card *card, const QList<const Player *> &others = QList<const Player *>(), bool include_hidden = false) const;
 
     LuaFunction is_prohibited;
 };
@@ -321,8 +321,10 @@ public:
     static bool equipAvailable(const ServerPlayer *p, EquipCard::Location location, const QString &equip_name);
     static bool equipAvailable(const ServerPlayer *p, const EquipCard *card);
 
+#if SWIGVERSION >= 0x030000
 private:
     EquipSkill() = delete;
+#endif
 };
 
 %{
@@ -331,6 +333,7 @@ private:
 #include "clientplayer.h"
 
 #include <QMessageBox>
+
 
 static void Error(lua_State *L)
 {
@@ -447,7 +450,7 @@ bool LuaTriggerSkill::effect(TriggerEvent triggerEvent, Room *room, QSharedPoint
     }
 }
 
-bool LuaProhibitSkill::isProhibited(const Player *from, const Player *to, const Card *card, const QList<const Player *> &others) const
+bool LuaProhibitSkill::isProhibited(const Player *from, const Player *to, const Card *card, const QList<const Player *> &others, bool include_hidden) const
 {
     if (is_prohibited == 0)
         return false;
@@ -468,7 +471,9 @@ bool LuaProhibitSkill::isProhibited(const Player *from, const Player *to, const 
         lua_rawseti(L, -2, i + 1);
     }
 
-    int error = lua_pcall(L, 5, 1, 0);
+    lua_pushboolean(L, include_hidden);
+
+    int error = lua_pcall(L, 6, 1, 0);
     if (error) {
         Error(L);
         return false;

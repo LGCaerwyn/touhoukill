@@ -5,14 +5,15 @@ class General;
 class Skill;
 class QCommandLinkButton;
 
-#include <QDialog>
-#include <QTableWidgetItem>
+#include <QAction>
 #include <QButtonGroup>
-#include <QVBoxLayout>
-#include <QLabel>
 #include <QCheckBox>
-#include <QSpinBox>
+#include <QDialog>
 #include <QGroupBox>
+#include <QLabel>
+#include <QSpinBox>
+#include <QTableWidgetItem>
+#include <QVBoxLayout>
 
 class GeneralOverview;
 
@@ -31,15 +32,17 @@ private:
     QLineEdit *name_edit;
     QButtonGroup *gender_buttons;
     QButtonGroup *kingdom_buttons;
-    QLabel *maxhp_lower_label, *maxhp_upper_label;
+    QLabel *maxhp_lower_label;
+    QLabel *maxhp_upper_label;
     QSpinBox *maxhp_lower_spinbox;
     QSpinBox *maxhp_upper_spinbox;
-    QPushButton *select_all_button, *unselect_all_button;
+    QPushButton *select_all_button;
+    QPushButton *unselect_all_button;
     QButtonGroup *package_buttons;
 
 signals:
-    void search(bool include_hidden, const QString &nickname, const QString &name, const QStringList &genders,
-        const QStringList &kingdoms, int lower, int upper, const QStringList &packages);
+    void search(bool include_hidden, const QString &nickname, const QString &name, const QStringList &genders, const QStringList &kingdoms, int lower, int upper,
+                const QStringList &packages);
 
 protected:
     virtual void accept();
@@ -54,9 +57,8 @@ private slots:
     void unselectAllPackages();
 };
 
-namespace Ui
-{
-    class GeneralOverview;
+namespace Ui {
+class GeneralOverview;
 }
 
 class GeneralOverview : public QDialog
@@ -86,8 +88,8 @@ private:
     QString getOriginInfo(const QString &general_name);
 
 public slots:
-    void startSearch(bool include_hidden, const QString &nickname, const QString &name, const QStringList &genders,
-        const QStringList &kingdoms, int lower, int upper, const QStringList &packages);
+    void startSearch(bool include_hidden, const QString &nickname, const QString &name, const QStringList &genders, const QStringList &kingdoms, int lower, int upper,
+                     const QStringList &packages);
 
 private slots:
     void playAudioEffect();
@@ -100,4 +102,3 @@ private slots:
 };
 
 #endif
-

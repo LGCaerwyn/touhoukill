@@ -1,28 +1,27 @@
 #ifndef _DASHBOARD_H
 #define _DASHBOARD_H
 
-#include "QSanSelectableItem.h"
-#include "qsanbutton.h"
-#include "carditem.h"
-#include "player.h"
-#include "skill.h"
-#include "protocol.h"
-#include "TimedProgressBar.h"
 #include "GenericCardContainerUI.h"
+#include "QSanSelectableItem.h"
+#include "TimedProgressBar.h"
+#include "carditem.h"
 #include "pixmapanimation.h"
+#include "player.h"
+#include "protocol.h"
+#include "qsanbutton.h"
+#include "skill.h"
 #include "sprite.h"
 
-#include <QPushButton>
 #include <QComboBox>
 #include <QGraphicsLinearLayout>
 #include <QLineEdit>
 #include <QMutex>
 #include <QPropertyAnimation>
+#include <QPushButton>
 
 #ifdef Q_OS_WIN
 class QWinTaskbarButton;
 #endif
-
 
 class Dashboard : public PlayerCardContainer
 {
@@ -32,25 +31,33 @@ class Dashboard : public PlayerCardContainer
 public:
     enum SortType
     {
-        ByType, BySuit, ByNumber
+        ByType,
+        BySuit,
+        ByNumber
     };
 
     Dashboard(QGraphicsItem *button_widget);
     //Dashboard(QGraphicsPixmapItem *button_widget);
     virtual QRectF boundingRect() const;
+    void refresh();
+    //void repaintAll();
     void setWidth(int width);
     int getMiddleWidth();
     inline QRectF getAvatarArea()
     {
         QRectF rect;
-        rect.setSize(_dlayout->m_avatarArea.size());
-        QPointF topLeft = mapFromItem(_getAvatarParent(), _dlayout->m_avatarArea.topLeft());
+        QRect avatarArea = (ServerInfo.Enable2ndGeneral) ? _dlayout->m_avatarAreaDouble : _dlayout->m_avatarArea;
+        rect.setSize(avatarArea.size());
+        QPointF topLeft = mapFromItem(_getAvatarParent(), avatarArea.topLeft());
         rect.moveTopLeft(topLeft);
         return rect;
     }
 
     void hideControlButtons();
     void showControlButtons();
+
+    void setPlayer(ClientPlayer *player); //hegemony
+    void showSeat(); //hegemony
 
     virtual void showProgressBar(QSanProtocol::Countdown countdown);
     virtual void hideProgressBar();
@@ -59,8 +66,8 @@ public:
     {
         return _m_rightFrame->sceneBoundingRect();
     }
-    QSanSkillButton *removeSkillButton(const QString &skillName);
-    QSanSkillButton *addSkillButton(const QString &skillName);
+    QSanSkillButton *removeSkillButton(const QString &skillName, bool head);
+    QSanSkillButton *addSkillButton(const QString &skillName, const bool &head = true);
     bool isAvatarUnderMouse();
 
     void highlightEquip(QString skillName, bool hightlight);
@@ -99,9 +106,9 @@ public:
     void expandSpecialCard();
     void retractPileCards(const QString &pile_name);
     void retractSpecialCard();
-    inline const QStringList &getPileExpanded() const
+    inline QStringList getPileExpanded() const
     {
-        return _m_pile_expanded;
+        return _m_pile_expanded.keys();
     }
 
     void selectCard(CardItem *item, bool isSelected);
@@ -112,7 +119,6 @@ public:
     int width();
     int height();
 
-
     void showNullificationButton();
     void hideNullificationButton();
 
@@ -122,12 +128,20 @@ public:
     {
         if (_m_skillDock)
             _m_skillDock->update();
+        if (_m_rightSkillDock)
+            _m_rightSkillDock->update();
     }
+
+    void playBattleArrayAnimations();
+    static const int CARDITEM_Z_DATA_KEY = 0413;
 
 public slots:
     virtual void updateAvatar();
+    virtual void updateSmallAvatar();
     void updateChaoren();
     void updateShown();
+    void updateHiddenMark();
+    void updateRightHiddenMark(); //hegemony
 
     void sortCards();
     void beginSorting();
@@ -137,10 +151,13 @@ public slots:
     void skillButtonDeactivated();
     void selectAll();
     void controlNullificationButton(bool show);
+    void updateHandPile();
 
 #ifdef Q_OS_WIN
     void updateTimedProgressBar(time_t val, time_t max);
 #endif
+    void onCardItemHover();
+    void onCardItemLeaveHover();
 
 protected:
     void _createExtraButtons();
@@ -193,6 +210,10 @@ protected:
     {
         return QSanRoomSkin::S_SKIN_KEY_DASHBOARD;
     }
+    inline virtual QAbstractAnimation *_getPlayerRemovedEffect()
+    {
+        return _removedEffect;
+    }
     virtual QPointF getHeroSkinContainerPosition() const;
     //virtual const QSanShadowTextFont &getSkillNameFont() const {
     //    return G_DASHBOARD_LAYOUT.m_skillNameFont;
@@ -230,12 +251,16 @@ protected:
     QGraphicsRectItem *trusting_item;
     QGraphicsSimpleTextItem *trusting_text;
 
-    QSanInvokeSkillDock* _m_skillDock;
+    QSanInvokeSkillDock *_m_skillDock;
+    QSanInvokeSkillDock *_m_rightSkillDock; //hegemony
     const QSanRoomSkin::DashboardLayout *_dlayout;
 
     //for animated effects
     EffectAnimation *animations;
 
+    QGraphicsRectItem *_m_shadow_layer1, *_m_shadow_layer2; //hegemony  //for avatar shadow layer
+    QGraphicsPixmapItem *leftHiddenMark;
+    QGraphicsPixmapItem *rightHiddenMark; //hegemony
 
     // for parts creation
     void _createLeft();
@@ -248,7 +273,8 @@ protected:
     const Card *pending_card;
     const ViewAsSkill *view_as_skill;
     const FilterSkill *filter;
-    QStringList _m_pile_expanded;
+    //QStringList _m_pile_expanded;
+    QMap<QString, QList<int> > _m_pile_expanded;
     QList<int> _m_id_expanded; //just for chaoren
 
     // for equip skill/selections
@@ -263,9 +289,16 @@ protected:
     void drawEquip(QPainter *painter, const CardItem *equip, int order);
     void setSelectedItem(CardItem *card_item);
 
+    // for battle arry
+    QHash<QString, PixmapAnimation *> _m_frameBorders;
+    QHash<QString, PixmapAnimation *> _m_roleBorders;
+    void _createBattleArrayAnimations();
+
+    virtual void _initializeRemovedEffect();
+    QPropertyAnimation *_removedEffect;
+
     QMenu *_m_sort_menu;
     //QMenu *_m_carditem_context_menu;
-
 
     QList<CardItem *> _m_cardItemsAnimationFinished;
     QMutex m_mutexCardItemsAnimationFinished;
@@ -273,7 +306,6 @@ protected:
 #ifdef Q_OS_WIN
     QWinTaskbarButton *taskbarButton;
 #endif
-
 
 protected slots:
     virtual void _onEquipSelectChanged();
@@ -286,7 +318,7 @@ protected slots:
         _m_screenNameItem->hide();
     }
 
-    virtual bool isItemUnderMouse(QGraphicsItem *item);
+    virtual bool isItemUnderMouse(QGraphicsItem *item) const;
 
 private slots:
     void onCardItemClicked();
@@ -295,9 +327,13 @@ private slots:
 
     void onCardItemDoubleClicked();
     void onCardItemThrown();
-    void onCardItemHover();
-    void onCardItemLeaveHover();
+
     void onMarkChanged();
+    void onHeadStateChanged();
+    void onDeputyStateChanged();
+
+    void bringSenderToTop();
+    void resetSenderZValue();
 
 signals:
     void card_selected(const Card *card);
@@ -306,4 +342,3 @@ signals:
 };
 
 #endif
-

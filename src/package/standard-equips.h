@@ -11,7 +11,6 @@ public:
     Q_INVOKABLE Crossbow(Card::Suit suit, int number = 1);
 };
 
-
 class Triblade : public Weapon
 {
     Q_OBJECT
@@ -27,9 +26,9 @@ class TribladeCard : public SkillCard
 public:
     Q_INVOKABLE TribladeCard();
     virtual bool targetFilter(const QList<const Player *> &targets, const Player *to_select, const Player *Self) const;
+    virtual void onUse(Room *room, const CardUseStruct &card_use) const;
     virtual void use(Room *room, ServerPlayer *source, QList<ServerPlayer *> &targets) const;
 };
-
 
 class DoubleSword : public Weapon
 {
@@ -129,7 +128,6 @@ public:
     virtual void use(Room *room, ServerPlayer *source, QList<ServerPlayer *> &targets) const;
 };
 
-
 class WoodenOx : public Treasure
 {
     Q_OBJECT
@@ -140,6 +138,13 @@ public:
     virtual void onUninstall(ServerPlayer *player) const;
 };
 
+class DeathSickle : public Weapon
+{
+    Q_OBJECT
+
+public:
+    Q_INVOKABLE DeathSickle(Card::Suit suit, int number);
+};
 
 class StandardCardPackage : public Package
 {
@@ -158,4 +163,3 @@ public:
 };
 
 #endif
-

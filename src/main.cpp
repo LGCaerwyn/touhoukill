@@ -1,62 +1,31 @@
-#include <QApplication>
-
-#include <QCoreApplication>
-#include <QTranslator>
-#include <QDir>
-#include <cstring>
-#include <QDateTime>
-
-#include "mainwindow.h"
-#include "settings.h"
-#include "banpair.h"
-#include "server.h"
 #include "audio.h"
+#include "banpair.h"
+#include "mainwindow.h"
+#include "server.h"
+#include "settings.h"
 
-#ifdef USE_BREAKPAD
-#ifdef _MSC_VER
-#pragma warning(push)
-#pragma warning(disable: 4091)
-#endif
-#include "breakpad/client/windows/handler/exception_handler.h"
-#ifdef _MSC_VER
-#pragma warning(pop)
-#endif
-
-
-using namespace google_breakpad;
-
-static bool callback(const wchar_t *dump_path, const wchar_t *id,
-    void *, EXCEPTION_POINTERS *,
-    MDRawAssertionInfo *,
-    bool succeeded)
-{
-    if (succeeded)
-        qWarning("Dump file created in %s, dump guid is %s\n", dump_path, id);
-    else
-        qWarning("Dump failed\n");
-    return succeeded;
-}
+#include <QApplication>
+#include <QCoreApplication>
+#include <QDateTime>
+#include <QDir>
+#include <QStyleFactory>
+#include <QTranslator>
 
 int main(int argc, char *argv[])
 {
-    ExceptionHandler eh(L"./dmp", NULL, callback, NULL,
-        ExceptionHandler::HANDLER_ALL);
-#else
-int main(int argc, char *argv[])
-{
-#endif
     if (argc > 1 && strcmp(argv[1], "-server") == 0) {
         new QCoreApplication(argc, argv);
     } else {
         new QApplication(argc, argv);
         QCoreApplication::addLibraryPath(QCoreApplication::applicationDirPath() + "/plugins");
+
+#ifdef Q_OS_OSX
+        if (QStyleFactory::keys().contains("Fusion", Qt::CaseInsensitive))
+            qApp->setStyle(QStyleFactory::create("Fusion"));
+#endif
     }
 
-#ifdef Q_OS_MAC
-#ifdef QT_NO_DEBUG
     QDir::setCurrent(qApp->applicationDirPath());
-#endif
-#endif
 
 #ifdef Q_OS_LINUX
     QDir dir(QString("lua"));
@@ -79,7 +48,6 @@ int main(int argc, char *argv[])
 
     Sanguosha = new Engine;
     Config.init();
-    qApp->setFont(Config.AppFont);
     BanPair::loadBanPairs();
 
     if (qApp->arguments().contains("-server")) {
@@ -100,6 +68,8 @@ int main(int argc, char *argv[])
         qApp->setStyleSheet(stream.readAll());
     }
 
+    qApp->setFont(Config.AppFont);
+
 #ifdef AUDIO_SUPPORT
     Audio::init();
 #endif
@@ -113,13 +83,14 @@ int main(int argc, char *argv[])
         if (arg.startsWith("-connect:")) {
             arg.remove("-connect:");
             Config.HostAddress = arg;
-            Config.setValue("HostAddress", arg);
+            Config.setValue("HostUrl", arg);
 
             main_window->startConnection();
             break;
         }
     }
 
-    return qApp->exec();
+    int execResult = qApp->exec();
+    delete qApp;
+    return execResult;
 }
-

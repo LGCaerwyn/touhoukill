@@ -1,19 +1,15 @@
 #ifndef _th10_H
 #define _th10_H
 
-#include "package.h"
 #include "card.h"
+#include "package.h"
 
-
-
-#include <QGroupBox>
 #include <QAbstractButton>
 #include <QButtonGroup>
 #include <QDialog>
+#include <QGroupBox>
 #include <QHBoxLayout>
 #include <QVBoxLayout>
-
-
 
 class GongfengCard : public SkillCard
 {
@@ -26,7 +22,6 @@ public:
     virtual bool targetFilter(const QList<const Player *> &targets, const Player *to_select, const Player *Self) const;
 };
 
-
 class QijiDialog : public QDialog
 {
     Q_OBJECT
@@ -34,7 +29,7 @@ class QijiDialog : public QDialog
 public:
     static QijiDialog *getInstance(const QString &object, bool left = true, bool right = true);
 
-    public slots:
+public slots:
     void popup();
     void selectCard(QAbstractButton *button);
 
@@ -53,26 +48,6 @@ signals:
     void onButtonClick();
 };
 
-class QijiCard : public SkillCard
-{
-    Q_OBJECT
-
-public:
-    Q_INVOKABLE QijiCard();
-
-    virtual bool targetFixed() const;
-    virtual bool targetFilter(const QList<const Player *> &targets, const Player *to_select, const Player *Self) const;
-    virtual bool targetsFeasible(const QList<const Player *> &targets, const Player *Self) const;
-
-    virtual const Card *validate(CardUseStruct &card_use) const;
-    virtual const Card *validateInResponse(ServerPlayer *user) const;
-};
-
-
-
-
-
-
 class FengshenCard : public SkillCard
 {
     Q_OBJECT
@@ -82,6 +57,14 @@ public:
 
     virtual bool targetFilter(const QList<const Player *> &targets, const Player *to_select, const Player *Self) const;
     virtual void onEffect(const CardEffectStruct &effect) const;
+};
+
+class ShowFengsu : public ShowDistanceCard
+{
+    Q_OBJECT
+
+public:
+    Q_INVOKABLE ShowFengsu();
 };
 
 class XinshangCard : public SkillCard
@@ -94,18 +77,6 @@ public:
     virtual void onEffect(const CardEffectStruct &effect) const;
 };
 
-
-
-class TianyanCard : public SkillCard
-{
-    Q_OBJECT
-
-public:
-    Q_INVOKABLE TianyanCard();
-
-    virtual void use(Room *room, ServerPlayer *source, QList<ServerPlayer *> &targets) const;
-};
-
 class FengrangCard : public SkillCard
 {
     Q_OBJECT
@@ -115,8 +86,6 @@ public:
 
     virtual const Card *validate(CardUseStruct &card_use) const;
 };
-
-
 
 class JiliaoCard : public SkillCard
 {
@@ -129,25 +98,14 @@ public:
     virtual void use(Room *room, ServerPlayer *source, QList<ServerPlayer *> &targets) const;
 };
 
-class DfgzmSiyuCard : public SkillCard
+class BujuCard : public SkillCard
 {
     Q_OBJECT
 
 public:
-    Q_INVOKABLE DfgzmSiyuCard();
+    Q_INVOKABLE BujuCard();
 
     virtual void use(Room *room, ServerPlayer *source, QList<ServerPlayer *> &targets) const;
-};
-
-class ExtraCollateralCard : public SkillCard
-{
-    Q_OBJECT
-
-public:
-    Q_INVOKABLE ExtraCollateralCard();
-
-    virtual bool targetFilter(const QList<const Player *> &targets, const Player *to_select, const Player *Self) const;
-    virtual void onUse(Room *room, const CardUseStruct &card_use) const;
 };
 
 class TH10Package : public Package
@@ -159,4 +117,3 @@ public:
 };
 
 #endif
-

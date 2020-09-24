@@ -1,9 +1,8 @@
 #ifndef _th11_H
 #define _th11_H
 
-#include "package.h"
 #include "card.h"
-
+#include "package.h"
 
 class MaihuoCard : public SkillCard
 {
@@ -38,18 +37,7 @@ public:
 
     virtual const Card *validate(CardUseStruct &card_use) const;
 };
-/*
-class ChuanranCard : public SkillCard
-{
-    Q_OBJECT
 
-public:
-    Q_INVOKABLE ChuanranCard();
-
-
-    virtual bool targetFilter(const QList<const Player *> &targets, const Player *to_select, const Player *Self) const;
-    virtual void use(Room *room, ServerPlayer *source, QList<ServerPlayer *> &targets) const;
-};*/
 class TH11Package : public Package
 {
     Q_OBJECT
@@ -59,4 +47,3 @@ public:
 };
 
 #endif
-

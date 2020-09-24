@@ -240,7 +240,12 @@ local function GuanXing(self, cards)
 	local pos = 1
 	local luoshen_flag = false
 	local next_judge = {}
-	local next_player = self.player:getNextAlive()
+	--local next_player = self.player:getNextAlive()
+	local next_player
+	for _, p in sgs.qlist(global_room:getOtherPlayers(self.player)) do
+		if p:faceUp() then next_player = p break end
+	end
+	next_player = next_player or self.player:faceUp() and self.player or self.player:getNextAlive(1, false)
 	judge = next_player:getCards("j")
 	judge = sgs.QList2Table(judge)
 	judge = sgs.reverse(judge)
@@ -329,7 +334,8 @@ local function XinZhan(self, cards)
 	local up, tmpup, bottom = {}, {}, {} --type: ids, ids, cards
 	local judged_list = {}
 	local hasJudge = false
-	local next_player = self.player:getNextAlive()
+	--local next_player = self.player:getNextAlive()
+	local next_player = self.room:findPlayer(self.room:getCurrent():getNextAlive(1, false):objectName())
 	local judge = next_player:getCards("j")
 	judge = sgs.QList2Table(judge)
 	judge = sgs.reverse(judge)
@@ -455,10 +461,10 @@ end
 
 function SmartAI:askForGuanxing(cards, guanxing_type)
 	--KOF模式--
-	if guanxing_type ~= sgs.Room_GuanxingDownOnly then
-		local func = Tactic("guanxing", self, guanxing_type == sgs.Room_GuanxingUpOnly)
-		if func then return func(self, cards) end
-	end
+	--if guanxing_type ~= sgs.Room_GuanxingDownOnly then
+	--	local func = Tactic("guanxing", self, guanxing_type == sgs.Room_GuanxingUpOnly)
+	--	if func then return func(self, cards) end
+	--end
 	--身份局--
 	if guanxing_type == sgs.Room_GuanxingBothSides then return GuanXing(self, cards)
 	elseif guanxing_type == sgs.Room_GuanxingUpOnly then return XinZhan(self, cards)

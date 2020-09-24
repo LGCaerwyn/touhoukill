@@ -1,20 +1,21 @@
 #include "sanfreetypefont.h"
 
-#include <QString>
-#include <QPainter>
 #include <QColor>
-#include <QSize>
-#include <QRect>
-#include <QFile>
 #include <QDesktopServices>
 #include <QDir>
+#include <QFile>
+#include <QPainter>
+#include <QRect>
+#include <QSize>
+#include <QString>
 
-#define NEW_FONT_PIXEL(x, y, channel) (newImage[((y) * cols + (x)) * 4 + channel])
-#define FONT_PIXEL(x, y) (bitmap.buffer[(y) * rowStep + (x)])
+#define NEW_FONT_PIXEL(x, y, channel) (newImage[((y)*cols + (x)) * 4 + channel])
+#define FONT_PIXEL(x, y) (bitmap.buffer[(y)*rowStep + (x)])
 
 SanFreeTypeFont *const SanFreeTypeFont::m_instance = new SanFreeTypeFont;
 
-SanFreeTypeFont::SanFreeTypeFont() : m_ftLib(NULL)
+SanFreeTypeFont::SanFreeTypeFont()
+    : m_ftLib(NULL)
 {
     FT_Error error = FT_Init_FreeType(&m_ftLib);
     if (error) {
@@ -50,7 +51,7 @@ QString SanFreeTypeFont::resolveFont(const QString &fontName)
     return "";
 }
 
-const int *const SanFreeTypeFont::loadFont(const QString &fontName)
+const int *SanFreeTypeFont::loadFont(const QString &fontName)
 {
     if (!m_ftLib) {
         return NULL;
@@ -75,10 +76,8 @@ const int *const SanFreeTypeFont::loadFont(const QString &fontName)
     }
 }
 
-bool SanFreeTypeFont::paintString(QPainter *const painter, const QString &text,
-    const int *const font, const QColor &color, QSize &fontSize,
-    int spacing, int weight, QRect &boundingBox,
-    const Qt::Orientation &orient, const Qt::Alignment &align)
+bool SanFreeTypeFont::paintString(QPainter *const painter, const QString &text, const int *const font, const QColor &color, QSize &fontSize, int spacing, int weight,
+                                  QRect &boundingBox, const Qt::Orientation &orient, const Qt::Alignment &align)
 {
     if (!m_ftLib || font == NULL || painter == NULL || text.isEmpty()) {
         return false;
@@ -169,8 +168,7 @@ bool SanFreeTypeFont::paintString(QPainter *const painter, const QString &text,
         }
 
         if (useKerning && previous && glyph_index) {
-            error = FT_Get_Kerning(face, previous, glyph_index,
-                FT_KERNING_DEFAULT, &delta);
+            error = FT_Get_Kerning(face, previous, glyph_index, FT_KERNING_DEFAULT, &delta);
             currentX += delta.x >> 6;
         }
         previous = glyph_index;
@@ -185,11 +183,10 @@ bool SanFreeTypeFont::paintString(QPainter *const painter, const QString &text,
 
         bitmap = slot->bitmap;
 
-        Q_ASSERT(bitmap.pitch == bitmap.width ||
-            bitmap.pitch == (bitmap.width - 1) / 8 + 1);
+        Q_ASSERT(bitmap.pitch == bitmap.width || bitmap.pitch == (bitmap.width - 1) / 8 + 1);
 
         bool mono = true;
-        if (bitmap.pitch == bitmap.width) {
+        if ((unsigned int)(bitmap.pitch) == bitmap.width) {
             mono = false;
         }
 
@@ -323,10 +320,8 @@ bool SanFreeTypeFont::paintString(QPainter *const painter, const QString &text,
     return true;
 }
 
-bool SanFreeTypeFont::paintStringMultiLine(QPainter *const painter, const QString &text,
-    const int *const font, const QColor &color, QSize &fontSize,
-    int spacing, int weight, QRect &boundingBox,
-    const Qt::Alignment &align)
+bool SanFreeTypeFont::paintStringMultiLine(QPainter *const painter, const QString &text, const int *const font, const QColor &color, QSize &fontSize, int spacing, int weight,
+                                           QRect &boundingBox, const Qt::Alignment &align)
 {
     if (!m_ftLib || font == NULL || painter == NULL || text.isEmpty()) {
         return false;
@@ -416,8 +411,7 @@ bool SanFreeTypeFont::paintStringMultiLine(QPainter *const painter, const QStrin
         }
 
         if (useKerning && previous && glyph_index) {
-            error = FT_Get_Kerning(face, previous, glyph_index,
-                FT_KERNING_DEFAULT, &delta);
+            error = FT_Get_Kerning(face, previous, glyph_index, FT_KERNING_DEFAULT, &delta);
             currentX += delta.x >> 6;
         }
         previous = glyph_index;
@@ -436,12 +430,11 @@ bool SanFreeTypeFont::paintStringMultiLine(QPainter *const painter, const QStrin
         int tmpYOffset = fontSize.height() - slot->bitmap_top;
         currentY = currentY + tmpYOffset;
 
-        Q_ASSERT(bitmap.pitch == bitmap.width ||
-            bitmap.pitch == (bitmap.width - 1) / 8 + 1);
+        Q_ASSERT(bitmap.pitch == bitmap.width || bitmap.pitch == (bitmap.width - 1) / 8 + 1);
 
         //@todo put it back
         bool mono = true;
-        if (bitmap.pitch == bitmap.width) {
+        if ((unsigned int)(bitmap.pitch) == bitmap.width) {
             mono = false;
         }
 

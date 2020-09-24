@@ -3,6 +3,36 @@ sgs.ai_skill_playerchosen.sidou = function(self, targets)
 	if self.player:getHp()== 1 then
 		return nil
 	end
+	
+	local fakeDamage=sgs.DamageStruct()
+	fakeDamage.nature= sgs.DamageStruct_Fire
+	fakeDamage.damage=1
+	fakeDamage.from = self.player
+	fakeDamage.to = self.player
+	local final_damage=self:touhouDamage(fakeDamage,self.player, self.player)
+        local friend_damage = final_damage.damage
+        local enemy_damage = 0
+        if self.player:isChained() then
+        	for _,p in sgs.qlist(self.room:getOtherPlayers(self.player)) do
+				if p:isChained() then
+					fakeDamage.to = p
+					local tmp_damage=self:touhouDamage(fakeDamage,self.player, self.player)
+					if self:isEnemy(p) then
+						enemy_damage = enemy_damage  + tmp_damage.damage
+					elseif self:isFriend(p) then
+						friend_damage = friend_damage  + tmp_damage.damage
+				end
+            end		
+	    end
+	end
+
+
+
+	if friend_damage > enemy_damage and friend_damage >=2 then
+		return nil
+    end
+	
+	
 	local wizzard=self:invokeTouhouJudge()
 	for _,p in sgs.qlist(targets) do
 		if not wizzard and p:containsTrick("lightning") then
@@ -63,7 +93,7 @@ sgs.ai_skillProperty.tymhwuyu = function(self)
 end
 
 
-sgs.ai_skill_invoke.huanyue = function(self,data)
+--[[sgs.ai_skill_invoke.huanyue = function(self,data)
 	local damage = self.player:getTag("huanyue_damage"):toDamage()
 	if not self:isEnemy(damage.to) then return false end
 	local tempDamage = damage.damage
@@ -92,6 +122,24 @@ sgs.ai_choicemade_filter.skillInvoke.huanyue = function(self, player, args)
 end
 
 sgs.ai_skill_invoke.sizhai = true
+]]
+
+sgs.ai_skill_invoke.huanyue = true
+sgs.ai_skill_invoke.wanggou = true
+sgs.ai_skill_cardask["@huanyue"] = function(self, data)
+	local damage = data:toDamage()
+	if self:isEnemy(damage.to) then
+		return "$" .. self.player:getPile("huanyue_pile"):first()
+	end
+	return "."
+end
+sgs.ai_choicemade_filter.cardResponded["@huanyue"] = function(self, player, args, data)
+	if args[#args] ~= "_nil_" then
+		local target =data:toDamage().to
+		if not target then return end
+		sgs.updateIntention(player, target, 80)
+	end
+end
 
 sgs.ai_skill_invoke.yuanhu = function(self,data)
 	local source = self.player:getTag("yuanhu"):toPlayer()
@@ -103,6 +151,26 @@ sgs.ai_choicemade_filter.skillInvoke.yuanhu = function(self, player, args)
 		sgs.updateIntention(player, source, -30)
 	end
 end
+
+sgs.ai_skill_cardask["@yuanhu"] = function(self, data, pattern, target)
+	local yukari = self.player:getTag("yuanhu_drawers"):toPlayer()
+	if self:isFriend(yukari) then
+		local handcards = sgs.QList2Table(self.player:getHandcards())
+		if #handcards==0 then return "." end
+		self:sortByUseValue(handcards)
+		return "$" .. handcards[1]:getId()
+	end
+	return "."
+end
+
+sgs.ai_choicemade_filter.cardResponded["@yuanhu"] = function(self, player, args)
+	local source = player:getTag("yuanhu_drawers"):toPlayer()
+	if source and args[#args] == "yes" then
+		sgs.updateIntention(player, source, -30)
+	end
+end
+
+
 sgs.ai_skill_discard.yuanhu = function(self,discard_num, min_num)
 	local target = self.player:getTag("yuanhu_target"):toPlayer()
 	local to_discard = {}
@@ -176,21 +244,89 @@ sgs.ai_skill_choice.fanji= function(self, choices, data)
 	end
 	return "hp"
 end
---[[sgs.ai_choicemade_filter.skillInvoke.fanji = function(self, player, args)
-	local damage = player:getTag("fanji_damage"):toDamage()
-	local to=damage.to
-	local from=damage.from
-	if from and to and from:objectName()~= to:objectName() then
-		if args[#args] == "yes" then
-		sgs.updateIntention(player, to, -50)
-		sgs.updateIntention(player, from, 50)
-		else
-		sgs.updateIntention(player, from, -10)
-		sgs.updateIntention(player, to, 20)
+
+
+sgs.ai_skill_use["@@liexi"] = function(self, prompt)
+	local dummy_use = { isDummy = true, to = sgs.SPlayerList() }
+	local card=sgs.cloneCard("slash", sgs.Card_NoSuit, 0)
+	card:setSkillName("liexi")
+	local target
+
+	self:useBasicCard(card, dummy_use)
+	if not dummy_use.card then return false end
+	if dummy_use.to:isEmpty() then
+		return "."
+	else
+		local target_objectname = {}
+
+		for _, p in sgs.qlist(dummy_use.to) do
+			if self:isEnemy(p) then
+				table.insert(target_objectname, p:objectName())
+				target=p
+				break
+			end
+		end
+
+		if #target_objectname>0 then
+			return dummy_use.card:toString() .. "->" .. table.concat(target_objectname, "+")
 		end
 	end
+	return "."
 end
-]]
+
+
+sgs.ai_skill_playerchosen.liexi = function(self, targets)
+	local use = self.room:getTag("liexi_extra"):toCardUse()
+	for _,p in sgs.qlist(targets) do
+		if self:isFriend(p) then
+			if not self:slashIsEffective(use.card, p, use.from) then
+			return true
+			end
+			if getCardsNum("Jink", p, self.player) > 0  then return p end
+		end
+	end
+	return targets:first()
+end
+sgs.ai_skill_invoke.liexi_extra = function(self,data)
+	local use = self.room:getTag("liexi_extra"):toCardUse()
+	if (use.from and self:isFriend(use.from)) then
+		if not self:slashIsEffective(use.card, self.player, use.from) then
+			return true
+		end
+		if  self:getCardsNum("Jink") > 0  then return true end
+	end
+	return false
+end
+sgs.ai_skill_playerchosen.mengwei = function(self, targets)
+	local use = self.room:getTag("mengwei_extra"):toCardUse()
+	for _,p in sgs.qlist(targets) do
+		if self:playerGetRound(p) <= self:playerGetRound(self.player) and self:isFriend(p) then
+			if not self:slashIsEffective(use.card, p, use.from) then
+				return p
+			end
+			if  self:getCardsNum("Jink") > 0  then return p end
+		end
+	end
+	return targets:first()
+end
+sgs.ai_skill_invoke.mengwei_extra = function(self,data)
+	local use = self.room:getTag("mengwei_extra"):toCardUse()
+	local source
+	for _,p in sgs.qlist(use.to) do
+		if p:hasSkill("mengwei") then
+			source = p
+			break
+		end
+	end
+	if (source and self:isFriend(source)) then
+		if not self:slashIsEffective(use.card, self.player, use.from) then
+			return true
+		end
+		if  self:getCardsNum("Jink") > 0  then return true end
+		if self:playerGetRound(self.player) >= self:playerGetRound(source) then return true end
+	end
+	return false
+end
 
 sgs.ai_skill_invoke.zaiwu = function(self,data)
 	local target = self.player:getTag("zaiwu"):toPlayer()
@@ -212,6 +348,7 @@ sgs.ai_choicemade_filter.skillInvoke.zaiwu = function(self, player, args)
 		end
 	end
 end
+--[[
 sgs.ai_skill_invoke.mengwei = function(self,data)
 	local target = data:toPlayer()
 	if not target then return false end
@@ -224,7 +361,7 @@ sgs.ai_choicemade_filter.skillInvoke.mengwei = function(self, player, args)
 		sgs.updateIntention(player, target, -30)
 	end
 end
-
+]]
 sgs.ai_skill_cardask["@xiubu-self"] = function(self, data)
 	if sgs.ai_skill_invoke.xiubu(self, data) then
 		local dis = self:askForDiscard("Dummy", 1, 1, false, false)
@@ -259,4 +396,165 @@ sgs.ai_cardneed.xiubu = function(to, card, self)
 		return  (not to:getWeapon() and  getCardsNum("Weapon",to,self.player)<1 and card:isKindOf("Weapon"))
 		or (not to:getOffensiveHorse() and  getCardsNum("OffensiveHorse",to,self.player)<1 and card:isKindOf("OffensiveHorse"))
 	end
+end
+
+sgs.ai_skill_invoke.jineng =function(self,data)
+	--if not self:invokeTouhouJudge() then return false end
+	return true
+end
+local jineng_skill = {}
+jineng_skill.name = "jineng"
+table.insert(sgs.ai_skills, jineng_skill)
+jineng_skill.getTurnUseCard = function(self)
+
+	local current = self.room:getCurrent()
+	if not current or current:isDead() or current:getPhase() == sgs.Player_NotActive then return end
+
+	local ids = self.player:getPile("jinengPile")
+	local spade, heart, club, diamond -- = {}, {}, {}, {}
+	local jinengCards = {}
+	for _, id in sgs.qlist(ids) do
+		local forbid
+		local c = sgs.Sanguosha:getCard(id)
+		local suit = c:getSuit()
+		if  suit == sgs.Card_Spade then
+			forbid = sgs.cloneCard("slash")
+		elseif suit == sgs.Card_Club then
+			forbid = sgs.cloneCard("known_both")
+		elseif suit == sgs.Card_Diamond then
+			forbid = sgs.cloneCard("analeptic")
+		end
+
+
+		if forbid then
+			forbid:addSubcard(c)
+			forbid:setSkillName("jineng")
+			if not self.player:isLocked(forbid)  then
+				table.insert(jinengCards,forbid)
+			end
+		end
+	end
+
+
+	self:sortByUseValue(jinengCards, false)
+	for _,jinengCard in pairs (jinengCards) do
+		local dummyuse = { isDummy = true }
+		if jinengCard:isKindOf("BasicCard") then
+			self:useBasicCard(jinengCard, dummyuse)
+		else
+			self:useTrickCard(jinengCard, dummyuse)
+		end
+
+		if dummyuse.card then
+			local suit = jinengCard:getSuitString()
+			local number = jinengCard:getNumberString()
+			local card_id = jinengCard:getEffectiveId()
+			local jineng_str = (jinengCard:objectName() .. ":jineng[%s:%s]=%d"):format(suit, number, card_id)
+			local jineng_card = sgs.Card_Parse(jineng_str)
+
+			assert(jineng_card)
+			if (jinengCard:isKindOf("KnownBoth")) then--known_both
+				jineng_card:setCanRecast(false)
+			end
+			return jineng_card
+		end
+	end
+
+	return nil
+end
+sgs.ai_skill_use_func.HuaxiangCard=function(card,use,self)
+	local userstring=card:toString()
+	userstring=(userstring:split(":"))[3]
+	local huaxiangcard=sgs.cloneCard(userstring)
+	huaxiangcard:setSkillName("huaxiang")
+	self:useBasicCard(huaxiangcard, use)
+	if not use.card then return end
+	use.card=card
+end
+
+
+
+function sgs.ai_cardsview_valuable.jineng(self, class_name, player)
+	if (sgs.Sanguosha:getCurrentCardUseReason() == sgs.CardUseStruct_CARD_USE_REASON_UNKNOWN) then
+		return nil
+	end
+
+	local ids = self.player:getPile("jinengPile")
+	local spade, heart, club, diamond -- = {}, {}, {}, {}
+
+	for _, id in sgs.qlist(ids) do
+		local c = sgs.Sanguosha:getCard(id)
+		local suit = c:getSuit()
+		if  suit == sgs.Card_Spade then
+			spade =  c
+		elseif suit == sgs.Card_Heart then
+			heart = c
+		elseif suit == sgs.Card_Diamond then
+			diamond = c
+		end
+	end
+
+	local cardname, card
+	if self:touhouClassMatch(class_name, "Analeptic") then
+		card = diamond
+		cardname = "analeptic"
+	elseif self:touhouClassMatch(class_name, "Jink") then
+		card = heart
+		cardname = "jink"
+	--elseif self:touhouClassMatch(class_name, "KnownBoth")  then
+	elseif self:touhouClassMatch(class_name, "Slash") then
+		card = spade
+		cardname = "slash"
+	end
+
+	if not card then return nil end
+
+	local suit = card:getSuitString()
+	local number = card:getNumberString()
+	local card_id = card:getEffectiveId()
+	return (cardname .. ":jineng[%s:%s]=%d"):format(suit, number, card_id)
+
+end
+
+sgs.ai_skill_invoke.kuaibao =function(self,data)
+	local current = self.room:getCurrent()
+	if self:isEnemy(current) and not self:needToLoseHp(current, self.player, false, false) then
+		return true
+	end
+	return false
+end
+
+--年代记SP天子
+-- 忧乐："一名角色的非额外回合结束时，若你于此回合内造成或受到过伤害，你可以选择一名角色的一个有牌区域，令其弃置其中的X张牌（X为其中的牌数且至多为5），然后其获得一个额外的回合。"
+--忧乐：选择发动技能的目标 @todo:sort targets
+sgs.ai_skill_playerchosen.youle = function(self, targets)
+	for _,t in sgs.qlist(targets) do
+		if self:isFriend(t) then
+			if t:containsTrick("supply_shortage") or t:containsTrick("indulgence") then return t end
+			if t:getHandcardNum() <= 2 then  return t end
+			if t:getEquips():length() == 1  then  return t end
+			
+		end
+		if self:isEnemy(t) then
+			if t:getEquips():length() > 2  then  return t end
+                	if t:getHandcardNum() >= 3  then return t end
+		end
+        end
+	return nil	
+end
+
+--忧乐：选择牌的区域
+sgs.ai_skill_choice.youle = function(self, choices, data)
+	--要改程序
+	local t = self.player:getTag("youle"):toPlayer() 
+	
+	if self:isFriend(t) then
+		if t:containsTrick("supply_shortage") or t:containsTrick("indulgence") then return "j" end
+		if t:getHandcardNum() <= 2 then  return "h" end
+		if t:getEquips():length() == 1  then  return "e" end			
+	elseif self:isEnemy(t) then
+		if t:getEquips():length() > 2  then  return "e" end
+               	if t:getHandcardNum() >= 3  then return "h" end
+	end
+	return choices[1]
 end

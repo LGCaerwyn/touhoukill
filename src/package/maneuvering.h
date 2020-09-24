@@ -43,7 +43,8 @@ class Analeptic : public BasicCard
 public:
     Q_INVOKABLE Analeptic(Card::Suit suit, int number);
     virtual QString getSubtype() const;
-
+    virtual bool canRecover() const;
+    virtual bool targetFilter(const QList<const Player *> &targets, const Player *to_select, const Player *Self) const;
     static bool IsAvailable(const Player *player, const Card *analeptic = NULL);
 
     virtual bool isAvailable(const Player *player) const;
@@ -116,6 +117,8 @@ class FireAttack : public SingleTargetTrick
 public:
     Q_INVOKABLE FireAttack(Card::Suit suit, int number);
 
+    virtual bool isAvailable(const Player *player) const;
+
     virtual bool targetFilter(const QList<const Player *> &targets, const Player *to_select, const Player *Self) const;
     virtual void onEffect(const CardEffectStruct &effect) const;
 };
@@ -127,6 +130,9 @@ class SupplyShortage : public DelayedTrick
 public:
     Q_INVOKABLE SupplyShortage(Card::Suit suit, int number);
 
+    virtual bool isAvailable(const Player *player) const;
+
+    virtual QString getSubtype() const;
     virtual bool targetFilter(const QList<const Player *> &targets, const Player *to_select, const Player *Self) const;
     virtual void takeEffect(ServerPlayer *target) const;
 };
@@ -140,4 +146,3 @@ public:
 };
 
 #endif
-

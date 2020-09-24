@@ -7,9 +7,10 @@ class ServerPlayer;
 class QDialog;
 
 #include "room.h"
-#include "structs.h"
 #include "standard.h"
+#include "structs.h"
 
+#include <QDialog>
 #include <QObject>
 
 class Skill : public QObject
@@ -29,11 +30,11 @@ public:
         Eternal
     };
 
-    explicit Skill(const QString &name, Frequency frequent = NotFrequent);
+    explicit Skill(const QString &name, Frequency frequent = NotFrequent, const QString &showType = "trigger");
     bool isLordSkill() const;
     bool isAttachedLordSkill() const;
     virtual bool shouldBeVisible(const Player *Self) const; // usually for attached skill
-    QString getDescription(bool yellow = true) const;
+    QString getDescription(bool yellow = true, bool addHegemony = false) const;
     QString getNotice(int index) const;
     bool isVisible() const;
 
@@ -44,14 +45,28 @@ public:
     void playAudioEffect(int index = -1) const;
     Frequency getFrequency() const;
     QString getLimitMark() const;
+    QString getRelatedMark() const;
+    QString getRelatedPileName() const;
     QStringList getSources() const;
     bool matchAvaliablePattern(QString avaliablePattern, QString askedPattern) const;
+    QString getShowType() const; //nue_god
+    virtual bool canPreshow() const; //hegemony
+    virtual bool relateToPlace(bool head = true) const;
+
+    //for LUA
+    //inline void setRelateToPlace(const char *rtp)
+    //{
+    //    relate_to_place = rtp;
+    //}
 
 protected:
     Frequency frequency;
     QString limit_mark;
+    QString related_mark; //while changing hero, this will be removed
+    QString related_pile;
     bool attached_lord_skill;
-
+    QString show_type;
+    QString relate_to_place;
 
 private:
     bool lord_skill;
@@ -63,7 +78,7 @@ class ViewAsSkill : public Skill
     Q_OBJECT
 
 public:
-    ViewAsSkill(const QString &name);
+    explicit ViewAsSkill(const QString &name);
 
     virtual bool viewFilter(const QList<const Card *> &selected, const Card *to_select) const = 0;
     virtual const Card *viewAs(const QList<const Card *> &cards) const = 0;
@@ -72,15 +87,13 @@ public:
     virtual bool isEnabledAtPlay(const Player *player) const;
     virtual bool isEnabledAtResponse(const Player *player, const QString &pattern) const;
     virtual bool isEnabledAtNullification(const ServerPlayer *player) const;
+    virtual QStringList getDialogCardOptions() const;
     static const ViewAsSkill *parseViewAsSkill(const Skill *skill);
     inline bool isResponseOrUse() const
     {
         return response_or_use;
     }
-    inline QString getExpandPile() const
-    {
-        return expand_pile;
-    }
+    virtual QString getExpandPile() const;
 
 protected:
     QString response_pattern;
@@ -93,7 +106,7 @@ class ZeroCardViewAsSkill : public ViewAsSkill
     Q_OBJECT
 
 public:
-    ZeroCardViewAsSkill(const QString &name);
+    explicit ZeroCardViewAsSkill(const QString &name);
 
     virtual bool viewFilter(const QList<const Card *> &selected, const Card *to_select) const;
     virtual const Card *viewAs(const QList<const Card *> &cards) const;
@@ -105,7 +118,7 @@ class OneCardViewAsSkill : public ViewAsSkill
     Q_OBJECT
 
 public:
-    OneCardViewAsSkill(const QString &name);
+    explicit OneCardViewAsSkill(const QString &name);
 
     virtual bool viewFilter(const QList<const Card *> &selected, const Card *to_select) const;
     virtual const Card *viewAs(const QList<const Card *> &cards) const;
@@ -122,7 +135,7 @@ class FilterSkill : public OneCardViewAsSkill
     Q_OBJECT
 
 public:
-    FilterSkill(const QString &name);
+    explicit FilterSkill(const QString &name);
 };
 
 class TriggerSkill : public Skill
@@ -130,7 +143,7 @@ class TriggerSkill : public Skill
     Q_OBJECT
 
 public:
-    TriggerSkill(const QString &name);
+    explicit TriggerSkill(const QString &name);
     const ViewAsSkill *getViewAsSkill() const;
     QList<TriggerEvent> getTriggerEvents() const;
 
@@ -159,7 +172,7 @@ class ScenarioRule : public TriggerSkill
     Q_OBJECT
 
 public:
-    ScenarioRule(Scenario *scenario);
+    explicit ScenarioRule(Scenario *scenario);
 
     virtual int getPriority() const;
     virtual QList<SkillInvokeDetail> triggerable(TriggerEvent triggerEvent, const Room *room, const QVariant &data) const;
@@ -170,7 +183,7 @@ class MasochismSkill : public TriggerSkill
     Q_OBJECT
 
 public:
-    MasochismSkill(const QString &name);
+    explicit MasochismSkill(const QString &name);
 
     QList<SkillInvokeDetail> triggerable(TriggerEvent triggerEvent, const Room *room, const QVariant &data) const;
     virtual QList<SkillInvokeDetail> triggerable(const Room *room, const DamageStruct &damage) const;
@@ -183,7 +196,7 @@ class PhaseChangeSkill : public TriggerSkill
     Q_OBJECT
 
 public:
-    PhaseChangeSkill(const QString &name);
+    explicit PhaseChangeSkill(const QString &name);
 
     bool effect(TriggerEvent triggerEvent, Room *room, QSharedPointer<SkillInvokeDetail> invoke, QVariant &data) const;
     virtual bool onPhaseChange(ServerPlayer *target) const = 0;
@@ -208,7 +221,7 @@ class GameStartSkill : public TriggerSkill
     Q_OBJECT
 
 public:
-    GameStartSkill(const QString &name);
+    explicit GameStartSkill(const QString &name);
 
     bool effect(TriggerEvent triggerEvent, Room *room, QSharedPointer<SkillInvokeDetail> invoke, QVariant &data) const;
     virtual void onGameStart() const = 0;
@@ -219,9 +232,10 @@ class ProhibitSkill : public Skill
     Q_OBJECT
 
 public:
-    ProhibitSkill(const QString &name);
+    explicit ProhibitSkill(const QString &name);
 
-    virtual bool isProhibited(const Player *from, const Player *to, const Card *card, const QList<const Player *> &others = QList<const Player *>()) const = 0;
+    virtual bool isProhibited(const Player *from, const Player *to, const Card *card, const QList<const Player *> &others = QList<const Player *>(),
+                              bool include_hidden = false) const = 0;
 };
 
 class DistanceSkill : public Skill
@@ -229,9 +243,24 @@ class DistanceSkill : public Skill
     Q_OBJECT
 
 public:
-    DistanceSkill(const QString &name);
+    explicit DistanceSkill(const QString &name);
 
     virtual int getCorrect(const Player *from, const Player *to) const = 0;
+    const ViewAsSkill *getViewAsSkill() const;
+
+protected:
+    const ViewAsSkill *view_as_skill;
+};
+
+class ShowDistanceSkill : public ZeroCardViewAsSkill
+{
+    Q_OBJECT
+
+public:
+    ShowDistanceSkill(const QString &name);
+
+    const Card *viewAs() const;
+    virtual bool isEnabledAtPlay(const Player *player) const;
 };
 
 class MaxCardsSkill : public Skill
@@ -239,10 +268,14 @@ class MaxCardsSkill : public Skill
     Q_OBJECT
 
 public:
-    MaxCardsSkill(const QString &name);
+    explicit MaxCardsSkill(const QString &name);
 
     virtual int getExtra(const Player *target) const;
     virtual int getFixed(const Player *target) const;
+    const ViewAsSkill *getViewAsSkill() const;
+
+protected:
+    const ViewAsSkill *view_as_skill;
 };
 
 class TargetModSkill : public Skill
@@ -258,7 +291,7 @@ public:
         ExtraTarget
     };
 
-    TargetModSkill(const QString &name);
+    explicit TargetModSkill(const QString &name);
     virtual QString getPattern() const;
 
     virtual int getResidueNum(const Player *from, const Card *card) const;
@@ -274,10 +307,14 @@ class AttackRangeSkill : public Skill
     Q_OBJECT
 
 public:
-    AttackRangeSkill(const QString &name);
+    explicit AttackRangeSkill(const QString &name);
 
     virtual int getExtra(const Player *target, bool include_weapon) const;
     virtual int getFixed(const Player *target, bool include_weapon) const;
+    const ViewAsSkill *getViewAsSkill() const;
+
+protected:
+    const ViewAsSkill *view_as_skill;
 };
 
 class SlashNoDistanceLimitSkill : public TargetModSkill
@@ -285,7 +322,7 @@ class SlashNoDistanceLimitSkill : public TargetModSkill
     Q_OBJECT
 
 public:
-    SlashNoDistanceLimitSkill(const QString &skill_name);
+    explicit SlashNoDistanceLimitSkill(const QString &skill_name);
 
     virtual int getDistanceLimit(const Player *from, const Card *card) const;
 
@@ -299,7 +336,7 @@ class FakeMoveSkill : public TriggerSkill
     Q_OBJECT
 
 public:
-    FakeMoveSkill(const QString &skillname);
+    explicit FakeMoveSkill(const QString &skillname);
 
     int getPriority() const;
     QList<SkillInvokeDetail> triggerable(TriggerEvent triggerEvent, const Room *room, const QVariant &data) const;
@@ -314,7 +351,7 @@ class EquipSkill : public TriggerSkill
     Q_OBJECT
 
 public:
-    EquipSkill(const QString &name);
+    explicit EquipSkill(const QString &name);
 
     static bool equipAvailable(const Player *p, EquipCard::Location location, const QString &equip_name, const Player *to = NULL);
     static bool equipAvailable(const Player *p, const EquipCard *card, const Player *to = NULL);
@@ -325,7 +362,7 @@ class WeaponSkill : public EquipSkill
     Q_OBJECT
 
 public:
-    WeaponSkill(const QString &name);
+    explicit WeaponSkill(const QString &name);
 };
 
 class ArmorSkill : public EquipSkill
@@ -333,7 +370,7 @@ class ArmorSkill : public EquipSkill
     Q_OBJECT
 
 public:
-    ArmorSkill(const QString &name);
+    explicit ArmorSkill(const QString &name);
 };
 
 class TreasureSkill : public EquipSkill
@@ -341,8 +378,55 @@ class TreasureSkill : public EquipSkill
     Q_OBJECT
 
 public:
-    TreasureSkill(const QString &name);
+    explicit TreasureSkill(const QString &name);
+};
+
+class ViewHasSkill : public Skill
+{
+    Q_OBJECT
+
+public:
+    ViewHasSkill(const QString &name);
+
+    virtual bool ViewHas(const Player *player, const QString &skill_name, const QString &flag, bool ignore_preshow = false) const = 0;
+    inline bool isGlobal() const
+    {
+        return global;
+    }
+
+protected:
+    bool global;
+};
+
+class BattleArraySkill : public TriggerSkill
+{
+    Q_OBJECT
+
+public:
+    BattleArraySkill(const QString &name, const QString arrayType); //
+    //virtual QList<SkillInvokeDetail> triggerable(TriggerEvent triggerEvent, const Room *room, const QVariant &data) const;
+    //virtual bool triggerable(const ServerPlayer *player) const;
+
+    virtual void summonFriends(ServerPlayer *player) const;
+
+    inline QString getArrayType() const
+    {
+        return array_type;
+    }
+
+private:
+    QString array_type;
+};
+
+class ArraySummonSkill : public ZeroCardViewAsSkill
+{
+    Q_OBJECT
+
+public:
+    ArraySummonSkill(const QString &name);
+
+    const Card *viewAs() const;
+    virtual bool isEnabledAtPlay(const Player *player) const;
 };
 
 #endif
-

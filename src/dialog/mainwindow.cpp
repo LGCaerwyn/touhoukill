@@ -1,39 +1,61 @@
 #include "mainwindow.h"
-#include "startscene.h"
-#include "roomscene.h"
-#include "server.h"
-#include "client.h"
-#include "generaloverview.h"
-#include "cardoverview.h"
-#include "ui_mainwindow.h"
-#include "scenario-overview.h"
-#include "window.h"
-#include "pixmapanimation.h"
-#include "record-analysis.h"
 #include "AboutUs.h"
 #include "audio.h"
+#include "cardoverview.h"
+#include "client.h"
+#include "generaloverview.h"
+#include "lua.hpp"
+#include "pixmapanimation.h"
+#include "record-analysis.h"
+#include "recorder.h"
+#include "roomscene.h"
+#include "server.h"
+#include "startscene.h"
+#include "ui_mainwindow.h"
+#include "window.h"
 
-#include <qmath.h>
-#include <QGraphicsView>
+#include <QCheckBox>
+#include <QCommandLinkButton>
+#include <QCryptographicHash>
+#include <QDesktopServices>
+#include <QDialogButtonBox>
+#include <QFileDialog>
+#include <QFormLayout>
 #include <QGraphicsItem>
 #include <QGraphicsPixmapItem>
 #include <QGraphicsTextItem>
-#include <QVariant>
-#include <QMessageBox>
-#include <QTime>
-#include <QProcess>
-#include <QCheckBox>
-#include <QFileDialog>
-#include <QDesktopServices>
-#include <QSystemTrayIcon>
+#include <QGraphicsView>
+#include <QGroupBox>
 #include <QInputDialog>
+#include <QJsonDocument>
+#include <QJsonObject>
 #include <QLabel>
+#include <QMessageBox>
+#include <QNetworkAccessManager>
+#include <QNetworkReply>
+#include <QProcess>
+#include <QProgressBar>
 #include <QStatusBar>
+#include <QSystemTrayIcon>
+#include <QTime>
+#include <QToolButton>
+#include <QVariant>
+#include <QtMath>
+
+#ifdef Q_OS_WIN
+#include <QWinTaskbarButton>
+#include <QWinTaskbarProgress>
+#endif
+
+#if QT_VERSION >= 0x050600
+#include <QVersionNumber>
+#endif
 
 class FitView : public QGraphicsView
 {
 public:
-    FitView(QGraphicsScene *scene) : QGraphicsView(scene)
+    explicit FitView(QGraphicsScene *scene)
+        : QGraphicsView(scene)
     {
         setSceneRect(Config.Rect);
         setRenderHints(QPainter::TextAntialiasing | QPainter::Antialiasing);
@@ -57,8 +79,7 @@ public:
             return;
         } else if (scene()->inherits("StartScene")) {
             StartScene *start_scene = qobject_cast<StartScene *>(scene());
-            QRectF newSceneRect(-event->size().width() / 2, -event->size().height() / 2,
-                event->size().width(), event->size().height());
+            QRectF newSceneRect(-event->size().width() / 2, -event->size().height() / 2, event->size().width(), event->size().height());
             start_scene->setSceneRect(newSceneRect);
             setSceneRect(start_scene->sceneRect());
             if (newSceneRect != start_scene->sceneRect())
@@ -70,7 +91,9 @@ public:
 };
 
 MainWindow::MainWindow(QWidget *parent)
-    : QMainWindow(parent), ui(new Ui::MainWindow)
+    : QMainWindow(parent)
+    , ui(new Ui::MainWindow)
+    , autoUpdateManager(new QNetworkAccessManager(this))
 {
     ui->setupUi(this);
     scene = NULL;
@@ -91,28 +114,19 @@ MainWindow::MainWindow(QWidget *parent)
 
     StartScene *start_scene = new StartScene;
     //play title BGM
+#ifdef AUDIO_SUPPORT
     if (Config.EnableBgMusic) {
         QString bgm = "audio/title/main.ogg";
-        if (QFile::exists(bgm)) {
-            Audio::stopBGM();
-            Audio::playBGM(bgm);
-            Audio::setBGMVolume(Config.BGMVolume);
-        }
+        Audio::stopBGM();
+        Audio::playBGM(bgm, true, true);
+        Audio::setBGMVolume(Config.BGMVolume);
     }
-
+#endif
     QList<QAction *> actions;
-    actions << ui->actionStart_Game
-        << ui->actionStart_Server
-        << ui->actionPC_Console_Start
-        << ui->actionReplay
-        << ui->actionConfigure
-        << ui->actionGeneral_Overview
-        << ui->actionCard_Overview
-        << ui->actionScenario_Overview
-        << ui->actionAbout
-        << ui->actionAbout_Us;
+    actions << ui->actionStart_Game << ui->actionStart_Server << ui->actionPC_Console_Start << ui->actionReplay << ui->actionGeneral_Overview << ui->actionCard_Overview
+            << ui->actionConfigure << ui->actionAbout_Us;
 
-    foreach(QAction *action, actions)
+    foreach (QAction *action, actions)
         start_scene->addButton(action);
     view = new FitView(scene);
 
@@ -127,14 +141,24 @@ MainWindow::MainWindow(QWidget *parent)
 
     systray = NULL;
 
-
-
+    if (Config.EnableAutoUpdate)
+        checkForUpdate();
 }
 
 void MainWindow::restoreFromConfig()
 {
-    resize(Config.value("WindowSize", QSize(1366, 706)).toSize());
-    move(Config.value("WindowPosition", QPoint(-8, -8)).toPoint());
+    int width = Config.value("WindowWidth", 1366).toInt();
+    int height = Config.value("WindowHeight", 706).toInt();
+    int x = Config.value("WindowX", -8).toInt();
+    int y = Config.value("WindowY", -8).toInt();
+    bool maximized = Config.value("WindowMaximized", false).toBool();
+
+    if (maximized)
+        setWindowState(Qt::WindowMaximized);
+    else {
+        resize(QSize(width, height));
+        move(x, y);
+    }
 
     QFont font;
     if (Config.UIFont != font)
@@ -145,10 +169,27 @@ void MainWindow::restoreFromConfig()
     ui->actionNever_nullify_my_trick->setEnabled(false);
 }
 
+void MainWindow::checkForUpdate()
+{
+    QNetworkRequest req;
+#if QT_VERSION >= 0x050600
+    req.setAttribute(QNetworkRequest::FollowRedirectsAttribute, true);
+#endif
+
+    req.setUrl(QUrl("https://www.touhousatsu.rocks/TouhouKillUpdate0.9.json"));
+
+    QNetworkReply *reply = autoUpdateManager->get(req);
+    connect(reply, (void (QNetworkReply::*)(QNetworkReply::NetworkError))(&QNetworkReply::error), this, &MainWindow::updateError);
+    connect(reply, &QNetworkReply::finished, this, &MainWindow::updateInfoReceived);
+}
+
 void MainWindow::closeEvent(QCloseEvent *)
 {
-    Config.setValue("WindowSize", size());
-    Config.setValue("WindowPosition", pos());
+    Config.setValue("WindowWidth", width());
+    Config.setValue("WindowHeight", height());
+    Config.setValue("WindowX", x());
+    Config.setValue("WindowY", y());
+    Config.setValue("WindowMaximized", bool(windowState() & Qt::WindowMaximized));
 }
 
 MainWindow::~MainWindow()
@@ -166,16 +207,21 @@ void MainWindow::gotoScene(QGraphicsScene *scene)
     //QResizeEvent e(QSize(view->size().width() - 4, view->size().height() - 4), view->size());
     QResizeEvent e(QSize(view->size().width(), view->size().height()), view->size());
     view->resizeEvent(&e);
+    //play BGM
+#ifdef AUDIO_SUPPORT
+    if (Config.EnableBgMusic && !Audio::isBackgroundMusicPlaying()) {
+        Audio::stopBGM();
+        Audio::playBGM("audio/title/main.ogg", true, true);
+        Audio::setBGMVolume(Config.BGMVolume);
+    }
+#endif
     changeBackground();
 }
 
 void MainWindow::on_actionExit_triggered()
 {
     QMessageBox::StandardButton result;
-    result = QMessageBox::question(this,
-        tr("TouhouSatsu"),
-        tr("Are you sure to exit?"),
-        QMessageBox::Ok | QMessageBox::Cancel);
+    result = QMessageBox::question(this, tr("TouhouSatsu"), tr("Are you sure to exit?"), QMessageBox::Ok | QMessageBox::Cancel);
     if (result == QMessageBox::Ok) {
         delete systray;
         systray = NULL;
@@ -210,13 +256,14 @@ void MainWindow::on_actionStart_Server_triggered()
 
 void MainWindow::checkVersion(const QString &server_version, const QString &server_mod)
 {
+    Client *client = qobject_cast<Client *>(sender());
+
     QString client_mod = Sanguosha->getMODName();
     if (client_mod != server_mod) {
+        client->disconnectFromHost();
         QMessageBox::warning(this, tr("Warning"), tr("Client MOD name is not same as the server!"));
         return;
     }
-
-    Client *client = qobject_cast<Client *>(sender());
     QString client_version = Sanguosha->getVersionNumber();
 
     if (server_version == client_version) {
@@ -233,7 +280,7 @@ void MainWindow::checkVersion(const QString &server_version, const QString &serv
     else
         text.append(tr("The server version is older than your client version, please ask the server to update<br/>"));
 
-    text.append(tr("please check the Qun file of QQ Qun 384318415 for update packages."));
+    text.append(tr("please check the Qun file of QQ Qun 384318315 for update packages."));
     QMessageBox::warning(this, tr("Warning"), text);
 }
 
@@ -252,10 +299,7 @@ void MainWindow::on_actionReplay_triggered()
     if (!last_dir.isEmpty())
         location = last_dir;
 
-    QString filename = QFileDialog::getOpenFileName(this,
-        tr("Select a reply file"),
-        location,
-        tr("Pure text replay file (*.txt);; Image replay file (*.png)"));
+    QString filename = QFileDialog::getOpenFileName(this, tr("Select a reply file"), location, tr("Pure text replay file (*.txt);; Image replay file (*.png)"));
 
     if (filename.isEmpty())
         return;
@@ -290,11 +334,13 @@ void BackLoader::preload()
 
 void MainWindow::enterRoom()
 {
-    // add current ip to history
-    if (!Config.HistoryIPs.contains(Config.HostAddress)) {
-        Config.HistoryIPs << Config.HostAddress;
-        Config.HistoryIPs.sort();
-        Config.setValue("HistoryIPs", Config.HistoryIPs);
+    if (QUrl(Config.HostAddress).path().length() == 0) {
+        // add current ip to history only if the modifiers does not exist.
+        // add the last connected address to the first one. DO NOT SORT
+        if (Config.HistoryIPs.contains(Config.HostAddress))
+            Config.HistoryIPs.removeAll(Config.HostAddress);
+        Config.HistoryIPs.prepend(Config.HostAddress);
+        Config.setValue("HistoryUrls", Config.HistoryIPs);
     }
 
     ui->actionStart_Game->setEnabled(false);
@@ -338,9 +384,16 @@ void MainWindow::enterRoom()
     gotoScene(room_scene);
 }
 
-
 void MainWindow::gotoStartScene()
 {
+    //play BGM
+#ifdef AUDIO_SUPPORT
+    if (Config.EnableBgMusic && !Audio::isBackgroundMusicPlaying()) {
+        Audio::stopBGM();
+        Audio::playBGM("audio/title/main.ogg", true, true);
+        Audio::setBGMVolume(Config.BGMVolume);
+    }
+#endif
     ServerInfo.DuringGame = false;
     QList<Server *> servers = findChildren<Server *>();
     if (!servers.isEmpty())
@@ -349,18 +402,10 @@ void MainWindow::gotoStartScene()
     StartScene *start_scene = new StartScene;
 
     QList<QAction *> actions;
-    actions << ui->actionStart_Game
-        << ui->actionStart_Server
-        << ui->actionPC_Console_Start
-        << ui->actionReplay
-        << ui->actionConfigure
-        << ui->actionGeneral_Overview
-        << ui->actionCard_Overview
-        << ui->actionScenario_Overview
-        << ui->actionAbout
-        << ui->actionAbout_Us;
+    actions << ui->actionStart_Game << ui->actionStart_Server << ui->actionPC_Console_Start << ui->actionReplay << ui->actionGeneral_Overview << ui->actionCard_Overview
+            << ui->actionConfigure << ui->actionAbout_Us;
 
-    foreach(QAction *action, actions)
+    foreach (QAction *action, actions)
         start_scene->addButton(action);
 
     setCentralWidget(view);
@@ -443,7 +488,7 @@ void MainWindow::on_actionAbout_triggered()
     //    "My QQ: 365840793 <br/>"
     //    "My Weibo: http://weibo.com/moligaloo <br/>").arg(email));
     content.append(tr("This is the open source clone of the popular <b>Sanguosha</b> game,"
-        "totally written in C++ Qt GUI framework <br />"));
+                      "totally written in C++ Qt GUI framework <br />"));
     //"My QQ: 384318315 <br/>"
     QString config;
 
@@ -453,10 +498,7 @@ void MainWindow::on_actionAbout_triggered()
     config = "debug";
 #endif
 
-    content.append(tr("Current version: %1 %2 (%3)<br/>")
-        .arg(Sanguosha->getVersion())
-        .arg(config)
-        .arg(Sanguosha->getVersionName()));
+    content.append(tr("Current version: %1 %2 (%3)<br/>").arg(Sanguosha->getVersion()).arg(config).arg(Sanguosha->getVersionName()));
 
     const char *date = __DATE__;
     const char *time = __TIME__;
@@ -474,8 +516,7 @@ void MainWindow::on_actionAbout_triggered()
 
     window->addContent(content);
     window->addCloseButton(tr("OK"));
-    window->shift(scene->inherits("RoomScene") ? scene->width() : 0,
-        scene->inherits("RoomScene") ? scene->height() : 0);
+    window->shift(scene->inherits("RoomScene") ? scene->width() : 0, scene->inherits("RoomScene") ? scene->height() : 0);
 
     window->appear();
 }
@@ -567,17 +608,26 @@ void MainWindow::on_actionRole_assign_table_triggered()
 
     QStringList headers;
     headers << tr("Count") << tr("Lord") << tr("Loyalist") << tr("Rebel") << tr("Renegade");
-    foreach(QString header, headers)
+    foreach (QString header, headers)
         content += QString("<th>%1</th>").arg(header);
 
     content = QString("<tr>%1</tr>").arg(content);
 
     QStringList rows;
-    rows << "2 1 0 1 0" << "3 1 0 1 1" << "4 1 0 2 1"
-        << "5 1 1 2 1" << "6 1 1 3 1" << "6d 1 1 2 2"
-        << "7 1 2 3 1" << "8 1 2 4 1" << "8d 1 2 3 2"
-        << "8z 1 3 4 0" << "9 1 3 4 1" << "10 1 3 4 2"
-        << "10z 1 4 5 0" << "10o 1 3 5 1";
+    rows << "2 1 0 1 0"
+         << "3 1 0 1 1"
+         << "4 1 0 2 1"
+         << "5 1 1 2 1"
+         << "6 1 1 3 1"
+         << "6d 1 1 2 2"
+         << "7 1 2 3 1"
+         << "8 1 2 4 1"
+         << "8d 1 2 3 2"
+         << "8z 1 3 4 0"
+         << "9 1 3 4 1"
+         << "10 1 3 4 2"
+         << "10z 1 4 5 0"
+         << "10o 1 3 5 1";
 
     foreach (QString row, rows) {
         QStringList cells = row.split(" ");
@@ -597,7 +647,7 @@ void MainWindow::on_actionRole_assign_table_triggered()
 
         QString row_content;
         row_content = QString("<td>%1</td>").arg(header);
-        foreach(QString cell, cells)
+        foreach (QString cell, cells)
             row_content += QString("<td>%1</td>").arg(cell);
 
         content += QString("<tr>%1</tr>").arg(row_content);
@@ -610,21 +660,15 @@ void MainWindow::on_actionRole_assign_table_triggered()
 
     window->addContent(content);
     window->addCloseButton(tr("OK"));
-    window->shift(scene && scene->inherits("RoomScene") ? scene->width() : 0,
-        scene && scene->inherits("RoomScene") ? scene->height() : 0);
+    window->shift(scene && scene->inherits("RoomScene") ? scene->width() : 0, scene && scene->inherits("RoomScene") ? scene->height() : 0);
     window->setZValue(32766);
 
     window->appear();
 }
 
-void MainWindow::on_actionScenario_Overview_triggered()
-{
-    ScenarioOverview *dialog = new ScenarioOverview(this);
-    dialog->show();
-}
-
 BroadcastBox::BroadcastBox(Server *server, QWidget *parent)
-    : QDialog(parent), server(server)
+    : QDialog(parent)
+    , server(server)
 {
     setWindowTitle(tr("Broadcast"));
 
@@ -672,8 +716,7 @@ void MainWindow::on_actionAcknowledgement_triggered()
     Button *button = window->addCloseButton(tr("OK"));
     button->moveBy(-85, -35);
     window->setZValue(32766);
-    window->shift(scene && scene->inherits("RoomScene") ? scene->width() : 0,
-        scene && scene->inherits("RoomScene") ? scene->height() : 0);
+    window->shift(scene && scene->inherits("RoomScene") ? scene->width() : 0, scene && scene->inherits("RoomScene") ? scene->height() : 0);
 
     window->appear();
 }
@@ -692,22 +735,14 @@ void MainWindow::on_actionPC_Console_Start_triggered()
 
     server->createNewRoom();
 
-    Config.HostAddress = "127.0.0.1";
+    Config.HostAddress = "qths://127.0.0.1";
     startConnection();
 }
 
-#include <QGroupBox>
-#include <QToolButton>
-#include <QCommandLinkButton>
-#include <QFormLayout>
-#include "recorder.h"
-
 void MainWindow::on_actionReplay_file_convert_triggered()
 {
-    QString filename = QFileDialog::getOpenFileName(this,
-        tr("Please select a replay file"),
-        Config.value("LastReplayDir").toString(),
-        tr("Pure text replay file (*.txt);; Image replay file (*.png)"));
+    QString filename = QFileDialog::getOpenFileName(this, tr("Please select a replay file"), Config.value("LastReplayDir").toString(),
+                                                    tr("Pure text replay file (*.txt);; Image replay file (*.png)"));
 
     if (filename.isEmpty())
         return;
@@ -739,12 +774,10 @@ void MainWindow::on_actionReplay_file_convert_triggered()
 void MainWindow::on_actionRecord_analysis_triggered()
 {
     QString location = QStandardPaths::writableLocation(QStandardPaths::HomeLocation);
-    QString filename = QFileDialog::getOpenFileName(this,
-        tr("Load replay record"),
-        location,
-        tr("Pure text replay file (*.txt);; Image replay file (*.png)"));
+    QString filename = QFileDialog::getOpenFileName(this, tr("Load replay record"), location, tr("Pure text replay file (*.txt);; Image replay file (*.png)"));
 
-    if (filename.isEmpty()) return;
+    if (filename.isEmpty())
+        return;
 
     QDialog *rec_dialog = new QDialog(this);
     rec_dialog->setWindowTitle(tr("Record Analysis"));
@@ -759,8 +792,8 @@ void MainWindow::on_actionRecord_analysis_triggered()
 
     static QStringList labels;
     if (labels.isEmpty()) {
-        labels << tr("ScreenName") << tr("General") << tr("Role") << tr("Living") << tr("WinOrLose") << tr("TurnCount")
-            << tr("Recover") << tr("Damage") << tr("Damaged") << tr("Kill") << tr("Designation");
+        labels << tr("ScreenName") << tr("General") << tr("Role") << tr("Living") << tr("WinOrLose") << tr("TurnCount") << tr("Recover") << tr("Damage") << tr("Damaged")
+               << tr("Kill");
     }
     table->setHorizontalHeaderLabels(labels);
     table->setSelectionBehavior(QTableWidget::SelectRows);
@@ -791,8 +824,7 @@ void MainWindow::on_actionRecord_analysis_triggered()
         table->setItem(i, 3, item);
 
         item = new QTableWidgetItem;
-        bool is_win = record->getRecordWinners().contains(rec->m_role)
-            || record->getRecordWinners().contains(record_map.key(rec));
+        bool is_win = record->getRecordWinners().contains(rec->m_role) || record->getRecordWinners().contains(record_map.key(rec));
         item->setText(is_win ? tr("Win") : tr("Lose"));
         table->setItem(i, 4, item);
 
@@ -815,10 +847,6 @@ void MainWindow::on_actionRecord_analysis_triggered()
         item = new QTableWidgetItem;
         item->setText(QString::number(rec->m_kill));
         table->setItem(i, 9, item);
-
-        item = new QTableWidgetItem;
-        item->setText(rec->m_designation.join(", "));
-        table->setItem(i, 10, item);
         i++;
     }
 
@@ -859,7 +887,157 @@ void MainWindow::on_actionView_ban_list_triggered()
     dialog->exec();
 }
 
-#include "audio.h"
+void MainWindow::updateError(QNetworkReply::NetworkError)
+{
+    QNetworkReply *reply = qobject_cast<QNetworkReply *>(sender());
+    if (reply != NULL)
+        disconnect(reply, &QNetworkReply::finished, this, 0);
+}
+
+#if QT_VERSION >= 0x050600
+void MainWindow::parseUpdateInfo(const QString &v, const QVersionNumber &vn, const QJsonObject &ob)
+#else
+void MainWindow::parseUpdateInfo(const QString &v, const QString &vn, const QJsonObject &ob)
+#endif
+{
+#if defined(Q_OS_WIN)
+    QJsonValue value = ob.value("Win");
+#elif defined(Q_OS_ANDROID)
+    QJsonValue value = ob.value("And");
+#elif defined(Q_OS_MACOS)
+    QJsonValue value = ob.value("Mac");
+#else
+    QJsonValue value = ob.value("Oth");
+#endif
+    if (value.isString()) {
+        QMessageBox mbox(this);
+        mbox.setTextFormat(Qt::RichText);
+        mbox.setText(tr("New Version %1(%3) available.<br/>"
+                        "But we don\'t support auto-updating from %2 to %1 on this platform.<br/>"
+                        "Please download the full package from <a href=\"%4\">Here</a>.")
+                         .arg(v)
+                         .arg(Sanguosha->getVersionNumber())
+#if QT_VERSION >= 0x050600
+                         .arg(vn.toString())
+#else
+                         .arg(vn)
+#endif
+                         .arg(value.toString()));
+        mbox.setWindowTitle(tr("New Version Avaliable"));
+        mbox.setIcon(QMessageBox::Information);
+        mbox.setStandardButtons(QMessageBox::Ok);
+        mbox.exec();
+    } else if (value.isObject()) {
+        QJsonObject updateOb = value.toObject();
+#ifndef Q_OS_ANDROID
+        QString updateScript = updateOb.value("UpdateScript").toString();
+#else
+        QString updateScript = "jni";
+#endif
+        QString packKey = "UpdatePack";
+        QString hashKey = "UpdatePackHash";
+        if (GetConfigFromLuaState(Sanguosha->getLuaState(), "withBgm").toBool()) {
+            packKey.append("B");
+            hashKey.append("B");
+        }
+        if (GetConfigFromLuaState(Sanguosha->getLuaState(), "withHeroSkin").toBool()) {
+            packKey.append("H");
+            hashKey.append("H");
+        }
+
+        QString updatePack = updateOb.value(packKey).toString();
+        QJsonObject updateHash = updateOb.value(hashKey).toObject();
+        if (!updateScript.isEmpty() && !updatePack.isEmpty() && !updateHash.isEmpty()) {
+            UpdateDialog upd;
+            upd.setInfo(v, vn, updateScript, updatePack, updateHash);
+            upd.exec();
+        }
+    }
+}
+
+void MainWindow::updateInfoReceived()
+{
+    QNetworkReply *reply = qobject_cast<QNetworkReply *>(sender());
+    if (reply == NULL)
+        return;
+    QByteArray arr = reply->readAll();
+
+    QJsonParseError err;
+    QJsonDocument doc = QJsonDocument::fromJson(arr, &err);
+
+    if (err.error != QJsonParseError::NoError) {
+        return;
+    }
+    if (!doc.isObject()) {
+        qDebug() << "error document when parsing update data";
+        return;
+    }
+
+    QJsonObject ob;
+    QJsonObject fullOb = doc.object();
+    QString channel = Config.value("AutoUpdateChannel", QStringLiteral("Global")).toString();
+    if (!fullOb.contains(channel)) {
+        qDebug() << "Ob doesn't contain the update channel: " << channel;
+        return;
+    } else if (!fullOb.value(channel).isObject()) {
+        qDebug() << "the Channel of Ob is not an object: " << channel;
+        return;
+    }
+    ob = fullOb.value(channel).toObject();
+
+    if (!ob.contains("LatestVersion") || !ob.value("LatestVersion").isString()) {
+        qDebug() << "LatestVersion field is incorrect";
+        return;
+    }
+
+    QString latestVersion = ob.value("LatestVersion").toString();
+
+#if QT_VERSION >= 0x050600
+    QVersionNumber ver = QVersionNumber::fromString(ob.value("LatestVersionNumber").toString());
+#else
+    QString ver = ob.value("LatestVersionNumber").toString();
+#endif
+
+    // detect the mis-upgrade info here --
+
+    bool warned = false;
+    {
+        QString warnConfigx = QStringLiteral("warnedUpdateFromTestVersion20200315");
+        QString warnConfig = QStringLiteral("warnedUpdateFromTestVersion") + Sanguosha->getVersionNumber();
+        bool needWarn = Config.value(warnConfigx, false).toBool();
+        warned = Config.value(warnConfig, false).toBool();
+        if (needWarn && !warned)
+            Config.setValue(warnConfig, true);
+        else
+            warned = true;
+    }
+
+    if (latestVersion > Sanguosha->getVersionNumber()) {
+        // there is a new version available now!!
+        QString from = QString("From") + Sanguosha->getVersionNumber();
+        if (ob.contains(from))
+            parseUpdateInfo(latestVersion, ver, ob.value(from).toObject());
+        else {
+#if QT_VERSION >= 0x050600
+            QVersionNumber pref = QVersionNumber::commonPrefix(Sanguosha->getQVersionNumber(), ver);
+            from = QString("From") + pref.toString();
+            if (ob.contains(from))
+                parseUpdateInfo(latestVersion, ver, ob.value(from).toObject());
+            else
+#endif
+                parseUpdateInfo(latestVersion, ver, ob.value("FullPack").toObject());
+        }
+    } else if (!warned) {
+        // -- and display the mis-upgrade info only when no update is available
+        QMessageBox::warning(this, tr("Important notify"),
+                             tr("<font color=\"red\"><b>You have previously updated from a publicly test version of TouhouSatsu.<br />"
+                                "<br />"
+                                "Because the update package IS NOT guarnteed to work every time on your copy,<br />"
+                                "please DO NOT report any errors caused by this copy.<br />"
+                                "If anything unexpected occurred, please delete this copy from your computer and re-download the full package.</b></font>"),
+                             QMessageBox::Ok);
+    }
+}
 
 void MainWindow::on_actionAbout_fmod_triggered()
 {
@@ -879,13 +1057,10 @@ void MainWindow::on_actionAbout_fmod_triggered()
     window->addContent(content);
     window->addCloseButton(tr("OK"));
     window->setZValue(32766);
-    window->shift(scene && scene->inherits("RoomScene") ? scene->width() : 0,
-        scene && scene->inherits("RoomScene") ? scene->height() : 0);
+    window->shift(scene && scene->inherits("RoomScene") ? scene->width() : 0, scene && scene->inherits("RoomScene") ? scene->height() : 0);
 
     window->appear();
 }
-
-#include "lua.hpp"
 
 void MainWindow::on_actionAbout_Lua_triggered()
 {
@@ -904,15 +1079,15 @@ void MainWindow::on_actionAbout_Lua_triggered()
     window->addContent(content);
     window->addCloseButton(tr("OK"));
     window->setZValue(32766);
-    window->shift(scene && scene->inherits("RoomScene") ? scene->width() : 0,
-        scene && scene->inherits("RoomScene") ? scene->height() : 0);
+    window->shift(scene && scene->inherits("RoomScene") ? scene->width() : 0, scene && scene->inherits("RoomScene") ? scene->height() : 0);
 
     window->appear();
 }
 
 void MainWindow::on_actionAbout_GPLv3_triggered()
 {
-    QString content = tr("The GNU General Public License is the most widely used free software license, which guarantees end users the freedoms to use, study, share, and modify the software.");
+    QString content = tr(
+        "The GNU General Public License is the most widely used free software license, which guarantees end users the freedoms to use, study, share, and modify the software.");
     content.append("<p align='center'> <img src='image/logo/gplv3.png' /> </p> <br/>");
 
     QString address = "http://gplv3.fsf.org";
@@ -924,9 +1099,271 @@ void MainWindow::on_actionAbout_GPLv3_triggered()
     window->addContent(content);
     window->addCloseButton(tr("OK"));
     window->setZValue(32766);
-    window->shift(scene && scene->inherits("RoomScene") ? scene->width() : 0,
-        scene && scene->inherits("RoomScene") ? scene->height() : 0);
+    window->shift(scene && scene->inherits("RoomScene") ? scene->width() : 0, scene && scene->inherits("RoomScene") ? scene->height() : 0);
 
     window->appear();
 }
 
+UpdateDialog::UpdateDialog(QWidget *parent)
+    : QDialog(parent)
+    , bar(new QProgressBar)
+    , lbl(new QLabel)
+    , downloadManager(new QNetworkAccessManager(this))
+    , scriptReply(NULL)
+    , packReply(NULL)
+    , taskbarButton(NULL)
+    , m_finishedScript(false)
+    , m_finishedPack(false)
+    , m_busy(false)
+{
+    setWindowTitle(tr("New Version Available"));
+
+    bar->setMaximum(10000);
+
+    QVBoxLayout *layout = new QVBoxLayout;
+
+    layout->addWidget(lbl);
+    layout->addWidget(bar);
+
+    QPushButton *yesBtn = new QPushButton(tr("Yes"));
+    connect(yesBtn, &QPushButton::clicked, [yesBtn]() -> void { yesBtn->setDisabled(true); });
+
+    QPushButton *noBtn = new QPushButton(tr("No"));
+    connect(noBtn, &QPushButton::clicked, [this]() -> void { QDialog::reject(); });
+    connect(yesBtn, &QPushButton::clicked, [noBtn]() -> void { noBtn->setDisabled(true); });
+
+    connect(yesBtn, &QPushButton::clicked, this, &UpdateDialog::startDownload);
+
+    QHBoxLayout *hlayout = new QHBoxLayout;
+    hlayout->addWidget(yesBtn);
+    hlayout->addWidget(noBtn);
+
+    layout->addLayout(hlayout);
+
+    setLayout(layout);
+}
+
+#if QT_VERSION >= 0x050600
+void UpdateDialog::setInfo(const QString &v, const QVersionNumber &vn, const QString &updateScript, const QString &updatePack, const QJsonObject &updateHash)
+#else
+void UpdateDialog::setInfo(const QString &v, const QString &vn, const QString &updateScript, const QString &updatePack, const QJsonObject &updateHash)
+#endif
+{
+    lbl->setText(tr("New Version %1(%3) available.\n"
+                    "We support auto-updating from %2 to %1 on this platform.\n"
+                    "Click 'Yes' to update now.")
+                     .arg(v)
+                     .arg(Sanguosha->getVersionNumber())
+#if QT_VERSION >= 0x050600
+                     .arg(vn.toString()));
+#else
+                     .arg(vn));
+#endif
+
+    m_updateScript = updateScript;
+    m_updatePack = updatePack;
+    m_updateHash = updateHash;
+}
+
+void UpdateDialog::startUpdate()
+{
+#ifdef Q_OS_WIN
+    taskbarButton->progress()->hide();
+#endif
+// we should run update script and then exit this main program.
+#if defined(Q_OS_WIN)
+    QStringList arg;
+    arg << "UpdateScript.vbs" << QString::number(QCoreApplication::applicationPid());
+    QProcess::startDetached("wscript", arg, QCoreApplication::applicationDirPath());
+#elif defined(Q_OS_ANDROID)
+// call JNI to install the package
+#else
+    QStringList arg;
+    arg << "-c" << ("\"./UpdateScript.sh " + QString::number(QCoreApplication::applicationPid()) + "\"");
+    QProcess::startDetached("sh", arg, QCoreApplication::applicationDirPath());
+#endif
+
+    QCoreApplication::exit(0);
+    QDialog::accept();
+}
+
+bool UpdateDialog::packHashVerify(const QByteArray &arr)
+{
+    static const QMap<QString, QCryptographicHash::Algorithm> algorithms {std::make_pair<QString, QCryptographicHash::Algorithm>("MD5", QCryptographicHash::Md5),
+                                                                          std::make_pair<QString, QCryptographicHash::Algorithm>("SHA1", QCryptographicHash::Sha1)};
+
+    foreach (const QString &str, algorithms.keys()) {
+        if (m_updateHash.contains(str)) {
+            QString hash = m_updateHash.value(str).toString();
+            QByteArray calculatedHash = QCryptographicHash::hash(arr, algorithms.value(str));
+            if (hash.toUpper() != QString::fromLatin1(calculatedHash.toHex()).toUpper())
+                return false;
+        }
+    }
+
+    return true;
+}
+
+void UpdateDialog::startDownload()
+{
+    if (m_updatePack.isEmpty() || m_updateScript.isEmpty()) {
+        QMessageBox::critical(this, tr("Update Error"), tr("An error occurred when downloading packages.\nURL is empty."));
+        QDialog::reject();
+        return;
+    }
+
+    m_busy = true;
+
+    QNetworkRequest reqPack;
+#if QT_VERSION >= 0x050600
+    reqPack.setAttribute(QNetworkRequest::FollowRedirectsAttribute, true);
+#endif
+    reqPack.setUrl(QUrl(m_updatePack));
+    packReply = downloadManager->get(reqPack);
+    connect(packReply, &QNetworkReply::downloadProgress, this, &UpdateDialog::downloadProgress);
+    connect(packReply, (void (QNetworkReply::*)(QNetworkReply::NetworkError))(&QNetworkReply::error), this, &UpdateDialog::errPack);
+    connect(packReply, &QNetworkReply::finished, this, &UpdateDialog::finishedPack);
+
+#ifndef Q_OS_ANDROID
+    QNetworkRequest reqScript;
+#if QT_VERSION >= 0x050600
+    reqScript.setAttribute(QNetworkRequest::FollowRedirectsAttribute, true);
+#endif
+    reqScript.setUrl(QUrl(m_updateScript));
+    scriptReply = downloadManager->get(reqScript);
+    connect(scriptReply, (void (QNetworkReply::*)(QNetworkReply::NetworkError))(&QNetworkReply::error), this, &UpdateDialog::errScript);
+    connect(scriptReply, &QNetworkReply::finished, this, &UpdateDialog::finishedScript);
+#else
+    m_finishedScript = true;
+#endif
+
+#ifdef Q_OS_WIN
+    taskbarButton->progress()->reset();
+    taskbarButton->progress()->show();
+#endif
+}
+
+void UpdateDialog::downloadProgress(quint64 downloaded, quint64 total)
+{
+    bar->setValue(10000 * downloaded / total);
+#ifdef Q_OS_WIN
+    taskbarButton->progress()->setValue(10000 * downloaded / total);
+#endif
+}
+
+void UpdateDialog::finishedScript()
+{
+#if defined(Q_OS_WIN)
+    QString suffix = ".vbs";
+#else
+    QString suffix = ".sh";
+#endif
+    QByteArray arr = scriptReply->readAll();
+    QFile file;
+    file.setFileName(QString("UpdateScript") + suffix);
+    file.open(QIODevice::WriteOnly | QIODevice::Truncate);
+    file.write(arr);
+    file.close();
+
+#ifdef Q_OS_UNIX
+    file.setPermissions(QFile::ReadOwner | QFile::WriteOwner | QFile::ExeOwner | QFile::ReadGroup | QFile::ExeGroup | QFile::ReadOther | QFile::ExeOther);
+#endif
+
+    m_finishedScript = true;
+    if (m_finishedPack && m_finishedScript)
+        startUpdate();
+}
+
+void UpdateDialog::errScript()
+{
+#ifdef Q_OS_WIN
+    taskbarButton->progress()->hide();
+#endif
+    if (scriptReply != NULL) {
+        disconnect(scriptReply, (void (QNetworkReply::*)(QNetworkReply::NetworkError))(&QNetworkReply::error), this, &UpdateDialog::errScript);
+        disconnect(scriptReply, &QNetworkReply::finished, this, &UpdateDialog::finishedScript);
+    }
+    if (packReply != NULL) {
+        disconnect(packReply, &QNetworkReply::downloadProgress, this, &UpdateDialog::downloadProgress);
+        disconnect(packReply, (void (QNetworkReply::*)(QNetworkReply::NetworkError))(&QNetworkReply::error), this, &UpdateDialog::errPack);
+        disconnect(packReply, &QNetworkReply::finished, this, &UpdateDialog::finishedPack);
+    }
+
+    QMessageBox::critical(this, tr("Update Error"), tr("An error occurred when downloading packages.\nCannot download the update script."));
+    QDialog::reject();
+}
+
+void UpdateDialog::finishedPack()
+{
+#if defined(Q_OS_WIN)
+    QString suffix = ".7z";
+#elif defined(Q_OS_ANDROID)
+    QString suffix = ".apk";
+#else
+    QString suffix = ".tar.xz";
+#endif
+    QByteArray arr = packReply->readAll();
+
+    if (!packHashVerify(arr)) {
+        QMessageBox::critical(this, tr("Update Error"), tr("An error occurred when downloading packages.\nDownload pack checksum mismatch."));
+#ifdef Q_OS_WIN
+        taskbarButton->progress()->hide();
+#endif
+        QDialog::reject();
+        return;
+    }
+
+    QFile file;
+    file.setFileName(QString("UpdatePack") + suffix);
+    file.open(QIODevice::WriteOnly | QIODevice::Truncate);
+    file.write(arr);
+    file.close();
+
+    m_finishedPack = true;
+
+    if (m_finishedPack && m_finishedScript)
+        startUpdate();
+}
+
+void UpdateDialog::errPack()
+{
+#ifdef Q_OS_WIN
+    taskbarButton->progress()->hide();
+#endif
+    if (scriptReply != NULL) {
+        disconnect(scriptReply, (void (QNetworkReply::*)(QNetworkReply::NetworkError))(&QNetworkReply::error), this, &UpdateDialog::errScript);
+        disconnect(scriptReply, &QNetworkReply::finished, this, &UpdateDialog::finishedScript);
+    }
+    if (packReply != NULL) {
+        disconnect(packReply, &QNetworkReply::downloadProgress, this, &UpdateDialog::downloadProgress);
+        disconnect(packReply, (void (QNetworkReply::*)(QNetworkReply::NetworkError))(&QNetworkReply::error), this, &UpdateDialog::errPack);
+        disconnect(packReply, &QNetworkReply::finished, this, &UpdateDialog::finishedPack);
+    }
+
+    QMessageBox::critical(this, tr("Update Error"), tr("An error occurred when downloading packages.\nCannot download the update pack."));
+    QDialog::reject();
+}
+
+void UpdateDialog::accept()
+{
+}
+
+void UpdateDialog::reject()
+{
+    if (!m_busy)
+        QDialog::reject();
+}
+
+void UpdateDialog::showEvent(QShowEvent *e)
+{
+    QDialog::showEvent(e);
+#ifdef Q_OS_WIN
+    taskbarButton = new QWinTaskbarButton(this);
+    taskbarButton->setWindow(windowHandle());
+    QWinTaskbarProgress *prog = taskbarButton->progress();
+    prog->setVisible(false);
+    prog->setMinimum(0);
+    prog->reset();
+    prog->setMaximum(10000);
+#endif
+}

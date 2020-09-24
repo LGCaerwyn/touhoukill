@@ -1,19 +1,20 @@
 #ifndef _MAIN_WINDOW_H
 #define _MAIN_WINDOW_H
 
-#include "engine.h"
-#include "connectiondialog.h"
 #include "configdialog.h"
+#include "connectiondialog.h"
+#include "engine.h"
 
-#include <QMainWindow>
-#include <QSettings>
-#include <QComboBox>
 #include <QCheckBox>
+#include <QComboBox>
+#include <QJsonObject>
+#include <QMainWindow>
+#include <QNetworkReply>
+#include <QSettings>
 #include <QSpinBox>
 
-namespace Ui
-{
-    class MainWindow;
+namespace Ui {
+class MainWindow;
 }
 
 class FitView;
@@ -24,6 +25,9 @@ class QTextEdit;
 class QToolButton;
 class QGroupBox;
 class RoomItem;
+class QProgressBar;
+class QLabel;
+class QWinTaskbarButton;
 
 class BroadcastBox : public QDialog
 {
@@ -46,12 +50,60 @@ public:
     static void preload();
 };
 
+class UpdateDialog : public QDialog
+{
+    Q_OBJECT
+
+public:
+    explicit UpdateDialog(QWidget *parent = 0);
+#if QT_VERSION >= 0x050600
+    void setInfo(const QString &v, const QVersionNumber &vn, const QString &updateScript, const QString &updatePack, const QJsonObject &updateHash);
+#else
+    void setInfo(const QString &v, const QString &vn, const QString &updateScript, const QString &updatePack, const QJsonObject &updateHash);
+#endif
+
+private:
+    QProgressBar *bar;
+    QLabel *lbl;
+    QNetworkAccessManager *downloadManager;
+    QNetworkReply *scriptReply;
+    QNetworkReply *packReply;
+    QWinTaskbarButton *taskbarButton;
+
+    QString m_updateScript;
+    QString m_updatePack;
+    QJsonObject m_updateHash;
+
+    bool m_finishedScript;
+    bool m_finishedPack;
+
+    bool m_busy;
+
+    void startUpdate();
+    bool packHashVerify(const QByteArray &arr);
+
+private slots:
+    void startDownload();
+    void downloadProgress(quint64 downloaded, quint64 total);
+    void finishedScript();
+    void errScript();
+    void finishedPack();
+    void errPack();
+
+public slots:
+    void accept() override;
+    void reject() override;
+
+protected:
+    void showEvent(QShowEvent *event) override;
+};
+
 class MainWindow : public QMainWindow
 {
     Q_OBJECT
 
 public:
-    MainWindow(QWidget *parent = 0);
+    explicit MainWindow(QWidget *parent = 0);
     ~MainWindow();
     void setBackgroundBrush(bool center_as_origin);
 
@@ -65,9 +117,16 @@ private:
     ConnectionDialog *connection_dialog;
     ConfigDialog *config_dialog;
     QSystemTrayIcon *systray;
+    QNetworkAccessManager *autoUpdateManager;
 
     void restoreFromConfig();
+    void checkForUpdate();
 
+#if QT_VERSION >= 0x050600
+    void parseUpdateInfo(const QString &v, const QVersionNumber &vn, const QJsonObject &ob);
+#else
+    void parseUpdateInfo(const QString &v, const QString &vn, const QJsonObject &ob);
+#endif
 public slots:
     void startConnection();
 
@@ -80,7 +139,6 @@ private slots:
     void on_actionRecord_analysis_triggered();
     void on_actionAcknowledgement_triggered();
     void on_actionBroadcast_triggered();
-    void on_actionScenario_Overview_triggered();
     void on_actionRole_assign_table_triggered();
     void on_actionMinimize_to_system_tray_triggered();
     void on_actionShow_Hide_Menu_triggered();
@@ -104,7 +162,9 @@ private slots:
     void changeBackground();
     void changeTableBg();
     void on_actionView_ban_list_triggered();
+
+    void updateError(QNetworkReply::NetworkError e);
+    void updateInfoReceived();
 };
 
 #endif
-

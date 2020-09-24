@@ -1,30 +1,28 @@
 #include "clientstruct.h"
-#include "engine.h"
 #include "client.h"
+#include "engine.h"
 #include "settings.h"
 
 ServerInfoStruct ServerInfo;
 
+#include <QCheckBox>
 #include <QFormLayout>
 #include <QLabel>
 #include <QListWidget>
-#include <QCheckBox>
 
-time_t ServerInfoStruct::getCommandTimeout(QSanProtocol::CommandType command, QSanProtocol::ProcessInstanceType instance)
+time_t ServerInfoStruct::getCommandTimeout(QSanProtocol::CommandType command, QSanProtocol::ProcessInstanceType instance, int operationRate)
 {
     time_t timeOut;
     if (OperationTimeout == 0)
         return 0;
-    else if (command == QSanProtocol::S_COMMAND_CHOOSE_GENERAL
-        || command == QSanProtocol::S_COMMAND_ASK_GENERAL)
+    else if (command == QSanProtocol::S_COMMAND_CHOOSE_GENERAL || command == QSanProtocol::S_COMMAND_ASK_GENERAL)
         timeOut = OperationTimeout * 1500;
-    else if (command == QSanProtocol::S_COMMAND_SKILL_GUANXING
-        || command == QSanProtocol::S_COMMAND_ARRANGE_GENERAL)
+    else if (command == QSanProtocol::S_COMMAND_SKILL_GUANXING || command == QSanProtocol::S_COMMAND_ARRANGE_GENERAL)
         timeOut = OperationTimeout * 2000;
     else if (command == QSanProtocol::S_COMMAND_NULLIFICATION)
         timeOut = NullificationCountDown * 1000;
     else
-        timeOut = OperationTimeout * 1000;
+        timeOut = OperationTimeout * 500 * operationRate;
 
     if (instance == QSanProtocol::S_SERVER_INSTANCE)
         timeOut += Config.S_SERVER_TIMEOUT_GRACIOUS_PERIOD;
@@ -157,10 +155,18 @@ void ServerInfoWidget::fill(const ServerInfoStruct &info, const QString &address
 
     if (info.Enable2ndGeneral) {
         switch (info.MaxHpScheme) {
-            case 0: max_hp_label->setText(QString(tr("Sum - %1")).arg(info.Scheme0Subtraction)); break;
-            case 1: max_hp_label->setText(tr("Minimum")); break;
-            case 2: max_hp_label->setText(tr("Maximum")); break;
-            case 3: max_hp_label->setText(tr("Average")); break;
+        case 0:
+            max_hp_label->setText(QString(tr("Sum - %1")).arg(info.Scheme0Subtraction));
+            break;
+        case 1:
+            max_hp_label->setText(tr("Minimum"));
+            break;
+        case 2:
+            max_hp_label->setText(tr("Maximum"));
+            break;
+        case 3:
+            max_hp_label->setText(tr("Average"));
+            break;
         }
     } else {
         max_hp_label->setText(tr("2nd general is disabled"));

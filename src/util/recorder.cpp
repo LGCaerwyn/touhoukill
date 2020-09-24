@@ -2,8 +2,8 @@
 #include "client.h"
 #include "serverplayer.h"
 
-#include <QFile>
 #include <QBuffer>
+#include <QFile>
 #include <QMessageBox>
 
 #include <cmath>
@@ -32,7 +32,7 @@ void Recorder::recordLine(const QString &line)
 
 bool Recorder::save(const QString &filename) const
 {
-    qDebug(filename.toUtf8().data());
+    qDebug("%s", filename.toUtf8().data());
     if (filename.endsWith(".txt")) {
         QFile file(filename);
         if (file.open(QIODevice::WriteOnly | QIODevice::Text))
@@ -69,7 +69,7 @@ QImage Recorder::TXT2PNG(QByteArray txtData)
     return image;
 }
 
-QByteArray Recorder::PNG2TXT(const QString filename)
+QByteArray Recorder::PNG2TXT(const QString &filename)
 {
     QImage image(filename);
     image = image.convertToFormat(QImage::Format_ARGB32);
@@ -82,8 +82,11 @@ QByteArray Recorder::PNG2TXT(const QString filename)
 }
 
 Replayer::Replayer(QObject *parent, const QString &filename)
-    : QThread(parent), m_commandSeriesCounter(1),
-    filename(filename), speed(1.0), playing(true)
+    : QThread(parent)
+    , m_commandSeriesCounter(1)
+    , filename(filename)
+    , speed(1.0)
+    , playing(true)
 {
     QIODevice *device = NULL;
     if (filename.endsWith(".png")) {
@@ -190,9 +193,7 @@ void Replayer::run()
     int last = 0;
 
     QList<CommandType> nondelays;
-    nondelays << S_COMMAND_ADD_PLAYER
-        << S_COMMAND_REMOVE_PLAYER
-        << S_COMMAND_SPEAK;
+    nondelays << S_COMMAND_ADD_PLAYER << S_COMMAND_REMOVE_PLAYER << S_COMMAND_SPEAK << S_COMMAND_HEARTBEAT;
 
     foreach (Pair pair, pairs) {
         int delay = qMin(pair.elapsed - last, 2500);
@@ -223,4 +224,3 @@ QString Replayer::getPath() const
 {
     return filename;
 }
-

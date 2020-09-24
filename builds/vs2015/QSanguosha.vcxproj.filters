@@ -110,9 +110,6 @@
     <ClCompile Include="..\..\src\dialog\roleassigndialog.cpp">
       <Filter>dialog</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\dialog\playercarddialog.cpp">
-      <Filter>dialog</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\dialog\mainwindow.cpp">
       <Filter>dialog</Filter>
     </ClCompile>
@@ -208,9 +205,6 @@
     </ClCompile>
     <ClCompile Include="..\..\src\ui\rolecombobox.cpp">
       <Filter>ui</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\dialog\scenario-overview.cpp">
-      <Filter>dialog</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\server\ai.cpp">
       <Filter>server</Filter>
@@ -308,9 +302,6 @@
     <ClCompile Include="Release\moc_scenario.cpp">
       <Filter>Generated Files\Release</Filter>
     </ClCompile>
-    <ClCompile Include="Release\moc_scenario-overview.cpp">
-      <Filter>Generated Files\Release</Filter>
-    </ClCompile>
     <ClCompile Include="Release\moc_roomthread3v3.cpp">
       <Filter>Generated Files\Release</Filter>
     </ClCompile>
@@ -333,9 +324,6 @@
       <Filter>Generated Files\Release</Filter>
     </ClCompile>
     <ClCompile Include="Release\moc_recorder.cpp">
-      <Filter>Generated Files\Release</Filter>
-    </ClCompile>
-    <ClCompile Include="Release\moc_playercarddialog.cpp">
       <Filter>Generated Files\Release</Filter>
     </ClCompile>
     <ClCompile Include="Release\moc_player.cpp">
@@ -542,9 +530,6 @@
     <ClCompile Include="Debug\moc_player.cpp">
       <Filter>Generated Files\Debug</Filter>
     </ClCompile>
-    <ClCompile Include="Debug\moc_playercarddialog.cpp">
-      <Filter>Generated Files\Debug</Filter>
-    </ClCompile>
     <ClCompile Include="Debug\moc_recorder.cpp">
       <Filter>Generated Files\Debug</Filter>
     </ClCompile>
@@ -567,9 +552,6 @@
       <Filter>Generated Files\Debug</Filter>
     </ClCompile>
     <ClCompile Include="Debug\moc_roomthread3v3.cpp">
-      <Filter>Generated Files\Debug</Filter>
-    </ClCompile>
-    <ClCompile Include="Debug\moc_scenario-overview.cpp">
       <Filter>Generated Files\Debug</Filter>
     </ClCompile>
     <ClCompile Include="Debug\moc_scenario.cpp">
@@ -679,24 +661,6 @@
       <Filter>Generated Files\Debug</Filter>
     </ClCompile>
     <ClCompile Include="Release\moc_thndj.cpp">
-      <Filter>Generated Files\Release</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\package\thxwm.cpp">
-      <Filter>package</Filter>
-    </ClCompile>
-    <ClCompile Include="Debug\moc_thxwm.cpp">
-      <Filter>Generated Files\Debug</Filter>
-    </ClCompile>
-    <ClCompile Include="Release\moc_thxwm.cpp">
-      <Filter>Generated Files\Release</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\package\touhoucard.cpp">
-      <Filter>package</Filter>
-    </ClCompile>
-    <ClCompile Include="Debug\moc_touhoucard.cpp">
-      <Filter>Generated Files\Debug</Filter>
-    </ClCompile>
-    <ClCompile Include="Release\moc_touhoucard.cpp">
       <Filter>Generated Files\Release</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\package\touhougod.cpp">
@@ -909,14 +873,78 @@
     <ClCompile Include="Release\moc_lightboxanimation.cpp">
       <Filter>Generated Files\Release</Filter>
     </ClCompile>
-    <ClCompile Include="Debug\moc_hegemony-cards.cpp">
+    <ClCompile Include="..\..\src\package\testCard.cpp">
+      <Filter>package</Filter>
+    </ClCompile>
+    <ClCompile Include="Debug\moc_testCard.cpp">
       <Filter>Generated Files\Debug</Filter>
     </ClCompile>
-    <ClCompile Include="Release\moc_hegemony-cards.cpp">
+    <ClCompile Include="Release\moc_testCard.cpp">
       <Filter>Generated Files\Release</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\package\hegemony-cards.cpp">
+    <ClCompile Include="..\..\src\ui\chooseoptionsbox.cpp">
+      <Filter>ui</Filter>
+    </ClCompile>
+    <ClCompile Include="Debug\moc_chooseoptionsbox.cpp">
+      <Filter>Generated Files\Debug</Filter>
+    </ClCompile>
+    <ClCompile Include="Release\moc_chooseoptionsbox.cpp">
+      <Filter>Generated Files\Release</Filter>
+    </ClCompile>
+    <ClCompile Include="Debug\moc_playercardbox.cpp">
+      <Filter>Generated Files\Debug</Filter>
+    </ClCompile>
+    <ClCompile Include="Release\moc_playercardbox.cpp">
+      <Filter>Generated Files\Release</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\ui\playercardbox.cpp">
+      <Filter>ui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\pch.cpp" />
+    <ClCompile Include="..\..\src\ui\hegemonyrolecombobox.cpp">
+      <Filter>ui</Filter>
+    </ClCompile>
+    <ClCompile Include="Debug\moc_hegemonyrolecombobox.cpp">
+      <Filter>Generated Files\Debug</Filter>
+    </ClCompile>
+    <ClCompile Include="Release\moc_hegemonyrolecombobox.cpp">
+      <Filter>Generated Files\Release</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\package\th16.cpp">
       <Filter>package</Filter>
+    </ClCompile>
+    <ClCompile Include="Debug\moc_th16.cpp">
+      <Filter>Generated Files\Debug</Filter>
+    </ClCompile>
+    <ClCompile Include="Release\moc_th16.cpp">
+      <Filter>Generated Files\Release</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\ui\choosegeneralbox.cpp">
+      <Filter>ui</Filter>
+    </ClCompile>
+    <ClCompile Include="Debug\moc_choosegeneralbox.cpp">
+      <Filter>Generated Files\Debug</Filter>
+    </ClCompile>
+    <ClCompile Include="Release\moc_choosegeneralbox.cpp">
+      <Filter>Generated Files\Release</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\package\hegemonyGeneral.cpp">
+      <Filter>package</Filter>
+    </ClCompile>
+    <ClCompile Include="Debug\moc_hegemonyGeneral.cpp">
+      <Filter>Generated Files\Debug</Filter>
+    </ClCompile>
+    <ClCompile Include="Release\moc_hegemonyGeneral.cpp">
+      <Filter>Generated Files\Release</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\package\hegemonyCard.cpp">
+      <Filter>package</Filter>
+    </ClCompile>
+    <ClCompile Include="Debug\moc_hegemonyCard.cpp">
+      <Filter>Generated Files\Debug</Filter>
+    </ClCompile>
+    <ClCompile Include="Release\moc_hegemonyCard.cpp">
+      <Filter>Generated Files\Release</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -1001,13 +1029,7 @@
     <CustomBuild Include="..\..\src\dialog\mainwindow.h">
       <Filter>dialog</Filter>
     </CustomBuild>
-    <CustomBuild Include="..\..\src\dialog\playercarddialog.h">
-      <Filter>dialog</Filter>
-    </CustomBuild>
     <CustomBuild Include="..\..\src\dialog\roleassigndialog.h">
-      <Filter>dialog</Filter>
-    </CustomBuild>
-    <CustomBuild Include="..\..\src\dialog\scenario-overview.h">
       <Filter>dialog</Filter>
     </CustomBuild>
     <CustomBuild Include="..\..\src\package\standard-equips.h">
@@ -1133,12 +1155,6 @@
     <CustomBuild Include="..\..\src\package\thndj.h">
       <Filter>package</Filter>
     </CustomBuild>
-    <CustomBuild Include="..\..\src\package\thxwm.h">
-      <Filter>package</Filter>
-    </CustomBuild>
-    <CustomBuild Include="..\..\src\package\touhoucard.h">
-      <Filter>package</Filter>
-    </CustomBuild>
     <CustomBuild Include="..\..\src\package\touhougod.h">
       <Filter>package</Filter>
     </CustomBuild>
@@ -1202,7 +1218,28 @@
     <CustomBuild Include="..\..\src\ui\lightboxanimation.h">
       <Filter>ui</Filter>
     </CustomBuild>
-    <CustomBuild Include="..\..\src\package\hegemony-cards.h">
+    <CustomBuild Include="..\..\src\package\testCard.h">
+      <Filter>package</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\src\ui\chooseoptionsbox.h">
+      <Filter>ui</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\src\ui\playercardbox.h">
+      <Filter>ui</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\src\ui\hegemonyrolecombobox.h">
+      <Filter>ui</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\src\package\th16.h">
+      <Filter>package</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\src\ui\choosegeneralbox.h">
+      <Filter>ui</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\src\package\hegemonyGeneral.h">
+      <Filter>package</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\src\package\hegemonyCard.h">
       <Filter>package</Filter>
     </CustomBuild>
   </ItemGroup>
@@ -1299,6 +1336,7 @@
     <ClInclude Include="..\..\src\core\json.h">
       <Filter>core</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\pch.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\sanguosha.ts">

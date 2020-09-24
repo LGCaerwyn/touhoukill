@@ -1,20 +1,24 @@
 #ifndef _PHOTO_H
 #define _PHOTO_H
 
-#include "QSanSelectableItem.h"
-#include "player.h"
-#include "carditem.h"
-#include "protocol.h"
-
 #include "GenericCardContainerUI.h"
+#include "QSanSelectableItem.h"
+#include "carditem.h"
+#include "pixmapanimation.h"
+#include "player.h"
+#include "protocol.h"
 #include "sprite.h"
+
+#include <QComboBox>
 #include <QGraphicsObject>
 #include <QPixmap>
-#include <QComboBox>
 
 class ClientPlayer;
 class RoleComboBox;
+class HegemonyRoleComboBox;
 class QPushButton;
+
+class QPropertyAnimation;
 
 class Photo : public PlayerCardContainer
 {
@@ -42,6 +46,7 @@ public:
     void setFrame(FrameType type);
     virtual QRectF boundingRect() const;
     QGraphicsItem *getMouseClickReceiver();
+    void playBattleArrayAnimations();
 
 public slots:
     void updatePhase();
@@ -95,6 +100,11 @@ protected:
     {
         return QSanRoomSkin::S_SKIN_KEY_PHOTO;
     }
+    inline virtual QAbstractAnimation *_getPlayerRemovedEffect()
+    {
+        return _blurEffect;
+    }
+
     virtual QPointF getHeroSkinContainerPosition() const;
 
     //virtual const QSanShadowTextFont &getSkillNameFont() const {
@@ -106,6 +116,8 @@ protected:
     bool _addCardItems(QList<CardItem *> &card_items, const CardsMoveStruct &moveInfo);
 
     virtual void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget);
+    QPropertyAnimation *initializeBlurEffect(GraphicsPixmapHoverItem *icon);
+    virtual void _initializeRemovedEffect();
 
     FrameType _m_frameType;
     QGraphicsPixmapItem *_m_mainFrame;
@@ -114,7 +126,11 @@ protected:
     QGraphicsPixmapItem *_m_focusFrame;
     QGraphicsPixmapItem *_m_onlineStatusItem;
     QGraphicsRectItem *_m_duanchangMask;
+    QParallelAnimationGroup *_blurEffect;
+
+    QHash<QString, PixmapAnimation *> _m_frameBorders;
+    QHash<QString, PixmapAnimation *> _m_roleBorders;
+    void _createBattleArrayAnimations();
 };
 
 #endif
-

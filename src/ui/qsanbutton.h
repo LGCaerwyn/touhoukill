@@ -1,33 +1,38 @@
 #ifndef _QSAN_BUTTON_H
 #define _QSAN_BUTTON_H
 
-#include <QGraphicsObject>
-#include <QPixmap>
-#include <QRegion>
-#include <qrect.h>
-#include <qlist.h>
 #include "skill.h"
+#include <QGraphicsObject>
+#include <QList>
+#include <QPixmap>
+#include <QRect>
+#include <QRegion>
 
 class QSanButton : public QGraphicsObject
 {
     Q_OBJECT
 
 public:
-    QSanButton(QGraphicsItem *parent);
+    explicit QSanButton(QGraphicsItem *parent);
     QSanButton(const QString &groupName, const QString &buttonName, QGraphicsItem *parent);
     enum ButtonState
     {
-        S_STATE_UP, S_STATE_HOVER, S_STATE_DOWN,
-        S_STATE_DISABLED, S_NUM_BUTTON_STATES
+        S_STATE_UP,
+        S_STATE_HOVER,
+        S_STATE_DOWN,
+        S_STATE_CANPRESHOW,
+        S_STATE_DISABLED,
+        S_NUM_BUTTON_STATES
     };
     enum ButtonStyle
     {
-        S_STYLE_PUSH, S_STYLE_TOGGLE
+        S_STYLE_PUSH,
+        S_STYLE_TOGGLE
     };
     void setSize(QSize size);
     void setStyle(ButtonStyle style);
-    void setState(ButtonState state, bool ignore_change = false);
-    inline void setButtonName(QString buttonName)
+    virtual void setState(ButtonState state, bool ignore_change = false);
+    inline void setButtonName(const QString &buttonName)
     {
         _m_buttonName = buttonName;
     }
@@ -46,10 +51,10 @@ public:
     void setRect(QRect rect);
     virtual QRectF boundingRect() const;
     bool insideButton(QPointF pos) const;
-    void setEnabled(bool enabled);
+    virtual void setEnabled(bool enabled);
     bool isDown();
     bool isMouseInside() const;
-    public slots:
+public slots:
     void click();
 
 protected:
@@ -70,6 +75,9 @@ protected:
     // get rid of it.
     bool _m_mouseEntered;
     QPixmap _m_bgPixmap[S_NUM_BUTTON_STATES];
+    //for trustbutton, duet to hegemony
+    //bool multi_state;
+    //bool m_isFirstState;
 
 private:
     bool _isMouseInside(const QPointF &pos) const
@@ -89,19 +97,33 @@ class QSanSkillButton : public QSanButton
 public:
     enum SkillType
     {
-        S_SKILL_ATTACHEDLORD, S_SKILL_PROACTIVE, S_SKILL_FREQUENT, S_SKILL_COMPULSORY,
-        S_SKILL_AWAKEN, S_SKILL_ONEOFF_SPELL, S_NUM_SKILL_TYPES
+        S_SKILL_ATTACHEDLORD,
+        S_SKILL_PROACTIVE,
+        S_SKILL_FREQUENT,
+        S_SKILL_COMPULSORY,
+        S_SKILL_AWAKEN,
+        S_SKILL_ONEOFF_SPELL,
+        S_SKILL_ARRAY,
+        S_NUM_SKILL_TYPES
     };
 
     inline static QString getSkillTypeString(SkillType type)
     {
         QString arg1;
-        if (type == QSanSkillButton::S_SKILL_AWAKEN) arg1 = "awaken";
-        else if (type == QSanSkillButton::S_SKILL_COMPULSORY) arg1 = "compulsory";
-        else if (type == QSanSkillButton::S_SKILL_FREQUENT) arg1 = "frequent";
-        else if (type == QSanSkillButton::S_SKILL_ONEOFF_SPELL) arg1 = "oneoff";
-        else if (type == QSanSkillButton::S_SKILL_PROACTIVE) arg1 = "proactive";
-        else if (type == QSanSkillButton::S_SKILL_ATTACHEDLORD) arg1 = "attachedlord";
+        if (type == QSanSkillButton::S_SKILL_AWAKEN)
+            arg1 = "awaken";
+        else if (type == QSanSkillButton::S_SKILL_ARRAY)
+            arg1 = "array";
+        else if (type == QSanSkillButton::S_SKILL_COMPULSORY)
+            arg1 = "compulsory";
+        else if (type == QSanSkillButton::S_SKILL_FREQUENT)
+            arg1 = "frequent";
+        else if (type == QSanSkillButton::S_SKILL_ONEOFF_SPELL)
+            arg1 = "oneoff";
+        else if (type == QSanSkillButton::S_SKILL_PROACTIVE)
+            arg1 = "proactive";
+        else if (type == QSanSkillButton::S_SKILL_ATTACHEDLORD)
+            arg1 = "attachedlord";
         return arg1;
     }
     virtual void setSkill(const Skill *skill);
@@ -109,17 +131,21 @@ public:
     {
         return _m_skill;
     }
-    inline virtual void setEnabled(bool enabled)
+    /*inline virtual void setEnabled(bool enabled)
     {
-        if (!_m_canEnable && enabled) return;
-        if (!_m_canDisable && !enabled) return;
+        if (!_m_canEnable && enabled)
+            return;
+        if (!_m_canDisable && !enabled)
+            return;
         QSanButton::setEnabled(enabled);
-    }
-    QSanSkillButton(QGraphicsItem *parent = NULL);
+    }*/
+    explicit QSanSkillButton(QGraphicsItem *parent = NULL);
     inline const ViewAsSkill *getViewAsSkill() const
     {
         return _m_viewAsSkill;
     }
+    void setState(ButtonState state, bool ignore_change = false);
+    void setEnabled(bool enabled);
 
 protected:
     virtual void _setSkillType(SkillType type);
@@ -148,17 +174,22 @@ class QSanInvokeSkillButton : public QSanSkillButton
     Q_OBJECT
 
 public:
-    inline QSanInvokeSkillButton(QGraphicsItem *parent = NULL) : QSanSkillButton(parent)
+    explicit inline QSanInvokeSkillButton(QGraphicsItem *parent = NULL)
+        : QSanSkillButton(parent)
     {
         _m_enumWidth = S_WIDTH_NARROW;
     }
     enum SkillButtonWidth
     {
-        S_WIDTH_WIDE, S_WIDTH_MED, S_WIDTH_NARROW, S_NUM_BUTTON_WIDTHS
+        S_WIDTH_WIDE,
+        S_WIDTH_MED,
+        S_WIDTH_NARROW,
+        S_NUM_BUTTON_WIDTHS
     };
     inline void setButtonWidth(SkillButtonWidth width)
     {
-        _m_enumWidth = width; _repaint();
+        _m_enumWidth = width;
+        _repaint();
     }
     inline SkillButtonWidth getButtonWidth()
     {
@@ -178,8 +209,10 @@ class QSanInvokeSkillDock : public QGraphicsObject
     Q_OBJECT
 
 public:
-    QSanInvokeSkillDock(QGraphicsItem *parent) : QGraphicsObject(parent)
+    explicit QSanInvokeSkillDock(QGraphicsItem *parent)
+        : QGraphicsObject(parent)
     {
+        _m_width = 0;
     }
     int width() const;
     int height() const;
@@ -190,7 +223,8 @@ public:
     }
     inline void removeSkillButton(QSanInvokeSkillButton *button)
     {
-        if (button == NULL) return;
+        if (button == NULL)
+            return;
         _m_buttons.removeAll(button);
         disconnect(button);
     }
@@ -200,7 +234,8 @@ public:
     inline QSanSkillButton *removeSkillButtonByName(const QString &skillName)
     {
         QSanInvokeSkillButton *button = getSkillButtonByName(skillName);
-        if (button != NULL) removeSkillButton(button);
+        if (button != NULL)
+            removeSkillButton(button);
         update();
         return button;
     }
@@ -228,4 +263,3 @@ signals:
 };
 
 #endif
-

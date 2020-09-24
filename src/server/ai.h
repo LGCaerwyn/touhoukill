@@ -13,8 +13,8 @@ typedef int LuaFunction;
 #include "roomthread.h"
 #include "serverplayer.h"
 
-#include <QString>
 #include <QObject>
+#include <QString>
 
 class AI : public QObject
 {
@@ -22,11 +22,14 @@ class AI : public QObject
     Q_ENUMS(Relation)
 
 public:
-    AI(ServerPlayer *player);
+    explicit AI(ServerPlayer *player);
+    virtual ~AI();
 
     enum Relation
     {
-        Friend, Enemy, Neutrality
+        Friend,
+        Enemy,
+        Neutrality
     };
     static Relation GetRelation3v3(const ServerPlayer *a, const ServerPlayer *b);
     static Relation GetRelation(const ServerPlayer *a, const ServerPlayer *b);
@@ -50,7 +53,7 @@ public:
     virtual int askForAG(const QList<int> &card_ids, bool refusable, const QString &reason) = 0;
     virtual const Card *askForCardShow(ServerPlayer *requestor, const QString &reason) = 0;
     virtual const Card *askForPindian(ServerPlayer *requestor, const QString &reason) = 0;
-    virtual ServerPlayer *askForPlayerChosen(const QList<ServerPlayer *> &targets, const QString &reason) = 0;
+    virtual ServerPlayer *askForPlayerChosen(const QList<ServerPlayer *> &targets, const QString &reason, bool optional) = 0;
     virtual const Card *askForSinglePeach(ServerPlayer *dying) = 0;
     virtual ServerPlayer *askForYiji(const QList<int> &cards, const QString &reason, int &card_id) = 0;
     virtual void askForGuanxing(const QList<int> &cards, QList<int> &up, QList<int> &bottom, int guanxing_type) = 0;
@@ -66,7 +69,8 @@ class TrustAI : public AI
     Q_OBJECT
 
 public:
-    TrustAI(ServerPlayer *player);
+    explicit TrustAI(ServerPlayer *player);
+    virtual ~TrustAI();
 
     virtual void activate(CardUseStruct &card_use);
     virtual Card::Suit askForSuit(const QString &);
@@ -81,7 +85,7 @@ public:
     virtual int askForAG(const QList<int> &card_ids, bool refusable, const QString &reason);
     virtual const Card *askForCardShow(ServerPlayer *requestor, const QString &reason);
     virtual const Card *askForPindian(ServerPlayer *requestor, const QString &reason);
-    virtual ServerPlayer *askForPlayerChosen(const QList<ServerPlayer *> &targets, const QString &reason);
+    virtual ServerPlayer *askForPlayerChosen(const QList<ServerPlayer *> &targets, const QString &reason, bool optional);
     virtual const Card *askForSinglePeach(ServerPlayer *dying);
     virtual ServerPlayer *askForYiji(const QList<int> &cards, const QString &reason, int &card_id);
     virtual void askForGuanxing(const QList<int> &cards, QList<int> &up, QList<int> &bottom, int guanxing_type);
@@ -97,7 +101,7 @@ class LuaAI : public TrustAI
     Q_OBJECT
 
 public:
-    LuaAI(ServerPlayer *player);
+    explicit LuaAI(ServerPlayer *player);
 
     virtual const Card *askForCardShow(ServerPlayer *requestor, const QString &reason);
     virtual bool askForSkillInvoke(const QString &skill_name, const QVariant &data);
@@ -108,7 +112,7 @@ public:
     virtual QString askForChoice(const QString &skill_name, const QString &choices, const QVariant &data);
     virtual int askForCardChosen(ServerPlayer *who, const QString &flags, const QString &reason, Card::HandlingMethod method);
     virtual const Card *askForCard(const QString &pattern, const QString &prompt, const QVariant &data);
-    virtual ServerPlayer *askForPlayerChosen(const QList<ServerPlayer *> &targets, const QString &reason);
+    virtual ServerPlayer *askForPlayerChosen(const QList<ServerPlayer *> &targets, const QString &reason, bool optional);
     virtual int askForAG(const QList<int> &card_ids, bool refusable, const QString &reason);
     virtual const Card *askForSinglePeach(ServerPlayer *dying);
     virtual const Card *askForPindian(ServerPlayer *requestor, const QString &reason);
@@ -129,4 +133,3 @@ private:
 };
 
 #endif
-

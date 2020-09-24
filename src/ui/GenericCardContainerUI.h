@@ -1,26 +1,25 @@
 #ifndef _GENERAL_CARD_CONTAINER_UI_H
 #define _GENERAL_CARD_CONTAINER_UI_H
 
-#include "carditem.h"
-#include "player.h"
 #include "QSanSelectableItem.h"
 #include "SkinBank.h"
 #include "TimedProgressBar.h"
+#include "carditem.h"
+#include "graphicspixmaphoveritem.h"
+#include "hegemonyrolecombobox.h"
+#include "heroskincontainer.h"
 #include "magatamasItem.h"
+#include "player.h"
 #include "rolecombobox.h"
 
-#include "graphicspixmaphoveritem.h"
-#include <QGraphicsPixmapItem>
-#include "heroskincontainer.h"
-
-#include <QGraphicsScene>
+#include <QGraphicsEffect>
 #include <QGraphicsItem>
+#include <QGraphicsPixmapItem>
+#include <QGraphicsScene>
+#include <QLabel>
 #include <QMutex>
-
-#include <qparallelanimationgroup.h>
-#include <qgraphicseffect.h>
-#include <qvariant.h>
-#include <qlabel.h>
+#include <QParallelAnimationGroup>
+#include <QVariant>
 
 class GenericCardContainer : public QGraphicsObject
 {
@@ -77,7 +76,7 @@ public:
         return m_player;
     }
 
-    void setPlayer(ClientPlayer *player);
+    virtual void setPlayer(ClientPlayer *player);
     inline int getVotes()
     {
         return _m_votesGot;
@@ -105,18 +104,16 @@ public:
     virtual void killPlayer();
     virtual void revivePlayer();
     virtual QGraphicsItem *getMouseClickReceiver() = 0;
-    virtual void startHuaShen(QString generalName, QString skillName);
+    virtual void startHuaShen(QString generalName, QString skillName, QString general2Name, QString skill2Name);
     virtual void stopHuaShen();
     virtual void updateAvatarTooltip();
     virtual void setRoleShown(bool shown = false);
 
-
-    static void _paintPixmap(QGraphicsPixmapItem *&item, const QRect &rect,
-        const QPixmap &pixmap, QGraphicsItem *parent);
+    static void _paintPixmap(QGraphicsPixmapItem *&item, const QRect &rect, const QPixmap &pixmap, QGraphicsItem *parent);
 
     inline void hookMouseEvents();
 
-    QPixmap paintByMask(QPixmap& source);
+    QPixmap paintByMask(QPixmap &source);
     QPixmap _getAvatarIcon(const QString &generalName);
     QPixmap getSmallAvatarIcon(const QString &generalName);
     GraphicsPixmapHoverItem *getAvartarItem() const
@@ -128,9 +125,19 @@ public:
         return _m_smallAvatarIcon;
     }
 
+    inline RoleComboBox *getRoleComboBox() const
+    {
+        return _m_roleComboBox;
+    }
+
+    inline HegemonyRoleComboBox *getHegemonyRoleComboBox() const
+    {
+        return _m_hegemonyroleComboBox;
+    }
+
     void stopHeroSkinChangingAnimation();
     void showSkillName(const QString &skill_name, bool isSelf);
-
+    QString getHuashenSkillName(bool head);
 
 public slots:
     void updateAvatar();
@@ -141,6 +148,10 @@ public slots:
     void updateDrankState();
     virtual void updateDuanchang();
     void updatePile(const QString &pile_name);
+    void updateKingdom(const QString &kingdom);
+    virtual void showPile();
+    virtual void hidePile();
+    virtual void showSeat();
     void updateRole(const QString &role);
     void updateMarks();
     void updateVotes(bool need_select = true, bool display_1 = false);
@@ -148,6 +159,10 @@ public slots:
     void showDistance();
     virtual void refresh();
     void hideSkillName();
+
+    void updateBrokenEquips();
+    void onRemovedChanged();
+
 protected:
     // overrider parent functions
     virtual QVariant itemChange(GraphicsItemChange change, const QVariant &value);
@@ -171,6 +186,8 @@ protected:
     //virtual const QRect &getSkillNameArea() const = 0;
     //virtual const QSanShadowTextFont &getSkillNameFont() const = 0;
 
+    virtual QAbstractAnimation *_getPlayerRemovedEffect() = 0;
+    virtual void _initializeRemovedEffect() = 0;
     QGraphicsPixmapItem *_m_skillNameItem;
 
     void _createRoleComboBox();
@@ -215,13 +232,14 @@ protected:
     QGraphicsPixmapItem *_m_avatarNameItem, *_m_smallAvatarNameItem;
     GraphicsPixmapHoverItem *_m_avatarIcon, *_m_smallAvatarIcon;
     //QGraphicsPixmapItem *_m_avatarIcon, *_m_smallAvatarIcon, *_m_circleItem;
-    QGraphicsPixmapItem  *_m_circleItem;
+    QGraphicsPixmapItem *_m_circleItem;
 
     QGraphicsPixmapItem *_m_screenNameItem;
-    QGraphicsPixmapItem *_m_chainIcon, *_m_faceTurnedIcon;
+    QGraphicsPixmapItem *_m_chainIcon, *_m_faceTurnedIcon, *_m_faceTurnedIcon2;
     QGraphicsPixmapItem *_m_handCardBg, *_m_handCardNumText;
     QGraphicsPixmapItem *_m_kingdomColorMaskIcon;
     QGraphicsPixmapItem *_m_dashboardKingdomColorMaskIcon;
+    QGraphicsPixmapItem *_m_dashboardSecondaryKingdomColorMaskIcon;
     QGraphicsPixmapItem *_m_deathIcon;
     QGraphicsPixmapItem *_m_actionIcon;
     QGraphicsPixmapItem *_m_kingdomIcon;
@@ -229,9 +247,12 @@ protected:
     QGraphicsPixmapItem *_m_phaseIcon;
     QGraphicsPixmapItem *_m_extraSkillBg;
     QGraphicsPixmapItem *_m_extraSkillText;
+    QGraphicsPixmapItem *leftDisableShowLock;
+    QGraphicsPixmapItem *rightDisableShowLock;
     QGraphicsTextItem *_m_markItem;
     QGraphicsPixmapItem *_m_selectedFrame;
     QMap<QString, QGraphicsProxyWidget *> _m_privatePiles;
+    QGraphicsProxyWidget *_m_privatePileArea;
 
     // The frame that is maintained by roomscene. Items in this area has positions
     // or contents that cannot be decided based on the information of PlayerCardContainer
@@ -253,6 +274,8 @@ protected:
     MagatamasBoxItem *_m_hpBox;
     MagatamasBoxItem *_m_sub_hpBox;
     RoleComboBox *_m_roleComboBox;
+    HegemonyRoleComboBox *_m_hegemonyroleComboBox;
+
     QGraphicsPixmapItem *_m_roleShownIcon;
     QSanCommandProgressBar *_m_progressBar;
     QGraphicsProxyWidget *_m_progressBarItem;
@@ -274,15 +297,23 @@ protected:
     // animations
     QAbstractAnimation *_m_huashenAnimation;
     QGraphicsItem *_m_huashenItem;
+    QGraphicsItem *_m_huashenItem2;
     //GraphicsWidgetHoverItem *_m_huashenItem;
     //GraphicsPixmapHoverItem *_m_huashenItem;
     //QGraphicsPixmapItem *_m_huashenItem;
 
     QString _m_huashenGeneralName;
     QString _m_huashenSkillName;
+    QString _m_huashenGeneral2Name;
+    QString _m_huashenSkill2Name;
 
     QSanButton *m_changePrimaryHeroSKinBtn;
     HeroSkinContainer *m_primaryHeroSkinContainer;
+    QSanButton *m_changeSecondaryHeroSkinBtn;
+    HeroSkinContainer *m_secondaryHeroSkinContainer;
+
+    // The following stuffs for showing seat
+    QGraphicsPixmapItem *_m_seatItem;
 
 protected slots:
     virtual void _onEquipSelectChanged();
@@ -300,7 +331,10 @@ protected slots:
     }
     virtual bool isItemUnderMouse(QGraphicsItem *item) const
     {
-        return item->isUnderMouse();
+        if (item != NULL)
+            return item->isUnderMouse();
+
+        return false;
     }
 
 private:
@@ -309,9 +343,7 @@ private:
     int _lastZ;
     bool _allZAdjusted;
 
-    void showHeroSkinListHelper(const General *general,
-        GraphicsPixmapHoverItem *avatarIcon,
-        HeroSkinContainer *&heroSkinContainer);
+    void showHeroSkinListHelper(const General *general, GraphicsPixmapHoverItem *avatarIcon); //, HeroSkinContainer *&heroSkinContainer
 
 signals:
     void selected_changed();
@@ -321,4 +353,3 @@ signals:
 };
 
 #endif
-

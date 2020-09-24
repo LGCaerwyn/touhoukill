@@ -1,12 +1,12 @@
 #ifndef _CLIENT_H
 #define _CLIENT_H
 
-#include "clientplayer.h"
 #include "card.h"
-#include "skill.h"
-#include "socket.h"
+#include "clientplayer.h"
 #include "clientstruct.h"
 #include "protocol.h"
+#include "skill.h"
+#include "socket.h"
 
 class Recorder;
 class Replayer;
@@ -21,29 +21,32 @@ class Client : public QObject
 public:
     enum Status
     {
-        NotActive = 0x00,
-        Responding = 0x01,
-        Playing = 0x02,
-        Discarding = 0x03,
-        Exchanging = 0x04,
-        ExecDialog = 0x05,
-        AskForSkillInvoke = 0x06,
-        AskForAG = 0x07,
-        AskForPlayerChoose = 0x08,
-        AskForYiji = 0x09,
-        AskForGuanxing = 0x0A,
-        AskForGongxin = 0x0B,
-        AskForShowOrPindian = 0x0C,
-        AskForGeneralTaken = 0x0D,
-        AskForArrangement = 0x0E,
+        NotActive = 0x0000,
+        Responding = 0x0001,
+        Playing = 0x0002,
+        Discarding = 0x0003,
+        Exchanging = 0x0004,
+        ExecDialog = 0x0005,
+        AskForSkillInvoke = 0x0006,
+        AskForAG = 0x0007,
+        AskForPlayerChoose = 0x0008,
+        AskForYiji = 0x0009,
+        AskForGuanxing = 0x000A,
+        AskForGongxin = 0x000B,
+        AskForShowOrPindian = 0x000C,
+        AskForGeneralTaken = 0x000D,
+        //AskForGeneralChosen = 0x01000D,
+        AskForArrangement = 0x000E,
+        AskForChoice = 0x000F,
+        AskForTriggerOrder = 0x0010,
+        AskForCardChosen = 0x0011,
+        //AskForSuit = 0x0012,
 
-        AskForTriggerOrder = 0x010010,//@todo
+        RespondingUse = 0x0101,
+        RespondingForDiscard = 0x0201,
+        RespondingNonTrigger = 0x0301,
 
-        RespondingUse = 0x11,
-        RespondingForDiscard = 0x21,
-        RespondingNonTrigger = 0x31,
-
-        ClientStatusBasicMask = 0x0F
+        ClientStatusBasicMask = 0x00FF
     };
 
     explicit Client(QObject *parent, const QString &filename = QString());
@@ -87,7 +90,7 @@ public:
     QTextDocument *getLinesDoc() const;
     QTextDocument *getPromptDoc() const;
 
-    typedef void (Client::*Callback) (const QVariant &);
+    typedef void (Client::*Callback)(const QVariant &);
 
     void checkVersion(const QVariant &server_version);
     void setup(const QVariant &setup_str);
@@ -115,12 +118,14 @@ public:
     void showCard(const QVariant &show_str);
     void log(const QVariant &log_str);
     void speak(const QVariant &speak_data);
+    void heartbeat(const QVariant &);
     void addHistory(const QVariant &history);
     void moveFocus(const QVariant &focus);
     void setEmotion(const QVariant &set_str);
     void skillInvoked(const QVariant &invoke_str);
     void animate(const QVariant &animate_str);
     void cardLimitation(const QVariant &limit);
+    void disableShow(const QVariant &args);
     void setNullification(const QVariant &str);
     void enableSurrender(const QVariant &enabled);
     void exchangeKnownCards(const QVariant &players);
@@ -133,6 +138,9 @@ public:
     void updateCard(const QVariant &arg);
     void setPlayerSkillInvalidity(const QVariant &arg);
     void setShownHandCards(const QVariant &card_str);
+    void setBrokenEquips(const QVariant &card_str);
+    void setHiddenGenerals(const QVariant &arg);
+    void setShownHiddenGeneral(const QVariant &arg);
 
     void fillAG(const QVariant &cards_str);
     void takeAG(const QVariant &take_str);
@@ -229,13 +237,15 @@ public slots:
     void onPlayerChooseCard(int card_id = -2);
     void onPlayerChooseAG(int card_id);
     void onPlayerChoosePlayer(const Player *player);
+    void onPlayerChooseOption(const QString &choice);
     void onPlayerChooseTriggerOrder(const QString &choice);
     void trust();
     void addRobot();
     void fillRobots();
 
     void onPlayerReplyGongxin(int card_id = -1);
-    void changeSkin(QString name, int index);
+    void changeSkin(const QString &name, int index);
+    void preshow(const QString &skill_name, const bool isPreshowed); //, bool head
 
 protected:
     // operation countdown
@@ -256,12 +266,14 @@ private:
     QStringList ban_packages;
     Recorder *recorder;
     Replayer *replayer;
+    QTimer *heartbeatTimer;
     QTextDocument *lines_doc, *prompt_doc;
     int pile_num;
     QString skill_to_invoke;
     QList<int> available_cards;
 
     unsigned int _m_lastServerSerial;
+    bool m_isObjectNameRecorded;
 
     void updatePileNum();
     QString setPromptList(const QStringList &text);
@@ -290,12 +302,13 @@ signals:
     void player_added(ClientPlayer *new_player);
     void player_removed(const QString &player_name);
     // choice signal
-    void generals_got(const QStringList &generals);
+    //void generals_got(const QStringList &generals);
+    void generals_got(const QStringList &generals, const bool single_result, const bool can_convert);
     void kingdoms_got(const QStringList &kingdoms);
     void suits_got(const QStringList &suits);
     void options_got(const QString &skillName, const QStringList &options);
-    void cards_got(const ClientPlayer *player, const QString &flags, const QString &reason, bool handcard_visible,
-        Card::HandlingMethod method, QList<int> disabled_ids);
+    void cards_got(const ClientPlayer *player, const QString &flags, const QString &reason, bool handcard_visible, Card::HandlingMethod method, QList<int> disabled_ids,
+                   bool enableEmptyCard);
     void roles_got(const QString &scheme, const QStringList &roles);
     void directions_got();
     void orders_got(QSanProtocol::Game3v3ChooseOrderCommand reason);
@@ -313,11 +326,11 @@ signals:
     void card_shown(const QString &player_name, int card_id);
     void log_received(const QStringList &log_str);
     void guanxing(const QList<int> &card_ids, bool single_side);
-    void gongxin(const QList<int> &card_ids, bool enable_heart, QList<int> enabled_ids);
+    void gongxin(const QList<int> &card_ids, bool enable_heart, QList<int> enabled_ids, QList<int> shownHandcard_ids);
     void focus_moved(const QStringList &focus, QSanProtocol::Countdown countdown);
     void emotion_set(const QString &target, const QString &emotion);
     void skill_invoked(const QString &who, const QString &skill_name);
-    void skill_acquired(const ClientPlayer *player, const QString &skill_name);
+    void skill_acquired(const ClientPlayer *player, const QString &skill_name, const bool &head);
     void animated(int name, const QStringList &args);
     void text_spoken(const QString &text);
     void line_spoken(const QString &line);
@@ -335,13 +348,13 @@ signals:
     void move_cards_got(int moveId, QList<CardsMoveStruct> moves);
 
     void skill_attached(const QString &skill_name, bool from_left);
-    void skill_detached(const QString &skill_name);
+    void skill_detached(const QString &skill_name, bool head = true);
     void do_filter();
 
     void nullification_asked(bool asked);
     void surrender_enabled(bool enabled);
 
-    void ag_filled(const QList<int> &card_ids, const QList<int> &disabled_ids);
+    void ag_filled(const QList<int> &card_ids, const QList<int> &disabled_ids, const QList<int> &shownHandcard_ids);
     void ag_taken(ClientPlayer *taker, int card_id, bool move_cards);
     void ag_cleared();
 
@@ -357,9 +370,11 @@ signals:
 
     void assign_asked();
     void start_in_xs();
+
+    void head_preshowed();
+    void deputy_preshowed(); //hegemony
 };
 
 extern Client *ClientInstance;
 
 #endif
-

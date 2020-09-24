@@ -5,10 +5,9 @@ class General;
 
 #include "TimedProgressBar.h"
 
+#include <QButtonGroup>
 #include <QDialog>
 #include <QGroupBox>
-#include <QButtonGroup>
-
 #include <QToolButton>
 
 class OptionButton : public QToolButton
@@ -16,10 +15,7 @@ class OptionButton : public QToolButton
     Q_OBJECT
 
 public:
-    explicit OptionButton(const QString icon_path, const QString &caption = "", QWidget *parent = 0);
-#ifdef Q_WS_X11
-    virtual QSize sizeHint() const { return iconSize(); } // it causes bugs under Windows
-#endif
+    explicit OptionButton(const QString &icon_path, const QString &caption = "", QWidget *parent = 0);
 
 protected:
     virtual void mouseDoubleClickEvent(QMouseEvent *);
@@ -70,4 +66,3 @@ signals:
 };
 
 #endif
-

@@ -19,16 +19,16 @@
     *********************************************************************/
 
 #include "choosetriggerorderbox.h"
-#include "engine.h"
+#include "SkinBank.h"
+#include "TimedProgressBar.h"
 #include "button.h"
-#include "skinbank.h"
 #include "client.h"
 #include "clientplayer.h"
-#include "timedprogressbar.h"
+#include "engine.h"
 
+#include <QGraphicsProxyWidget>
 #include <QGraphicsSceneMouseEvent>
 #include <QPropertyAnimation>
-#include <QGraphicsProxyWidget>
 
 static qreal initialOpacity = 0.8;
 static int optionButtonHeight = 40;
@@ -40,23 +40,27 @@ const int ChooseTriggerOrderBox::interval = 15;
 const int ChooseTriggerOrderBox::m_leftBlankWidth = 37;
 
 SkillInvokeDetailForClient::SkillInvokeDetailForClient()
-    : skill(NULL), owner(NULL), invoker(NULL), preferredTarget(NULL), preferredTargetSeat(-1)
+    : skill(NULL)
+    , owner(NULL)
+    , invoker(NULL)
+    , preferredTarget(NULL)
+    , preferredTargetSeat(-1)
 {
 }
 
-bool SkillInvokeDetailForClient::operator ==(const SkillInvokeDetailForClient &arg2) const
+bool SkillInvokeDetailForClient::operator==(const SkillInvokeDetailForClient &arg2) const
 {
     return skill == arg2.skill && owner == arg2.owner && invoker == arg2.invoker && preferredTarget == arg2.preferredTarget && preferredTargetSeat == arg2.preferredTargetSeat;
 }
 
-bool SkillInvokeDetailForClient::operator ==(const QVariantMap &arg2) const
+bool SkillInvokeDetailForClient::operator==(const QVariantMap &arg2) const
 {
     SkillInvokeDetailForClient arg2str;
     arg2str.tryParse(arg2);
     return (*this) == arg2str;
 }
 
-bool operator ==(const QVariantMap &arg1, const SkillInvokeDetailForClient &arg2)
+bool operator==(const QVariantMap &arg1, const SkillInvokeDetailForClient &arg2)
 {
     SkillInvokeDetailForClient arg1str;
     arg1str.tryParse(arg1);
@@ -126,21 +130,26 @@ QString SkillInvokeDetailForClient::toString() const
 }
 
 TriggerOptionButton::TriggerOptionButton(QGraphicsObject *parent, const QVariantMap &skillDetail, int width)
-    : QGraphicsObject(parent), width(width), times(1)
+    : QGraphicsObject(parent)
+    , times(1)
+    , width(width)
 {
     detail.tryParse(skillDetail);
     construct();
 }
 
 TriggerOptionButton::TriggerOptionButton(QGraphicsObject *parent, const SkillInvokeDetailForClient &skillDetail, int width)
-    : QGraphicsObject(parent), detail(skillDetail), width(width), times(1)
+    : QGraphicsObject(parent)
+    , detail(skillDetail)
+    , times(1)
+    , width(width)
 {
     construct();
 }
 
 void TriggerOptionButton::construct()
 {
-    setToolTip(detail.skill->getDescription());
+    setToolTip(detail.skill->getDescription(true, isHegemonyGameMode(ServerInfo.GameMode)));
 
     setAcceptedMouseButtons(Qt::LeftButton);
     setAcceptHoverEvents(true);
@@ -170,7 +179,7 @@ void TriggerOptionButton::paint(QPainter *painter, const QStyleOptionGraphicsIte
     else
         generalName = detail.owner->getGeneralName();
 
-    QPixmap pixmap = G_ROOM_SKIN.getGeneralPixmap(generalName, QSanRoomSkin::S_GENERAL_ICON_SIZE_TINY);
+    QPixmap pixmap = G_ROOM_SKIN.getGeneralPixmap(generalName, QSanRoomSkin::S_GENERAL_ICON_SIZE_TINY, false);
 
     pixmap = pixmap.scaledToHeight(optionButtonHeight, Qt::SmoothTransformation);
     QRect pixmapRect(QPoint(0, (rect.height() - pixmap.height()) / 2), pixmap.size());
@@ -220,11 +229,11 @@ QString TriggerOptionButton::displayedTextOf(const SkillInvokeDetailForClient &d
     QString skillName = detail.skill->objectName();
     QString text = Sanguosha->translate(skillName);
     if (detail.preferredTarget) {
-        QString targetName = detail.preferredTarget->getGeneralName();
+        QString targetName = detail.preferredTarget->getFootnoteName();
         text = tr("%1 (use upon %2)").arg(text).arg(Sanguosha->translate(targetName));
     }
     if (detail.owner != detail.invoker)
-        text = tr("%1 (of %2's)").arg(text).arg(Sanguosha->translate(detail.owner->getGeneralName()));
+        text = tr("%1 (of %2's)").arg(text).arg(Sanguosha->translate(detail.owner->getFootnoteName()));
 
     if (times > 1)
         text += QString(" * %1").arg(times);
@@ -253,8 +262,10 @@ void TriggerOptionButton::needDisabled(bool disabled)
 }
 
 ChooseTriggerOrderBox::ChooseTriggerOrderBox()
-    : optional(true), m_minimumWidth(0),
-    cancel(new Button(tr("cancel"), 0.6)), progressBar(NULL)
+    : optional(true)
+    , m_minimumWidth(0)
+    , cancel(new Button(tr("cancel"), 0.6))
+    , progressBar(NULL)
 {
     cancel->hide();
     cancel->setParentItem(this);
@@ -281,10 +292,7 @@ QRectF ChooseTriggerOrderBox::boundingRect() const
 {
     int width = m_minimumWidth + m_leftBlankWidth * 2;
 
-    int height = m_topBlankWidth
-        + options.size() * optionButtonHeight
-        + (options.size() - 1) * interval
-        + bottom_blank_width;
+    int height = m_topBlankWidth + optionButtons.size() * optionButtonHeight + (optionButtons.size() - 1) * interval + bottom_blank_width;
 
     if (ServerInfo.OperationTimeout != 0)
         height += 12;
@@ -302,9 +310,6 @@ void ChooseTriggerOrderBox::chooseOption(const QVariantList &options, bool optio
     title = tr("Please Select Trigger Order");
 
     storeMinimumWidth();
-
-    prepareGeometryChange();
-
     foreach (const QVariant &option, options) {
         QVariantMap map = option.toMap();
         SkillInvokeDetailForClient detail;
@@ -332,6 +337,7 @@ void ChooseTriggerOrderBox::chooseOption(const QVariantList &options, bool optio
         optionButtons << button;
     }
 
+    prepareGeometryChange();
     moveToCenter();
     show();
 
@@ -350,7 +356,6 @@ void ChooseTriggerOrderBox::chooseOption(const QVariantList &options, bool optio
         cancel->setPos((boundingRect().width() - cancel->boundingRect().width()) / 2, y + interval);
         cancel->show();
     }
-
 
     if (ServerInfo.OperationTimeout != 0) {
         if (!progressBar) {
@@ -376,7 +381,7 @@ void ChooseTriggerOrderBox::clear()
         progressBar = NULL;
     }
 
-    foreach(TriggerOptionButton *button, optionButtons)
+    foreach (TriggerOptionButton *button, optionButtons)
         button->deleteLater();
 
     optionButtons.clear();

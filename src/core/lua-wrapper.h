@@ -1,9 +1,9 @@
 #ifndef _LUA_WRAPPER_H
 #define _LUA_WRAPPER_H
 
-#include "util.h"
 #include "skill.h"
 #include "standard.h"
+#include "util.h"
 
 typedef int LuaFunction;
 
@@ -26,7 +26,10 @@ public:
         this->global = global;
     }
 
-    virtual inline int getPriority() const { return priority; }
+    virtual inline int getPriority() const
+    {
+        return priority;
+    }
 
     virtual void record(TriggerEvent triggerEvent, Room *room, QVariant &data) const;
 
@@ -47,9 +50,10 @@ class LuaProhibitSkill : public ProhibitSkill
     Q_OBJECT
 
 public:
-    LuaProhibitSkill(const char *name);
+    explicit LuaProhibitSkill(const char *name);
 
-    virtual bool isProhibited(const Player *from, const Player *to, const Card *card, const QList<const Player *> &others = QList<const Player *>()) const;
+    virtual bool isProhibited(const Player *from, const Player *to, const Card *card, const QList<const Player *> &others = QList<const Player *>(),
+                              bool include_hidden = false) const;
 
     LuaFunction is_prohibited;
 };
@@ -57,12 +61,15 @@ public:
 class LuaViewAsSkill : public ViewAsSkill
 {
     Q_OBJECT
-        Q_ENUMS(GuhuoDialogType)
+    Q_ENUMS(GuhuoDialogType)
 
 public:
     enum GuhuoDialogType
     {
-        NoDialog = 0, LeftOnlyDialog = 1, RightOnlyDialog = 2, LeftRightDialog = 3
+        NoDialog = 0,
+        LeftOnlyDialog = 1,
+        RightOnlyDialog = 2,
+        LeftRightDialog = 3
     };
 
     LuaViewAsSkill(const char *name, const char *response_pattern = "");
@@ -103,7 +110,7 @@ class LuaFilterSkill : public FilterSkill
     Q_OBJECT
 
 public:
-    LuaFilterSkill(const char *name);
+    explicit LuaFilterSkill(const char *name);
 
     virtual bool viewFilter(const Card *to_select) const;
     virtual const Card *viewAs(const Card *originalCard) const;
@@ -117,7 +124,7 @@ class LuaDistanceSkill : public DistanceSkill
     Q_OBJECT
 
 public:
-    LuaDistanceSkill(const char *name);
+    explicit LuaDistanceSkill(const char *name);
 
     virtual int getCorrect(const Player *from, const Player *to) const;
 
@@ -129,7 +136,7 @@ class LuaMaxCardsSkill : public MaxCardsSkill
     Q_OBJECT
 
 public:
-    LuaMaxCardsSkill(const char *name);
+    explicit LuaMaxCardsSkill(const char *name);
 
     virtual int getExtra(const Player *target) const;
     virtual int getFixed(const Player *target) const;
@@ -159,7 +166,7 @@ class LuaAttackRangeSkill : public AttackRangeSkill
     Q_OBJECT
 
 public:
-    LuaAttackRangeSkill(const char *name);
+    explicit LuaAttackRangeSkill(const char *name);
 
     virtual int getExtra(const Player *target, bool include_weapon) const;
     virtual int getFixed(const Player *target, bool include_weapon) const;
@@ -283,7 +290,11 @@ class LuaTrickCard : public TrickCard
 public:
     enum SubClass
     {
-        TypeNormal, TypeSingleTargetTrick, TypeDelayedTrick, TypeAOE, TypeGlobalEffect
+        TypeNormal,
+        TypeSingleTargetTrick,
+        TypeDelayedTrick,
+        TypeAOE,
+        TypeGlobalEffect
     };
 
     Q_INVOKABLE LuaTrickCard(Card::Suit suit, int number, const char *obj_name, const char *class_name, const char *subtype);
@@ -335,16 +346,25 @@ public:
         if (strcmp(cardType, "LuaCard") == 0 || QString(cardType) == class_name)
             return true;
         else {
-            if (Card::isKindOf(cardType)) return true;
+            if (Card::isKindOf(cardType))
+                return true;
             switch (subclass) {
-                case TypeSingleTargetTrick: return strcmp(cardType, "SingleTargetTrick") == 0; break;
-                case TypeDelayedTrick: return strcmp(cardType, "DelayedTrick") == 0; break;
-                case TypeAOE: return strcmp(cardType, "AOE") == 0; break;
-                case TypeGlobalEffect: return strcmp(cardType, "GlobalEffect") == 0; break;
-                case TypeNormal:
-                default:
-                    return false;
-                    break;
+            case TypeSingleTargetTrick:
+                return strcmp(cardType, "SingleTargetTrick") == 0;
+                break;
+            case TypeDelayedTrick:
+                return strcmp(cardType, "DelayedTrick") == 0;
+                break;
+            case TypeAOE:
+                return strcmp(cardType, "AOE") == 0;
+                break;
+            case TypeGlobalEffect:
+                return strcmp(cardType, "GlobalEffect") == 0;
+                break;
+            case TypeNormal:
+            default:
+                return false;
+                break;
             }
         }
     }
@@ -446,7 +466,10 @@ public:
     virtual void onInstall(ServerPlayer *player) const;
     virtual void onUninstall(ServerPlayer *player) const;
 
-    inline virtual QString getClassName() const { return class_name; }
+    inline virtual QString getClassName() const
+    {
+        return class_name;
+    }
     inline virtual bool isKindOf(const char *cardType) const
     {
         if (strcmp(cardType, "LuaCard") == 0 || QString(cardType) == class_name)

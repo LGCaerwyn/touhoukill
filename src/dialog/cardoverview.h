@@ -7,9 +7,8 @@
 #include <QTableWidgetItem>
 
 class MainWindow;
-namespace Ui
-{
-    class CardOverview;
+namespace Ui {
+class CardOverview;
 }
 
 class CardOverview : public QDialog
@@ -40,4 +39,3 @@ private slots:
 };
 
 #endif
-

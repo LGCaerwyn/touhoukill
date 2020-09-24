@@ -1,16 +1,16 @@
 #include "generaloverview.h"
-#include "ui_generaloverview.h"
+#include "SkinBank.h"
+#include "client.h"
+#include "clientstruct.h"
 #include "engine.h"
 #include "settings.h"
-#include "SkinBank.h"
-#include "clientstruct.h"
-#include "client.h"
+#include "ui_generaloverview.h"
 
+#include <QClipboard>
+#include <QCommandLinkButton>
+#include <QGroupBox>
 #include <QMessageBox>
 #include <QRadioButton>
-#include <QGroupBox>
-#include <QCommandLinkButton>
-#include <QClipboard>
 
 static QLayout *HLay(QWidget *left, QWidget *right)
 {
@@ -30,8 +30,8 @@ GeneralSearch::GeneralSearch(GeneralOverview *parent)
     layout->addLayout(createButtonLayout());
     setLayout(layout);
 
-    connect(this, SIGNAL(search(bool, QString, QString, QStringList, QStringList, int, int, QStringList)),
-        parent, SLOT(startSearch(bool, QString, QString, QStringList, QStringList, int, int, QStringList)));
+    connect(this, SIGNAL(search(bool, QString, QString, QStringList, QStringList, int, int, QStringList)), parent,
+            SLOT(startSearch(bool, QString, QString, QStringList, QStringList, int, int, QStringList)));
 }
 
 QWidget *GeneralSearch::createInfoTab()
@@ -44,7 +44,8 @@ QWidget *GeneralSearch::createInfoTab()
     layout->addWidget(include_hidden_checkbox);
 
     nickname_label = new QLabel(tr("Nickname"));
-    nickname_label->setToolTip(tr("<font color=#FFFF33>Input characters included by the nickname. '?' and '*' is available. Every nickname meets the condition if the line is empty.</font>"));
+    nickname_label->setToolTip(
+        tr("<font color=#FFFF33>Input characters included by the nickname. '?' and '*' is available. Every nickname meets the condition if the line is empty.</font>"));
     nickname_edit = new QLineEdit;
     nickname_edit->clear();
     layout->addLayout(HLay(nickname_label, nickname_edit));
@@ -224,25 +225,25 @@ void GeneralSearch::clearAll()
     include_hidden_checkbox->setChecked(true);
     nickname_edit->clear();
     name_edit->clear();
-    foreach(QAbstractButton *button, gender_buttons->buttons())
+    foreach (QAbstractButton *button, gender_buttons->buttons())
         button->setChecked(false);
-    foreach(QAbstractButton *button, kingdom_buttons->buttons())
+    foreach (QAbstractButton *button, kingdom_buttons->buttons())
         button->setChecked(false);
     maxhp_lower_spinbox->setValue(0);
     maxhp_upper_spinbox->setValue(0);
-    foreach(QAbstractButton *button, package_buttons->buttons())
+    foreach (QAbstractButton *button, package_buttons->buttons())
         button->setChecked(false);
 }
 
 void GeneralSearch::selectAllPackages()
 {
-    foreach(QAbstractButton *button, package_buttons->buttons())
+    foreach (QAbstractButton *button, package_buttons->buttons())
         button->setChecked(true);
 }
 
 void GeneralSearch::unselectAllPackages()
 {
-    foreach(QAbstractButton *button, package_buttons->buttons())
+    foreach (QAbstractButton *button, package_buttons->buttons())
         button->setChecked(false);
 }
 
@@ -257,9 +258,12 @@ GeneralOverview *GeneralOverview::getInstance(QWidget *main_window)
 }
 
 GeneralOverview::GeneralOverview(QWidget *parent)
-    : QDialog(parent), ui(new Ui::GeneralOverview)
+    : QDialog(parent)
+    , ui(new Ui::GeneralOverview)
 {
     ui->setupUi(this);
+    ui->tableWidget->setSortingEnabled(false);
+
     origin_window_title = windowTitle();
 
     button_layout = new QVBoxLayout;
@@ -270,11 +274,17 @@ GeneralOverview::GeneralOverview(QWidget *parent)
     ui->scrollArea->setWidget(group_box);
     ui->skillTextEdit->setProperty("description", true);
     if (ServerInfo.DuringGame && ServerInfo.EnableCheat) {
-        ui->changeGeneralButton->show();
-        //ui->changeGeneral2Button->show();
-        ui->changeGeneral2Button->hide();
+        if (!isHegemonyGameMode(ServerInfo.GameMode))
+            ui->changeGeneralButton->show();
+        else
+            ui->changeGeneralButton->hide();
+        //
+        if (!isHegemonyGameMode(ServerInfo.GameMode) && ServerInfo.Enable2ndGeneral)
+            ui->changeGeneral2Button->show();
+        else
+            ui->changeGeneral2Button->hide();
         connect(ui->changeGeneralButton, SIGNAL(clicked()), this, SLOT(askTransfiguration()));
-        //connect(ui->changeGeneral2Button, SIGNAL(clicked()), this, SLOT(askTransfiguration()));
+        connect(ui->changeGeneral2Button, SIGNAL(clicked()), this, SLOT(askTransfiguration()));
     } else {
         ui->changeGeneralButton->hide();
         ui->changeGeneral2Button->hide();
@@ -315,13 +325,13 @@ void GeneralOverview::fillGenerals(const QList<const General *> &generals, bool 
         if (name.startsWith("!"))
             name = Sanguosha->translate(general->objectName());
         kingdom = Sanguosha->translate(general->getKingdom());
-        gender = general->isMale() ? tr("Male") : (general->isFemale() ? tr("Female") : tr("NoGender"));
+        //gender = general->isMale() ? tr("Male") : (general->isFemale() ? tr("Female") : tr("NoGender"));
         max_hp = QString::number(general->getMaxHp());
         package = Sanguosha->translate(general->getPackage());
 
         QString nickname = Sanguosha->translate("#" + general_name);
         if (nickname.startsWith("#") && general_name.contains("_"))
-            nickname = Sanguosha->translate("#" + general_name.split("_").last());
+            nickname = Sanguosha->translate("#" + general_name.split("_").first());
         QTableWidgetItem *nickname_item;
         if (!nickname.startsWith("#"))
             nickname_item = new QTableWidgetItem(nickname);
@@ -351,8 +361,8 @@ void GeneralOverview::fillGenerals(const QList<const General *> &generals, bool 
         QTableWidgetItem *kingdom_item = new QTableWidgetItem(kingdom);
         kingdom_item->setTextAlignment(Qt::AlignCenter);
 
-        QTableWidgetItem *gender_item = new QTableWidgetItem(gender);
-        gender_item->setTextAlignment(Qt::AlignCenter);
+        //QTableWidgetItem *gender_item = new QTableWidgetItem(gender);
+        //gender_item->setTextAlignment(Qt::AlignCenter);
 
         QTableWidgetItem *max_hp_item = new QTableWidgetItem(max_hp);
         max_hp_item->setTextAlignment(Qt::AlignCenter);
@@ -380,17 +390,22 @@ void GeneralOverview::fillGenerals(const QList<const General *> &generals, bool 
         ui->tableWidget->setItem(i, 0, nickname_item);
         ui->tableWidget->setItem(i, 1, name_item);
         ui->tableWidget->setItem(i, 2, kingdom_item);
-        ui->tableWidget->setItem(i, 3, gender_item);
-        ui->tableWidget->setItem(i, 4, max_hp_item);
-        ui->tableWidget->setItem(i, 5, package_item);
+        ui->tableWidget->setItem(i, 3, max_hp_item);
+        ui->tableWidget->setItem(i, 4, package_item);
     }
+    //original width
+    //ui->tableWidget->setColumnWidth(0, 80);
+    //ui->tableWidget->setColumnWidth(1, 95);
+    //ui->tableWidget->setColumnWidth(2, 40);
+    //ui->tableWidget->setColumnWidth(3, 50);
+    //ui->tableWidget->setColumnWidth(3, 60);
+    //ui->tableWidget->setColumnWidth(4, 85);
 
-    ui->tableWidget->setColumnWidth(0, 80);
-    ui->tableWidget->setColumnWidth(1, 95);
+    ui->tableWidget->setColumnWidth(0, 115);
+    ui->tableWidget->setColumnWidth(1, 110);
     ui->tableWidget->setColumnWidth(2, 40);
-    ui->tableWidget->setColumnWidth(3, 50);
-    ui->tableWidget->setColumnWidth(4, 60);
-    ui->tableWidget->setColumnWidth(5, 85);
+    ui->tableWidget->setColumnWidth(3, 60);
+    ui->tableWidget->setColumnWidth(4, 85);
 
     ui->tableWidget->setCurrentItem(ui->tableWidget->item(0, 0));
 }
@@ -412,14 +427,17 @@ GeneralOverview::~GeneralOverview()
 
 bool GeneralOverview::hasSkin(const QString &general_name)
 {
-    int skin_index = Config.value(QString("HeroSkin/%1").arg(general_name), 0).toInt();
+    QString unique_general = general_name;
+    if (unique_general.endsWith("_hegemony"))
+        unique_general = unique_general.replace("_hegemony", "");
+    int skin_index = Config.value(QString("HeroSkin/%1").arg(unique_general), 0).toInt();
     if (skin_index == 0) {
         Config.beginGroup("HeroSkin");
-        Config.setValue(general_name, 1);
+        Config.setValue(unique_general, 1);
         Config.endGroup();
-        QPixmap pixmap = G_ROOM_SKIN.getCardMainPixmap(general_name);
+        QPixmap pixmap = G_ROOM_SKIN.getCardMainPixmap(unique_general);
         Config.beginGroup("HeroSkin");
-        Config.remove(general_name);
+        Config.remove(unique_general);
         Config.endGroup();
         if (pixmap.width() <= 1 && pixmap.height() <= 1)
             return false;
@@ -429,13 +447,16 @@ bool GeneralOverview::hasSkin(const QString &general_name)
 
 QString GeneralOverview::getIllustratorInfo(const QString &general_name)
 {
-    int skin_index = Config.value(QString("HeroSkin/%1").arg(general_name), 0).toInt();
+    QString unique_general = general_name;
+    if (unique_general.endsWith("_hegemony"))
+        unique_general = unique_general.replace("_hegemony", "");
+    int skin_index = Config.value(QString("HeroSkin/%1").arg(unique_general), 0).toInt();
     QString suffix = (skin_index > 0) ? QString("_%1").arg(skin_index) : QString();
-    QString illustrator_text = Sanguosha->translate(QString("illustrator:%1%2").arg(general_name).arg(suffix));
+    QString illustrator_text = Sanguosha->translate(QString("illustrator:%1%2").arg(unique_general).arg(suffix));
     if (!illustrator_text.startsWith("illustrator:"))
         return illustrator_text;
     else {
-        illustrator_text = Sanguosha->translate("illustrator:" + general_name);
+        illustrator_text = Sanguosha->translate("illustrator:" + unique_general);
         if (!illustrator_text.startsWith("illustrator:"))
             return illustrator_text;
         else
@@ -445,13 +466,16 @@ QString GeneralOverview::getIllustratorInfo(const QString &general_name)
 
 QString GeneralOverview::getOriginInfo(const QString &general_name)
 {
-    int skin_index = Config.value(QString("HeroSkin/%1").arg(general_name), 0).toInt();
+    QString unique_general = general_name;
+    if (unique_general.endsWith("_hegemony"))
+        unique_general = unique_general.replace("_hegemony", "");
+    int skin_index = Config.value(QString("HeroSkin/%1").arg(unique_general), 0).toInt();
     QString suffix = (skin_index > 0) ? QString("_%1").arg(skin_index) : QString();
-    QString illustrator_text = Sanguosha->translate(QString("origin:%1%2").arg(general_name).arg(suffix));
+    QString illustrator_text = Sanguosha->translate(QString("origin:%1%2").arg(unique_general).arg(suffix));
     if (!illustrator_text.startsWith("origin:"))
         return illustrator_text;
     else {
-        illustrator_text = Sanguosha->translate("origin:" + general_name);
+        illustrator_text = Sanguosha->translate("origin:" + unique_general);
         if (!illustrator_text.startsWith("origin:"))
             return illustrator_text;
         else
@@ -526,19 +550,20 @@ void GeneralOverview::on_tableWidget_itemSelectionChanged()
     QList<const Skill *> skills = general->getVisibleSkillList();
     foreach (QString skill_name, general->getRelatedSkillNames()) {
         const Skill *skill = Sanguosha->getSkill(skill_name);
-        if (skill && skill->isVisible()) skills << skill;
+        if (skill && skill->isVisible())
+            skills << skill;
     }
 
     ui->skillTextEdit->clear();
 
     resetButtons();
 
-    foreach(const Skill *skill, skills)
+    foreach (const Skill *skill, skills)
         addLines(skill);
 
     QString last_word = Sanguosha->translate("~" + general->objectName());
     if (last_word.startsWith("~") && general->objectName().contains("_"))
-        last_word = Sanguosha->translate(("~") + general->objectName().split("_").last());
+        last_word = Sanguosha->translate(("~") + general->objectName().split("_").first());
 
     if (!last_word.startsWith("~")) {
         QCommandLinkButton *death_button = new QCommandLinkButton(tr("Death"), last_word);
@@ -552,7 +577,7 @@ void GeneralOverview::on_tableWidget_itemSelectionChanged()
     QString declaration_title = Sanguosha->translate("lord_declaration");
     QString declaration = Sanguosha->translate("$" + general->objectName());
     if (declaration.startsWith("$") && general->objectName().contains("_"))
-        declaration = Sanguosha->translate(("$") + general->objectName().split("_").last());
+        declaration = Sanguosha->translate(("$") + general->objectName().split("_").first());
 
     if (!declaration.startsWith("$")) {
         QCommandLinkButton *declaration_button = new QCommandLinkButton(declaration_title, declaration);
@@ -567,10 +592,10 @@ void GeneralOverview::on_tableWidget_itemSelectionChanged()
 
     if (general_name.contains("caocao")) {
         QCommandLinkButton *win_button = new QCommandLinkButton(tr("Victory"),
-            tr("Six dragons lead my chariot, "
-            "I will ride the wind with the greatest speed."
-            "With all of the feudal lords under my command,"
-            "to rule the world with one name!"));
+                                                                tr("Six dragons lead my chariot, "
+                                                                   "I will ride the wind with the greatest speed."
+                                                                   "With all of the feudal lords under my command,"
+                                                                   "to rule the world with one name!"));
 
         button_layout->addWidget(win_button);
         addCopyAction(win_button);
@@ -587,11 +612,24 @@ void GeneralOverview::on_tableWidget_itemSelectionChanged()
 
     QString cv_text = Sanguosha->translate("cv:" + general->objectName());
     if (cv_text.startsWith("cv:"))
-        cv_text = Sanguosha->translate("cv:" + general->objectName().split("_").last());
+        cv_text = Sanguosha->translate("cv:" + general->objectName().split("_").first());
     if (!cv_text.startsWith("cv:"))
         ui->cvLineEdit->setText(cv_text);
     else
         ui->cvLineEdit->setText(tr("Temporily None"));
+
+    if (!general->objectName().endsWith("hegemony")) {
+        ui->companionLineEdit->hide();
+        ui->companionLabel->hide();
+    } else {
+        QString companions_text = general->getCompanions();
+        if (companions_text.isEmpty())
+            ui->companionLineEdit->clear(); //->setText(tr("None"));
+        else
+            ui->companionLineEdit->setText(companions_text);
+        ui->companionLineEdit->show();
+        ui->companionLabel->show();
+    }
 
     ui->illustratorLineEdit->setText(getIllustratorInfo(general->objectName()));
     ui->originLineEdit->setText(getOriginInfo(general->objectName()));
@@ -613,17 +651,17 @@ void GeneralOverview::playAudioEffect()
 
 void GeneralOverview::askTransfiguration()
 {
-    //QPushButton *button = qobject_cast<QPushButton *>(sender());
-    //bool isSecondaryHero = (button && button->objectName() == ui->changeGeneral2Button->objectName());
+    QPushButton *button = qobject_cast<QPushButton *>(sender());
+    bool isSecondaryHero = (button && button->objectName() == ui->changeGeneral2Button->objectName());
     if (ServerInfo.EnableCheat && Self) {
-        //if (isSecondaryHero)
-        //    ui->changeGeneral2Button->setEnabled(false);
-        //else
-        //    ui->changeGeneralButton->setEnabled(false);
+        if (isSecondaryHero)
+            ui->changeGeneral2Button->setEnabled(false);
+        else
+            ui->changeGeneralButton->setEnabled(false);
         int row = ui->tableWidget->currentRow();
         QString general_name = ui->tableWidget->item(row, 0)->data(Qt::UserRole).toString();
-        //ClientInstance->requestCheatChangeGeneral(general_name, isSecondaryHero);
-        ClientInstance->requestCheatChangeGeneral(general_name, false);
+        ClientInstance->requestCheatChangeGeneral(general_name, isSecondaryHero);
+        //ClientInstance->requestCheatChangeGeneral(general_name, false);
     }
 }
 
@@ -638,28 +676,31 @@ void GeneralOverview::askChangeSkin()
 {
     int row = ui->tableWidget->currentRow();
     QString general_name = ui->tableWidget->item(row, 0)->data(Qt::UserRole).toString();
-
-    int n = Config.value(QString("HeroSkin/%1").arg(general_name), 0).toInt();
+    QString unique_general = general_name;
+    if (unique_general.endsWith("_hegemony"))
+        unique_general = unique_general.replace("_hegemony", "");
+    int n = Config.value(QString("HeroSkin/%1").arg(unique_general), 0).toInt();
     n++;
     Config.beginGroup("HeroSkin");
-    Config.setValue(general_name, n);
+    Config.setValue(unique_general, n);
     Config.endGroup();
-    QPixmap pixmap = G_ROOM_SKIN.getCardMainPixmap(general_name);
+    QPixmap pixmap = G_ROOM_SKIN.getCardMainPixmap(unique_general);
     if (pixmap.width() <= 1 && pixmap.height() <= 1) {
         Config.beginGroup("HeroSkin");
-        Config.remove(general_name);
+        Config.remove(unique_general);
         Config.endGroup();
         if (n > 1)
-            pixmap = G_ROOM_SKIN.getCardMainPixmap(general_name);
+            pixmap = G_ROOM_SKIN.getCardMainPixmap(unique_general);
         else
             return;
     }
     ui->generalPhoto->setPixmap(pixmap);
-    ui->illustratorLineEdit->setText(getIllustratorInfo(general_name));
+    ui->illustratorLineEdit->setText(getIllustratorInfo(unique_general));
+    ui->originLineEdit->setText(getOriginInfo(unique_general));
 }
 
-void GeneralOverview::startSearch(bool include_hidden, const QString &nickname, const QString &name, const QStringList &genders,
-    const QStringList &kingdoms, int lower, int upper, const QStringList &packages)
+void GeneralOverview::startSearch(bool include_hidden, const QString &nickname, const QString &name, const QStringList &genders, const QStringList &kingdoms, int lower, int upper,
+                                  const QStringList &packages)
 {
     QList<const General *> generals;
     foreach (const General *general, all_generals) {
@@ -674,7 +715,7 @@ void GeneralOverview::startSearch(bool include_hidden, const QString &nickname, 
 
             QString g_nickname = Sanguosha->translate("#" + general_name);
             if (g_nickname.startsWith("#"))
-                g_nickname = Sanguosha->translate("#" + general_name.split("_").last());
+                g_nickname = Sanguosha->translate("#" + general_name.split("_").first());
             if (!rx.exactMatch(g_nickname))
                 continue;
         }

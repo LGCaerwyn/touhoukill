@@ -1,10 +1,10 @@
 #include "AboutUs.h"
 #include "engine.h"
 
+#include <QFile>
+#include <QHBoxLayout>
 #include <QListWidget>
 #include <QTextBrowser>
-#include <QHBoxLayout>
-#include <QFile>
 #include <QTextStream>
 
 AboutUsDialog::AboutUsDialog(QWidget *parent)
@@ -28,7 +28,9 @@ AboutUsDialog::AboutUsDialog(QWidget *parent)
     setLayout(layout);
 
     QStringList developers = GetConfigFromLuaState(Sanguosha->getLuaState(), "developers").toStringList();
-    developers.prepend(tr("TouhouSatsu"));
+    //developers.prepend(tr("TouhouSatsu"));
+    developers.prepend("hegemony");
+    developers.prepend("TouhouSatsu");
 
     foreach (QString name, developers) {
         QListWidgetItem *item = new QListWidgetItem(name, list);

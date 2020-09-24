@@ -1,8 +1,8 @@
 #include "TablePile.h"
 #include "SkinBank.h"
-#include <QParallelAnimationGroup>
 #include "pixmapanimation.h"
 
+#include <QParallelAnimationGroup>
 #include <QTimer>
 
 QList<CardItem *> TablePile::removeCardItems(const QList<int> &card_ids, Player::Place)
@@ -68,7 +68,8 @@ void TablePile::_markClearance(CardItem *item)
 
 void TablePile::clear(bool delayRequest)
 {
-    if (m_visibleCards.isEmpty()) return;
+    if (m_visibleCards.isEmpty())
+        return;
     _m_mutex_pileCards.lock();
     // check again since we just gain the lock.
     if (m_visibleCards.isEmpty()) {
@@ -77,7 +78,7 @@ void TablePile::clear(bool delayRequest)
     }
 
     if (delayRequest) {
-        foreach(CardItem *toRemove, m_visibleCards)
+        foreach (CardItem *toRemove, m_visibleCards)
             _markClearance(toRemove);
     } else {
         _fadeOutCardsLocked(m_visibleCards);
@@ -127,8 +128,7 @@ bool TablePile::_addCardItems(QList<CardItem *> &card_items, const CardsMoveStru
 {
     if (card_items.isEmpty())
         return false;
-    else if (moveInfo.from_place == Player::PlaceDelayedTrick
-        && moveInfo.reason.m_reason == CardMoveReason::S_REASON_NATURAL_ENTER) {
+    else if (moveInfo.from_place == Player::PlaceDelayedTrick && moveInfo.reason.m_reason == CardMoveReason::S_REASON_NATURAL_ENTER) {
         foreach (CardItem *item, card_items) {
             item->deleteLater();
             card_items.clear();
@@ -156,9 +156,7 @@ bool TablePile::_addCardItems(QList<CardItem *> &card_items, const CardsMoveStru
     foreach (CardItem *card_item, card_items) {
         card_item->setHomeOpacity(1.0);
         card_item->showFootnote();
-        if (moveInfo.from_place == Player::DrawPile
-            || moveInfo.from_place == Player::PlaceJudge
-            || moveInfo.from_place == Player::PlaceTable) {
+        if (moveInfo.from_place == Player::DrawPile || moveInfo.from_place == Player::PlaceJudge || moveInfo.from_place == Player::PlaceTable) {
             card_item->setOpacity(0.0);
             card_item->setPos(rightMostPos);
             rightMostPos += QPointF(G_COMMON_LAYOUT.m_cardNormalWidth, 0);
@@ -173,11 +171,12 @@ bool TablePile::_addCardItems(QList<CardItem *> &card_items, const CardsMoveStru
 
 void TablePile::adjustCards()
 {
-    if (m_visibleCards.length() == 0) return;
+    if (m_visibleCards.length() == 0)
+        return;
     _disperseCards(m_visibleCards, m_cardsDisplayRegion, Qt::AlignCenter, true, true);
-    QParallelAnimationGroup *animation = new QParallelAnimationGroup;
-    foreach(CardItem *card_item, m_visibleCards)
+    QParallelAnimationGroup *animation = new QParallelAnimationGroup(this);
+    foreach (CardItem *card_item, m_visibleCards)
         animation->addAnimation(card_item->getGoBackAnimation(true));
-    animation->start();
+    //connect(animation, SIGNAL(finished()), this, SLOT(onAnimationFinished()));
+    animation->start(QAbstractAnimation::DeleteWhenStopped);
 }
-

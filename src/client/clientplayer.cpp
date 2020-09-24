@@ -1,7 +1,7 @@
 #include "clientplayer.h"
-#include "skill.h"
 #include "client.h"
 #include "engine.h"
+#include "skill.h"
 #include "standard.h"
 
 #include <QTextDocument>
@@ -10,14 +10,24 @@
 ClientPlayer *Self = NULL;
 
 ClientPlayer::ClientPlayer(Client *client)
-    : Player(client), handcard_num(0)
+    : Player(client)
+    , handcard_num(0)
 {
     mark_doc = new QTextDocument(this);
 }
 
-int ClientPlayer::aliveCount() const
+int ClientPlayer::aliveCount(bool includeRemoved) const
 {
-    return ClientInstance->alivePlayerCount();
+    //return ClientInstance->alivePlayerCount();
+    int n = ClientInstance->alivePlayerCount();
+    if (!includeRemoved) {
+        if (isRemoved())
+            n--;
+        foreach (const Player *p, getAliveSiblings())
+            if (p->isRemoved())
+                n--;
+    }
+    return n;
 }
 
 int ClientPlayer::getHandcardNum() const
@@ -28,25 +38,23 @@ int ClientPlayer::getHandcardNum() const
 void ClientPlayer::addCard(const Card *card, Place place)
 {
     switch (place) {
-        case PlaceHand:
-        {
-            if (card) known_cards << card;
-            handcard_num++;
-            break;
-        }
-        case PlaceEquip:
-        {
-            WrappedCard *equip = Sanguosha->getWrappedCard(card->getEffectiveId());
-            setEquip(equip);
-            break;
-        }
-        case PlaceDelayedTrick:
-        {
-            addDelayedTrick(card);
-            break;
-        }
-        default:
-            break;
+    case PlaceHand: {
+        if (card)
+            known_cards << card;
+        handcard_num++;
+        break;
+    }
+    case PlaceEquip: {
+        WrappedCard *equip = Sanguosha->getWrappedCard(card->getEffectiveId());
+        setEquip(equip);
+        break;
+    }
+    case PlaceDelayedTrick: {
+        addDelayedTrick(card);
+        break;
+    }
+    default:
+        break;
     }
 }
 
@@ -83,26 +91,23 @@ bool ClientPlayer::isLastHandCard(const Card *card, bool contain) const
 void ClientPlayer::removeCard(const Card *card, Place place)
 {
     switch (place) {
-        case PlaceHand:
-        {
-            handcard_num--;
-            if (card)
-                known_cards.removeOne(card);
-            break;
-        }
-        case PlaceEquip:
-        {
-            WrappedCard *equip = Sanguosha->getWrappedCard(card->getEffectiveId());
-            removeEquip(equip);
-            break;
-        }
-        case PlaceDelayedTrick:
-        {
-            removeDelayedTrick(card);
-            break;
-        }
-        default:
-            break;
+    case PlaceHand: {
+        handcard_num--;
+        if (card)
+            known_cards.removeOne(card);
+        break;
+    }
+    case PlaceEquip: {
+        WrappedCard *equip = Sanguosha->getWrappedCard(card->getEffectiveId());
+        removeEquip(equip);
+        break;
+    }
+    case PlaceDelayedTrick: {
+        removeDelayedTrick(card);
+        break;
+    }
+    default:
+        break;
     }
 }
 
@@ -114,7 +119,7 @@ QList<const Card *> ClientPlayer::getHandcards() const
 void ClientPlayer::setCards(const QList<int> &card_ids)
 {
     known_cards.clear();
-    foreach(int cardId, card_ids)
+    foreach (int cardId, card_ids)
         known_cards.append(Sanguosha->getCard(cardId));
 }
 
@@ -125,14 +130,15 @@ QTextDocument *ClientPlayer::getMarkDoc() const
 
 void ClientPlayer::changePile(const QString &name, bool add, QList<int> card_ids)
 {
-    if (name == "shown_card")
+    if (name == "shown_card" || name == "huashencard")
         emit pile_changed(name);
     else {
-        if (add)
+        if (add) {
             piles[name].append(card_ids);
-        else {
-            foreach(int card_id, card_ids) {
-                if (piles[name].isEmpty()) break;
+        } else {
+            foreach (int card_id, card_ids) {
+                if (piles[name].isEmpty())
+                    break;
                 if (piles[name].contains(Card::S_UNKNOWN_CARD_ID) && !piles[name].contains(card_id))
                     piles[name].removeOne(Card::S_UNKNOWN_CARD_ID);
                 else if (piles[name].contains(card_id))
@@ -190,7 +196,7 @@ void ClientPlayer::setMark(const QString &mark, int value)
         return;
     marks[mark] = value;
 
-    if (mark == "drank")
+    if (mark == "drank" || mark == "magic_drank")
         emit drank_changed();
 
     if (!mark.startsWith("@"))
@@ -207,12 +213,13 @@ void ClientPlayer::setMark(const QString &mark, int value)
         itor.next();
 
         if (itor.key().startsWith("@") && itor.value() > 0) {
-#define _EXCLUDE_MARK(markname) do {\
-                if (itor.key() == QString("@%1").arg(#markname)) {\
-                    markname##_mark = itor.value();\
-                    continue;\
-                                }\
-                    } while (false)
+#define _EXCLUDE_MARK(markname)                            \
+    do {                                                   \
+        if (itor.key() == QString("@%1").arg(#markname)) { \
+            markname##_mark = itor.value();                \
+            continue;                                      \
+        }                                                  \
+    } while (false)
 
             _EXCLUDE_MARK(huashen);
             _EXCLUDE_MARK(yongsi_test);
@@ -231,22 +238,23 @@ void ClientPlayer::setMark(const QString &mark, int value)
             text.append(mark_text);
         }
     }
-    //<img src='image/mark/%1.png' />2<br>
-    // keep these marks at a certain place
-#define _SET_MARK(markname) do {\
-        if (markname##_mark > 0) {\
-            QString mark_text = QString("<img src='image/mark/test/@%1.png' />").arg(#markname);\
-            if (markname##_mark != 1) {\
-                mark_text.append(QString("%1").arg(markname##_mark));\
-                        }\
-            if (this != Self) {\
-                mark_text.append("<br>");\
-                text.prepend(mark_text);\
-                        } else {\
-                text.append(mark_text);\
-                        }\
-                }\
-        } while (false)
+//<img src='image/mark/%1.png' />2<br>
+// keep these marks at a certain place
+#define _SET_MARK(markname)                                                                      \
+    do {                                                                                         \
+        if (markname##_mark > 0) {                                                               \
+            QString mark_text = QString("<img src='image/mark/test/@%1.png' />").arg(#markname); \
+            if (markname##_mark != 1) {                                                          \
+                mark_text.append(QString("%1").arg(markname##_mark));                            \
+            }                                                                                    \
+            if (this != Self) {                                                                  \
+                mark_text.append("<br>");                                                        \
+                text.prepend(mark_text);                                                         \
+            } else {                                                                             \
+                text.append(mark_text);                                                          \
+            }                                                                                    \
+        }                                                                                        \
+    } while (false)
 
     _SET_MARK(huashen);
     _SET_MARK(yongsi_test);
@@ -257,4 +265,3 @@ void ClientPlayer::setMark(const QString &mark, int value)
 #undef _SET_MARK
     mark_doc->setHtml(text);
 }
-

@@ -24,7 +24,6 @@ private:
     QUdpSocket *daemon;
 };
 
-
 class NativeClientSocket : public ClientSocket
 {
     Q_OBJECT
@@ -39,6 +38,7 @@ public:
     virtual bool isConnected() const;
     virtual QString peerName() const;
     virtual QString peerAddress() const;
+    virtual quint32 ipv4Address() const;
 
 private slots:
     void getMessage();
@@ -51,4 +51,3 @@ private:
 };
 
 #endif
-

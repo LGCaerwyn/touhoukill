@@ -1,11 +1,11 @@
 #include "sprite.h"
 
 #include <QAnimationGroup>
-#include <QPropertyAnimation>
-#include <QParallelAnimationGroup>
-#include <QSequentialAnimationGroup>
-#include <QtCore/qmath.h>
 #include <QPainter>
+#include <QParallelAnimationGroup>
+#include <QPropertyAnimation>
+#include <QSequentialAnimationGroup>
+#include <QtMath>
 
 EffectAnimation::EffectAnimation(QObject *parent)
     : QObject(parent)
@@ -20,7 +20,8 @@ void EffectAnimation::fade(QGraphicsItem *map)
     if (effect) {
         effectOut(map);
         effect = registered.value(map);
-        if (effect) effect->deleteLater();
+        if (effect)
+            effect->deleteLater();
         registered.insert(map, new FadeEffect(true));
         return;
     }
@@ -37,7 +38,8 @@ void EffectAnimation::emphasize(QGraphicsItem *map, bool stay)
     if (effect) {
         effectOut(map);
         effect = registered.value(map);
-        if (effect) effect->deleteLater();
+        if (effect)
+            effect->deleteLater();
         registered.insert(map, new EmphasizeEffect(stay));
         return;
     }
@@ -53,7 +55,8 @@ void EffectAnimation::sendBack(QGraphicsItem *map)
     if (effect) {
         effectOut(map);
         effect = registered.value(map);
-        if (effect) effect->deleteLater();
+        if (effect)
+            effect->deleteLater();
         registered.insert(map, new SentbackEffect(true));
         return;
     }
@@ -72,7 +75,8 @@ void EffectAnimation::effectOut(QGraphicsItem *map)
     }
 
     effect = registered.value(map);
-    if (effect) effect->deleteLater();
+    if (effect)
+        effect->deleteLater();
     registered.insert(map, NULL);
 }
 
@@ -84,12 +88,14 @@ void EffectAnimation::deleteEffect()
 
 void EffectAnimation::deleteEffect(QAnimatedEffect *effect)
 {
-    if (!effect) return;
+    if (!effect)
+        return;
     effect->deleteLater();
     QGraphicsItem *pix = effects.key(effect);
     if (pix) {
         QAnimatedEffect *effect = registered.value(pix);
-        if (effect) effect->reset();
+        if (effect)
+            effect->reset();
         pix->setGraphicsEffect(registered.value(pix));
         effects.insert(pix, registered.value(pix));
         registered.insert(pix, NULL);
@@ -116,10 +122,7 @@ void EmphasizeEffect::draw(QPainter *painter)
 
     QPoint offset;
     QPixmap pixmap = sourcePixmap(Qt::LogicalCoordinates, &offset);
-    const QRectF target = boundingRect().adjusted(s.width() * scale - 1,
-        s.height() * scale,
-        -s.width() * scale,
-        -s.height() * scale);
+    const QRectF target = boundingRect().adjusted(s.width() * scale - 1, s.height() * scale, -s.width() * scale, -s.height() * scale);
     const QRectF source(s.width() * 0.1, s.height() * 0.1, s.width(), s.height());
 
     painter->setRenderHint(QPainter::SmoothPixmapTransform);
@@ -130,10 +133,7 @@ QRectF EmphasizeEffect::boundingRectFor(const QRectF &sourceRect) const
 {
     qreal scale = 0.1;
     QRectF rect(sourceRect);
-    rect.adjust(-sourceRect.width() * scale,
-        -sourceRect.height() * scale,
-        sourceRect.width() * scale,
-        sourceRect.height() * scale);
+    rect.adjust(-sourceRect.width() * scale, -sourceRect.height() * scale, sourceRect.width() * scale, sourceRect.height() * scale);
     return rect;
 }
 
@@ -169,10 +169,7 @@ QRectF SentbackEffect::boundingRectFor(const QRectF &sourceRect) const
 {
     qreal scale = 0.05;
     QRectF rect(sourceRect);
-    rect.adjust(-sourceRect.width() * scale,
-        -sourceRect.height() * scale,
-        sourceRect.width() * scale,
-        sourceRect.height() * scale);
+    rect.adjust(-sourceRect.width() * scale, -sourceRect.height() * scale, sourceRect.width() * scale, sourceRect.height() * scale);
     return rect;
 }
 
@@ -227,4 +224,3 @@ void FadeEffect::draw(QPainter *painter)
     painter->setOpacity(index / 40.0);
     painter->drawPixmap(offset, pixmap);
 }
-

@@ -8,9 +8,12 @@ CONFIG += audio
 win32: QT += winextras
 
 CONFIG += c++11
-
-
 CONFIG += lua
+
+VERSION = 0.9.6
+
+CONFIG += precompiled_header
+PRECOMPILED_HEADER = src/pch.h
 
 SOURCES += \
     swig/sanguosha_wrap.cxx \
@@ -42,9 +45,7 @@ SOURCES += \
     src/dialog/distanceviewdialog.cpp \
     src/dialog/generaloverview.cpp \
     src/dialog/mainwindow.cpp \
-    src/dialog/playercarddialog.cpp \
     src/dialog/roleassigndialog.cpp \
-    src/dialog/scenario-overview.cpp \
     src/package/exppattern.cpp \
     src/package/maneuvering.cpp \
     src/package/package.cpp \
@@ -62,11 +63,12 @@ SOURCES += \
     src/package/th13.cpp \
     src/package/th14.cpp \
     src/package/th15.cpp \
+    src/package/th16.cpp \
+    src/package/th17.cpp \
     src/package/th99.cpp \
     src/package/thndj.cpp \
-    src/package/thxwm.cpp \
-    src/package/touhoucard.cpp \
     src/package/touhougod.cpp \
+    src/package/hegemonyGeneral.cpp \
     src/scenario/miniscenarios.cpp \
     src/scenario/scenario.cpp \
     src/scenario/scenerule.cpp \
@@ -94,6 +96,7 @@ SOURCES += \
     src/ui/magatamasItem.cpp \
     src/ui/photo.cpp \
     src/ui/pixmapanimation.cpp \
+    src/ui/choosegeneralbox.cpp \
     src/ui/qsanbutton.cpp \
     src/ui/QSanSelectableItem.cpp \
     src/ui/rolecombobox.cpp \
@@ -117,7 +120,12 @@ SOURCES += \
     src/ui/choosetriggerorderbox.cpp \
     src/ui/graphicsbox.cpp \
     src/ui/lightboxanimation.cpp \
-    src/package/hegemony-cards.cpp
+    src/ui/chooseoptionsbox.cpp \
+    src/ui/playercardbox.cpp \
+    src/package/testCard.cpp \
+    src/package/hegemonyCard.cpp \
+    src/package/playground.cpp \
+    src/ui/hegemonyrolecombobox.cpp
 
 HEADERS += \
     src/client/aux-skills.h \
@@ -150,9 +158,7 @@ HEADERS += \
     src/dialog/distanceviewdialog.h \
     src/dialog/generaloverview.h \
     src/dialog/mainwindow.h \
-    src/dialog/playercarddialog.h \
     src/dialog/roleassigndialog.h \
-    src/dialog/scenario-overview.h \
     src/package/exppattern.h \
     src/package/maneuvering.h \
     src/package/package.h \
@@ -170,11 +176,12 @@ HEADERS += \
     src/package/th13.h \
     src/package/th14.h \
     src/package/th15.h \
+    src/package/th16.h \
+    src/package/th17.h \
     src/package/th99.h \
     src/package/thndj.h \
-    src/package/thxwm.h \
-    src/package/touhoucard.h \
     src/package/touhougod.h \
+    src/package/hegemonyGeneral.h \
     src/scenario/miniscenarios.h \
     src/scenario/scenario.h \
     src/scenario/scenerule.h \
@@ -197,6 +204,7 @@ HEADERS += \
     src/ui/dashboard.h \
     src/ui/GenericCardContainerUI.h \
     src/ui/graphicspixmaphoveritem.h \
+    src/ui/choosegeneralbox.h \
     src/ui/heroskincontainer.h \
     src/ui/indicatoritem.h \
     src/ui/magatamasItem.h \
@@ -225,13 +233,17 @@ HEADERS += \
     src/ui/choosetriggerorderbox.h \
     src/ui/graphicsbox.h \
     src/ui/lightboxanimation.h \
-    src/package/hegemony-cards.h
-
+    src/ui/hegemonyrolecombobox.h \
+    src/ui/chooseoptionsbox.h \
+    src/ui/playercardbox.h \
+    src/package/testCard.h \
+    src/package/hegemonyCard.h \
+    src/package/playground.h \
+    src/pch.h
 
 FORMS += \
     src/dialog/cardoverview.ui \
     src/dialog/configdialog.ui \
-    src/dialog/connectiondialog.ui \
     src/dialog/generaloverview.ui \
     src/dialog/mainwindow.ui
 
@@ -244,10 +256,11 @@ INCLUDEPATH += src/scenario
 INCLUDEPATH += src/server
 INCLUDEPATH += src/ui
 INCLUDEPATH += src/util
-INCLUDEPATH += src/jsoncpp/include
 
 win32{
-    RC_FILE += resource/icon.rc
+    CONFIG += skip_target_version_ext
+    RC_ICONS += resource/icon/sgs.ico
+    QMAKE_TARGET_DESCRIPTION = "TouhouSatsu Main Program"
 }
 
 macx{
@@ -264,29 +277,6 @@ win32-msvc*{
     } else {
         DEFINES += WIN64
         LIBS += -L"$$_PRO_FILE_PWD_/lib/win/x64"
-    }
-    CONFIG(debug, debug|release) {
-        !winrt:INCLUDEPATH += include/vld
-    } else {
-        QMAKE_LFLAGS_RELEASE = $$QMAKE_LFLAGS_RELEASE_WITH_DEBUGINFO
-        DEFINES += USE_BREAKPAD
-
-        SOURCES += src/breakpad/client/windows/crash_generation/client_info.cc \
-            src/breakpad/client/windows/crash_generation/crash_generation_client.cc \
-            src/breakpad/client/windows/crash_generation/crash_generation_server.cc \
-            src/breakpad/client/windows/crash_generation/minidump_generator.cc \
-            src/breakpad/client/windows/handler/exception_handler.cc \
-            src/breakpad/common/windows/guid_string.cc
-
-        HEADERS += src/breakpad/client/windows/crash_generation/client_info.h \
-            src/breakpad/client/windows/crash_generation/crash_generation_client.h \
-            src/breakpad/client/windows/crash_generation/crash_generation_server.h \
-            src/breakpad/client/windows/crash_generation/minidump_generator.h \
-            src/breakpad/client/windows/handler/exception_handler.h \
-            src/breakpad/common/windows/guid_string.h
-
-        INCLUDEPATH += src/breakpad
-        INCLUDEPATH += src/breakpad/client/windows
     }
 }
 win32-g++{
@@ -308,6 +298,7 @@ winrt{
 macx{
     DEFINES += MAC
     LIBS += -L"$$_PRO_FILE_PWD_/lib/mac/lib"
+    DEFINES += LUA_USE_MACOSX
 }
 ios{
     DEFINES += IOS
@@ -334,6 +325,8 @@ linux{
             LIBS += -L"$$_PRO_FILE_PWD_/lib/linux/x64"
             QMAKE_LFLAGS += -Wl,--rpath=lib/linux/x64
         }
+        DEFINES += LUA_USE_LINUX
+        LIBS += -ldl -lreadline
     }
 }
 
@@ -419,7 +412,7 @@ android:DEFINES += "\"getlocaledecpoint()='.'\""
 
 
 !build_pass{
-    system("lrelease $$_PRO_FILE_PWD_/builds/sanguosha.ts -qm $$_PRO_FILE_PWD_/sanguosha.qm")
+    system("$$dirname(QMAKE_QMAKE)/lrelease $$_PRO_FILE_PWD_/builds/sanguosha.ts -qm $$_PRO_FILE_PWD_/sanguosha.qm")
 
     SWIG_bin = "swig"
     contains(QMAKE_HOST.os, "Windows"): SWIG_bin = "$$_PRO_FILE_PWD_/tools/swig/swig.exe"
@@ -435,4 +428,5 @@ else:LIBS += -lfreetype
 INCLUDEPATH += $$_PRO_FILE_PWD_/include/freetype
 DEPENDPATH += $$_PRO_FILE_PWD_/include/freetype
 
-ANDROID_PACKAGE_SOURCE_DIR = $$_PRO_FILE_PWD_/resource/android
+#ANDROID_PACKAGE_SOURCE_DIR = $$_PRO_FILE_PWD_/resource/android
+

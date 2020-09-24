@@ -1,9 +1,9 @@
 #ifndef _MAGATAMAS_ITEM_H
 #define _MAGATAMAS_ITEM_H
 
-#include <QGraphicsObject>
-#include <qpixmap.h>
 #include "SkinBank.h"
+#include <QGraphicsObject>
+#include <QPixmap>
 
 class MagatamasBoxItem : public QGraphicsObject
 {
@@ -16,7 +16,7 @@ public:
     {
         return m_hp;
     }
-    void setHp(int hp);
+    void setHp(int hp, int dying = 1);
     inline int getMaxHp() const
     {
         return m_maxHp;
@@ -45,7 +45,7 @@ public:
         return anchorEnabled;
     }
     void setIconSize(QSize size);
-    inline void setImageArea(QRect rect)
+    inline void setImageArea(const QRect &rect)
     {
         m_imageArea = rect;
     }
@@ -65,13 +65,14 @@ protected:
     Qt::Alignment m_align;
     bool anchorEnabled;
     int m_hp;
+    int m_dyingHp;
     int m_maxHp;
     Qt::Orientation m_orientation;
     bool m_showBackground;
     QSize m_iconSize;
     QRect m_imageArea;
     QPixmap _icons[6];
+    QPixmap _dyingIcons[6];
     QPixmap _bgImages[6];
 };
 #endif
-

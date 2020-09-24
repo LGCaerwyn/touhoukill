@@ -1,19 +1,17 @@
 #ifndef GRAPHICSPIXMAPHOVERITEM_H
 #define GRAPHICSPIXMAPHOVERITEM_H
 
-#include <QObject>
 #include <QGraphicsPixmapItem>
+#include <QObject>
 
 class PlayerCardContainer;
-
 
 class GraphicsPixmapHoverItem : public QObject, public QGraphicsPixmapItem
 {
     Q_OBJECT
 
 public:
-    explicit GraphicsPixmapHoverItem(PlayerCardContainer *playerCardContainer,
-        QGraphicsItem *parent = 0);
+    explicit GraphicsPixmapHoverItem(PlayerCardContainer *playerCardContainer, QGraphicsItem *parent = 0);
 
     void stopChangeHeroSkinAnimation();
     bool isSkinChangingFinished() const

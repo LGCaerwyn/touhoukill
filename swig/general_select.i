@@ -5,15 +5,17 @@
 
 void GeneralSelector::initialize()
 {
-#define GETFUNCFROMLUASTATE(funcname) do { \
-        lua_getglobal(L, #funcname); \
-        funcname ## Func = luaL_ref(L, LUA_REGISTRYINDEX); \
-        Q_ASSERT(funcname ## Func != 0); \
-    } while(false)
+#define GETFUNCFROMLUASTATE(funcname)                    \
+    do {                                                 \
+        lua_getglobal(L, #funcname);                     \
+        funcname##Func = luaL_ref(L, LUA_REGISTRYINDEX); \
+        Q_ASSERT(funcname##Func != 0);                   \
+    } while (false)
 
     GETFUNCFROMLUASTATE(initialize);
     GETFUNCFROMLUASTATE(selectFirst);
     GETFUNCFROMLUASTATE(selectSecond);
+	GETFUNCFROMLUASTATE(selectPair);
     GETFUNCFROMLUASTATE(select3v3);
     GETFUNCFROMLUASTATE(select1v1);
     GETFUNCFROMLUASTATE(arrange3v3);
@@ -22,7 +24,6 @@ void GeneralSelector::initialize()
 #undef GETFUNCFROMLUASTATE
 
     callLuaInitialize();
-
 }
 
 static void pushLuaFunction(lua_State *l, LuaFunction f)
@@ -67,6 +68,32 @@ QString GeneralSelector::selectFirst(ServerPlayer *player, const QStringList &ca
 QString GeneralSelector::selectSecond(ServerPlayer *player, const QStringList &candidates)
 {
     pushLuaFunction(L, selectSecondFunc);
+
+    SWIG_NewPointerObj(L, player, SWIGTYPE_p_ServerPlayer, 0);
+
+    lua_createtable(L, (&candidates)->length(), 0);
+
+    for (int i = 0; i < (&candidates)->length(); i++) {
+        QString str = (&candidates)->at(i);
+        lua_pushstring(L, str.toUtf8());
+        lua_rawseti(L, -2, i + 1);
+    }
+
+    int error = lua_pcall(L, 2, 1, 0);
+    if (error)
+        Error(L);
+    else {
+        QString s = lua_tostring(L, -1);
+        lua_pop(L, 1);
+        return s;
+    }
+
+    return candidates.first();
+}
+
+QString GeneralSelector::selectPair(ServerPlayer *player, const QStringList &candidates)
+{
+    pushLuaFunction(L, selectPairFunc);
 
     SWIG_NewPointerObj(L, player, SWIGTYPE_p_ServerPlayer, 0);
 
@@ -187,6 +214,5 @@ QStringList GeneralSelector::arrange1v1(ServerPlayer *player)
 
     return player->getSelected();
 }
-
 
 %}

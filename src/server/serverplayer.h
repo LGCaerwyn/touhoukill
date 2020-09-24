@@ -8,13 +8,13 @@ class Recorder;
 class CardMoveReason;
 struct PhaseStruct;
 
-#include "structs.h"
 #include "player.h"
-#include "socket.h"
 #include "protocol.h"
+#include "socket.h"
+#include "structs.h"
 
-#include <QSemaphore>
 #include <QDateTime>
+#include <QSemaphore>
 
 class ServerPlayer : public Player
 {
@@ -46,8 +46,8 @@ public:
     void clearOnePrivatePile(QString pile_name);
     void clearPrivatePiles();
     void drawCards(int n, const QString &reason = QString());
-    bool askForSkillInvoke(const QString &skill_name, const QVariant &data = QVariant());
-    bool askForSkillInvoke(const Skill *skill, const QVariant &data = QVariant());
+    bool askForSkillInvoke(const QString &skill_name, const QVariant &data = QVariant(), const QString &prompt = QString());
+    bool askForSkillInvoke(const Skill *skill, const QVariant &data = QVariant(), const QString &prompt = QString());
     QList<int> forceToDiscard(int discard_num, bool include_equip, bool is_discard = true);
     QList<int> handCards() const;
     virtual QList<const Card *> getHandcards() const;
@@ -60,8 +60,9 @@ public:
     bool changePhase(Player::Phase from, Player::Phase to);
 
     QList<Player::Phase> &getPhases();
+    int getPhasesIndex() const;
     void skip(Player::Phase phase, bool isCost = false, bool sendLog = true);
-    void insertPhase(Player::Phase phase);
+    void insertPhases(QList<Player::Phase> new_phases, int index = -1);
     void exchangePhases(Player::Phase phase, Player::Phase phase1);
     bool isSkipped(Player::Phase phase);
 
@@ -69,8 +70,8 @@ public:
     void loseMark(const QString &mark, int n = 1);
     void loseAllMarks(const QString &mark_name);
 
-    virtual void addSkill(const QString &skill_name);
-    virtual void loseSkill(const QString &skill_name);
+    virtual void addSkill(const QString &skill_name, bool head_skill = true);
+    virtual void loseSkill(const QString &skill_name, bool head_skill = true);
     virtual void setGender(General::Gender gender);
 
     void setAI(AI *ai);
@@ -83,7 +84,7 @@ public:
         return getState() == "robot" || getState() == "offline";
     }
 
-    virtual int aliveCount() const;
+    virtual int aliveCount(bool includeRemoved = true) const;
     virtual int getHandcardNum() const;
     virtual void removeCard(const Card *card, Place place);
     virtual void addCard(const Card *card, Place place);
@@ -95,9 +96,9 @@ public:
     void startRecord();
     void saveRecord(const QString &filename);
 
-    void setNext(ServerPlayer *next);
-    ServerPlayer *getNext() const;
-    ServerPlayer *getNextAlive(int n = 1) const;
+    //void setNext(ServerPlayer *next);
+    //ServerPlayer *getNext() const;
+    //ServerPlayer *getNextAlive(int n = 1) const;
 
     // 3v3 methods
     void addToSelected(const QString &general);
@@ -109,16 +110,24 @@ public:
     virtual QString getGameMode() const;
 
     QString getIp() const;
+    quint32 ipv4Address() const;
     void introduceTo(ServerPlayer *player);
     void marshal(ServerPlayer *player) const;
 
-    void addToPile(const QString &pile_name, const Card *card, bool open = true);
-    void addToPile(const QString &pile_name, int card_id, bool open = true);
-    void addToPile(const QString &pile_name, QList<int> card_ids, bool open = true);
+    void addToPile(const QString &pile_name, const Card *card, bool open = true, QList<ServerPlayer *> open_players = QList<ServerPlayer *>());
+    void addToPile(const QString &pile_name, int card_id, bool open = true, QList<ServerPlayer *> open_players = QList<ServerPlayer *>());
+    void addToPile(const QString &pile_name, QList<int> card_ids, bool open = true, QList<ServerPlayer *> open_players = QList<ServerPlayer *>());
     void addToPile(const QString &pile_name, QList<int> card_ids, bool open, CardMoveReason reason, QList<ServerPlayer *> open_players = QList<ServerPlayer *>());
     void addToShownHandCards(QList<int> card_ids);
-    void removeShownHandCards(QList<int> card_ids, bool sendLog = false);
+    void removeShownHandCards(QList<int> card_ids, bool sendLog = false, bool moveFromHand = false);
+    void addBrokenEquips(QList<int> card_ids);
+    void removeBrokenEquips(QList<int> card_ids, bool sendLog = true, bool moveFromEquip = false);
+    void addHiddenGenerals(const QStringList &generals);
+    void removeHiddenGenerals(const QStringList &generals);
     void gainAnExtraTurn();
+
+    void showHiddenSkill(const QString &skill_name);
+    QStringList checkTargetModSkillShow(const CardUseStruct &use);
 
     void copyFrom(ServerPlayer *sp);
 
@@ -184,6 +193,19 @@ public:
     // static function
     static bool CompareByActionOrder(ServerPlayer *a, ServerPlayer *b);
 
+    void notifyPreshow(); //hegemony
+    void showGeneral(bool head_general = true, bool trigger_event = true, bool sendLog = true, bool ignore_rule = true);
+    void hideGeneral(bool head_general = true);
+    void removeGeneral(bool head_general = true);
+    void sendSkillsToOthers(bool head_skill = true);
+    void disconnectSkillsFromOthers(bool head_skill = true);
+    int getPlayerNumWithSameKingdom(const QString &reason, const QString &_to_calculate = QString()) const;
+    bool askForGeneralShow(bool one = true, bool refusable = false);
+
+    bool inSiegeRelation(const ServerPlayer *skill_owner, const ServerPlayer *victim) const;
+    bool inFormationRalation(ServerPlayer *teammate) const;
+    void summonFriends(const QString type);
+
 protected:
     //Synchronization helpers
     QSemaphore **semas;
@@ -200,7 +222,7 @@ private:
     QList<Phase> phases;
     int _m_phases_index;
     QList<PhaseStruct> _m_phases_state;
-    ServerPlayer *next;
+    //ServerPlayer *next;
     QStringList selected; // 3v3 mode use only
     QDateTime test_time;
     QString m_clientResponseString;
@@ -217,4 +239,3 @@ signals:
 };
 
 #endif
-

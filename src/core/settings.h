@@ -2,15 +2,19 @@
 #define _SETTINGS_H
 
 #include "protocol.h"
-#include <QSettings>
-#include <QFont>
-#include <QRectF>
-#include <QPixmap>
+
 #include <QBrush>
+#include <QFont>
+#include <QPixmap>
+#include <QRectF>
+#include <QSettings>
 
 class Settings : public QSettings
 {
     Q_OBJECT
+
+private:
+    void loadSettingsFromConfigIni();
 
 public:
     explicit Settings();
@@ -36,6 +40,7 @@ public:
     QString GameMode;
     QStringList BanPackages;
     bool RandomSeat;
+    bool AssignLatestGeneral;
     bool EnableCheat;
     bool FreeChoose;
     bool ForbidSIMC;
@@ -62,6 +67,11 @@ public:
     QStringList ExtraHiddenGenerals;
     QStringList RemovedHiddenGenerals;
 
+    QString HegemonyFirstShowReward;
+    QString HegemonyCompanionReward;
+    QString HegemonyHalfHpReward;
+    QString HegemonyCareeristKillReward;
+
     // client side
     QString HostAddress;
     QString UserName;
@@ -75,6 +85,7 @@ public:
     bool EnableAutoTarget;
     bool EnableIntellectualSelection;
     bool EnableDoubleClick;
+    bool EnableAutoUpdate;
     bool EnableAutoSaveRecord;
     bool NetworkOnly;
 
@@ -94,8 +105,6 @@ public:
     QString TableBgImage;
     QString RecordSavePath;
     bool UseLordBackdrop;
-    bool EnableSurprisingGenerals;
-    QStringList KnownSurprisingGenerals;
 
     // consts
     static const int S_SURRENDER_REQUEST_MIN_INTERVAL;
@@ -106,7 +115,7 @@ public:
     static const int S_JUDGE_LONG_DELAY;
 };
 
-extern Settings Config;
+Settings *configInstance();
+#define Config (*(configInstance()))
 
 #endif
-

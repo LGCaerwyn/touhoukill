@@ -1,37 +1,61 @@
 #ifndef _CONNECTION_DIALOG_H
 #define _CONNECTION_DIALOG_H
 
+#include "engine.h"
+#include "general.h"
+
+#include <QAbstractListModel>
+#include <QButtonGroup>
+#include <QComboBox>
 #include <QDialog>
 #include <QListWidget>
-#include <QComboBox>
-#include <QButtonGroup>
 
 class UdpDetector;
 
-namespace Ui
+class AvatarModel : public QAbstractListModel
 {
-    class ConnectionDialog;
-}
+    Q_OBJECT
+public:
+    explicit AvatarModel(const QList<const General *> &list);
+
+    virtual int rowCount(const QModelIndex &) const;
+    virtual QVariant data(const QModelIndex &index, int role) const;
+
+private:
+    QList<const General *> list;
+};
 
 class ConnectionDialog : public QDialog
 {
     Q_OBJECT
 
 public:
-    ConnectionDialog(QWidget *parent);
+    explicit ConnectionDialog(QWidget *parent);
     ~ConnectionDialog();
     void hideAvatarList();
     void showAvatarList();
 
-private:
-    Ui::ConnectionDialog *ui;
+public slots:
+    void accept();
 
 private slots:
     void on_detectLANButton_clicked();
     void on_clearHistoryButton_clicked();
-    void on_avatarList_itemDoubleClicked(QListWidgetItem *item);
+    void on_avatarList_doubleClicked(const QModelIndex &index);
     void on_changeAvatarButton_clicked();
-    void on_connectButton_clicked();
+    void on_fillreconnect_clicked();
+
+private:
+    QLineEdit *nameLineEdit;
+    QComboBox *hostComboBox;
+    QLabel *avatarPixmap;
+    QListView *avatarList;
+
+    QSize shrinkSize;
+    QSize expandSize;
+
+private:
+    void showEvent(QShowEvent *e);
 };
 
 class UdpDetectorDialog : public QDialog
@@ -39,7 +63,7 @@ class UdpDetectorDialog : public QDialog
     Q_OBJECT
 
 public:
-    UdpDetectorDialog(QDialog *parent);
+    explicit UdpDetectorDialog(QDialog *parent);
 
 private:
     QListWidget *list;
@@ -57,4 +81,3 @@ signals:
 };
 
 #endif
-

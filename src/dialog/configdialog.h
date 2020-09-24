@@ -4,9 +4,8 @@
 #include <QDialog>
 #include <QLineEdit>
 
-namespace Ui
-{
-    class ConfigDialog;
+namespace Ui {
+class ConfigDialog;
 }
 
 class ConfigDialog : public QDialog
@@ -40,4 +39,3 @@ signals:
 };
 
 #endif
-

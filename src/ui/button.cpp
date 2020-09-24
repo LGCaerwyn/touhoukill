@@ -1,25 +1,42 @@
 #include "button.h"
 #include "audio.h"
 
-#include <QPainter>
-#include <QGraphicsSceneMouseEvent>
-#include <QGraphicsRotation>
-#include <QPropertyAnimation>
 #include <QGraphicsDropShadowEffect>
+#include <QGraphicsRotation>
+#include <QGraphicsSceneMouseEvent>
+#include <QPainter>
+#include <QPropertyAnimation>
 
 static QRectF ButtonRect(0, 0, 189, 46);
 
 Button::Button(const QString &label, qreal scale)
-    : label(label), size(ButtonRect.size() * scale), mute(true), font(Config.SmallFont)
+    : label(label)
+    , size(ButtonRect.size() * scale)
+    , mute(true)
+    , font(Config.SmallFont)
 {
     init();
 }
 
 Button::Button(const QString &label, const QSizeF &size)
-    : label(label), size(size), mute(true), font(Config.SmallFont)
+    : label(label)
+    , size(size)
+    , mute(true)
+    , font(Config.SmallFont)
 {
     init();
 }
+
+/*void Button::setText(const QString &text)
+{
+    if (label != text) {
+        label = text;
+        delete m_icon;
+        delete m_colorReversedIcon;
+        initTextItems();
+        prepareIcons();
+    }
+}*/
 
 void Button::init()
 {
@@ -76,7 +93,6 @@ void Button::init()
             else if (y >= (th - pad))
                 y = h - (th - y);
 
-
             QRgb rgb = bgimg.pixel(x, y);
             outimg->setPixel(i, j, rgb);
         }
@@ -115,8 +131,10 @@ void Button::setFont(const QFont &font)
 void Button::hoverEnterEvent(QGraphicsSceneHoverEvent *)
 {
     setFocus(Qt::MouseFocusReason);
-    if (!mute) Sanguosha->playSystemAudioEffect("button-hover");
-    if (!timer_id) timer_id = QObject::startTimer(40);
+    if (!mute)
+        Sanguosha->playSystemAudioEffect("button-hover");
+    if (!timer_id)
+        timer_id = QObject::startTimer(40);
 }
 
 void Button::mousePressEvent(QGraphicsSceneMouseEvent *event)
@@ -126,7 +144,8 @@ void Button::mousePressEvent(QGraphicsSceneMouseEvent *event)
 
 void Button::mouseReleaseEvent(QGraphicsSceneMouseEvent *)
 {
-    if (!mute) Sanguosha->playSystemAudioEffect("button-down");
+    if (!mute)
+        Sanguosha->playSystemAudioEffect("button-down");
     emit clicked();
 }
 
@@ -147,7 +166,8 @@ void Button::timerEvent(QTimerEvent *)
 {
     update();
     if (hasFocus()) {
-        if (glow < 5) glow++;
+        if (glow < 5)
+            glow++;
     } else {
         if (glow > 0)
             glow--;
@@ -157,4 +177,3 @@ void Button::timerEvent(QTimerEvent *)
         }
     }
 }
-

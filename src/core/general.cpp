@@ -1,17 +1,22 @@
 #include "general.h"
-#include "engine.h"
-#include "skill.h"
-#include "package.h"
 #include "client.h"
+#include "engine.h"
+#include "package.h"
 #include "settings.h"
+#include "skill.h"
 
-#include <QSize>
 #include <QFile>
+#include <QSize>
 
-General::General(Package *package, const QString &name, const QString &kingdom,
-    int max_hp, bool male, bool hidden, bool never_shown)
-    : QObject(package), kingdom(kingdom), max_hp(max_hp), gender(male ? Male : Female),
-    hidden(hidden), never_shown(never_shown)
+General::General(Package *package, const QString &name, const QString &kingdom, int max_hp, bool male, bool hidden, bool never_shown)
+    : QObject(package)
+    , kingdom(kingdom)
+    , max_hp(max_hp)
+    , gender(male ? Male : Female)
+    , hidden(hidden)
+    , never_shown(never_shown)
+    , head_max_hp_adjusted_value(0)
+    , deputy_max_hp_adjusted_value(0)
 {
     static QChar lord_symbol('$');
     if (name.endsWith(lord_symbol)) {
@@ -77,8 +82,7 @@ bool General::isTotallyHidden() const
 
 bool General::isVisible() const
 {
-    return !Sanguosha->SurprisingGenerals.contains(objectName())
-        || Config.KnownSurprisingGenerals.contains(objectName());
+    return true;
 }
 
 void General::addSkill(Skill *skill)
@@ -91,7 +95,8 @@ void General::addSkill(Skill *skill)
 
 void General::addSkill(const QString &skill_name)
 {
-    if (extra_set.contains(skill_name)) return;
+    if (extra_set.contains(skill_name))
+        return;
     extra_set << skill_name;
     if (!skillname_list.contains(skill_name))
         skillname_list << skill_name;
@@ -102,21 +107,24 @@ bool General::hasSkill(const QString &skill_name) const
     return skill_set.contains(skill_name) || extra_set.contains(skill_name);
 }
 
-QList<const Skill *> General::getSkillList() const
+QList<const Skill *> General::getSkillList(bool relate_to_place, bool head_only) const
 {
     QList<const Skill *> skills;
     foreach (QString skill_name, skillname_list) {
         const Skill *skill = Sanguosha->getSkill(skill_name);
         Q_ASSERT(skill != NULL);
-        skills << skill;
+        if (relate_to_place && !skill->relateToPlace(!head_only))
+            skills << skill;
+        else if (!relate_to_place)
+            skills << skill;
     }
     return skills;
 }
 
-QList<const Skill *> General::getVisibleSkillList() const
+QList<const Skill *> General::getVisibleSkillList(bool relate_to_place, bool head_only) const
 {
     QList<const Skill *> skills;
-    foreach (const Skill *skill, getSkillList()) {
+    foreach (const Skill *skill, getSkillList(relate_to_place, head_only)) {
         if (skill->isVisible())
             skills << skill;
     }
@@ -124,9 +132,9 @@ QList<const Skill *> General::getVisibleSkillList() const
     return skills;
 }
 
-QSet<const Skill *> General::getVisibleSkills() const
+QSet<const Skill *> General::getVisibleSkills(bool relate_to_place, bool head_only) const
 {
-    return getVisibleSkillList().toSet();
+    return getVisibleSkillList(relate_to_place, head_only).toSet();
 }
 
 QSet<const TriggerSkill *> General::getTriggerSkills() const
@@ -162,10 +170,11 @@ QString General::getPackage() const
 QString General::getSkillDescription(bool include_name, bool yellow) const
 {
     QString description;
+    bool addHegemony = objectName().endsWith("_hegemony");
 
     foreach (const Skill *skill, getVisibleSkillList()) {
         QString skill_name = Sanguosha->translate(skill->objectName());
-        QString desc = skill->getDescription(yellow);
+        QString desc = skill->getDescription(yellow, addHegemony);
         desc.replace("\n", "<br/>");
         description.append(QString("<font color=%1><b>%2</b>:</font> %3 <br/> <br/>").arg(yellow ? "#FFFF33" : "#FF0080").arg(skill_name).arg(desc));
     }
@@ -197,8 +206,60 @@ void General::lastWord() const
     if (!fileExists) {
         QStringList origin_generals = objectName().split("_");
         if (origin_generals.length() > 1)
-            filename = QString("audio/death/%1.ogg").arg(origin_generals.last());
+            filename = QString("audio/death/%1.ogg").arg(origin_generals.first());
     }
     Sanguosha->playAudioEffect(filename);
 }
 
+void General::addCompanion(const QString &name)
+{
+    this->companions << name;
+}
+
+bool General::isCompanionWith(const QString &name) const
+{
+    const General *other = Sanguosha->getGeneral(name);
+    Q_ASSERT(other);
+    //if (kingdom != other->kingdom)
+    //    return false;
+    return companions.contains(name) || other->companions.contains(objectName()); //lord || other->lord ||
+}
+
+QString General::getCompanions() const
+{
+    //if (isLord())
+    //    return tr("%1 Generals").arg(Sanguosha->translate(getKingdom()));
+    QStringList name;
+    foreach (const QString &general, companions)
+        name << QString("%1").arg(Sanguosha->translate(general));
+    //GeneralList generals(Sanguosha->getGeneralList());
+    QList<QString> generals = Sanguosha->getGenerals();
+    foreach (QString gname, generals) {
+        const General *gnr = Sanguosha->getGeneral(gname);
+        if (!gnr)
+            continue;
+        if (gnr->companions.contains(objectName()))
+            name << QString("%1").arg(Sanguosha->translate(gnr->objectName()));
+    }
+    return name.join(" ");
+}
+
+void General::setHeadMaxHpAdjustedValue(int adjusted_value /* = -1 */)
+{
+    head_max_hp_adjusted_value = adjusted_value;
+}
+
+void General::setDeputyMaxHpAdjustedValue(int adjusted_value /* = -1 */)
+{
+    deputy_max_hp_adjusted_value = adjusted_value;
+}
+
+int General::getMaxHpHead() const
+{
+    return max_hp + head_max_hp_adjusted_value;
+}
+
+int General::getMaxHpDeputy() const
+{
+    return max_hp + deputy_max_hp_adjusted_value;
+}

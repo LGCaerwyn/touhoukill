@@ -1,19 +1,17 @@
 #ifndef _ROOM_SCENE_H
 #define _ROOM_SCENE_H
 
-#include "photo.h"
-#include "dashboard.h"
-#include "TablePile.h"
-#include "card.h"
-#include "client.h"
-#include "aux-skills.h"
-#include "clientlogbox.h"
-#include "chatwidget.h"
 #include "SkinBank.h"
-#include "sprite.h"
+#include "TablePile.h"
+#include "aux-skills.h"
+#include "card.h"
+#include "chatwidget.h"
+#include "client.h"
+#include "clientlogbox.h"
+#include "dashboard.h"
+#include "photo.h"
 #include "qsanbutton.h"
-
-
+#include "sprite.h"
 
 class Window;
 class Button;
@@ -23,20 +21,24 @@ class QSanButton;
 class QGroupBox;
 struct RoomLayout;
 class BubbleChatBox;
+class ChooseGeneralBox;
+class ChooseOptionsBox;
 class ChooseTriggerOrderBox;
+class PlayerCardBox;
 
-#include <QGraphicsScene>
-#include <QTableWidget>
-#include <QMainWindow>
-#include <QTextEdit>
-#include <QSpinBox>
+#include <QCommandLinkButton>
 #include <QDialog>
-#include <QGraphicsWidget>
 #include <QGraphicsProxyWidget>
-#include <QThread>
+#include <QGraphicsScene>
+#include <QGraphicsWidget>
 #include <QHBoxLayout>
+#include <QMainWindow>
 #include <QMutex>
+#include <QSpinBox>
 #include <QStack>
+#include <QTableWidget>
+#include <QTextEdit>
+#include <QThread>
 
 class ScriptExecutor : public QDialog
 {
@@ -60,7 +62,8 @@ protected:
     virtual void accept();
 
 private:
-    QComboBox *killer, *victim;
+    QComboBox *killer;
+    QComboBox *victim;
 };
 
 class DamageMakerDialog : public QDialog
@@ -144,6 +147,23 @@ private:
     QTimer *timer;
 };
 
+class CommandLinkDoubleClickButton : public QCommandLinkButton
+{
+    Q_OBJECT
+
+public:
+    explicit CommandLinkDoubleClickButton(QWidget *parent = Q_NULLPTR);
+    explicit CommandLinkDoubleClickButton(const QString &text, QWidget *parent = Q_NULLPTR);
+    explicit CommandLinkDoubleClickButton(const QString &text, const QString &description, QWidget *parent = Q_NULLPTR);
+    ~CommandLinkDoubleClickButton();
+
+signals:
+    void double_clicked(QPrivateSignal);
+
+protected:
+    void mouseDoubleClickEvent(QMouseEvent *event);
+};
+
 class RoomScene : public QGraphicsScene
 {
     Q_OBJECT
@@ -181,12 +201,18 @@ public:
         return m_tableRect;
     }
 
-    void addHeroSkinContainer(ClientPlayer *player,
-        HeroSkinContainer *heroSkinContainer);
+    inline Dashboard *getDashboard()
+    {
+        return dashboard;
+    }
+
+    void addHeroSkinContainer(ClientPlayer *player, HeroSkinContainer *heroSkinContainer);
     HeroSkinContainer *findHeroSkinContainer(const QString &generalName) const;
     QSet<HeroSkinContainer *> getHeroSkinContainers();
 
-    public slots:
+    bool game_started; // from private to public
+
+public slots:
     void addPlayer(ClientPlayer *player);
     void removePlayer(const QString &player_name);
     void loseCards(int moveId, QList<CardsMoveStruct> moves);
@@ -194,10 +220,10 @@ public:
     void keepLoseCardLog(const CardsMoveStruct &move);
     void keepGetCardLog(const CardsMoveStruct &move);
     // choice dialog
-    void chooseGeneral(const QStringList &generals);
+    void chooseGeneral(const QStringList &generals, const bool single_result, const bool can_convert);
     void chooseSuit(const QStringList &suits);
-    void chooseCard(const ClientPlayer *playerName, const QString &flags, const QString &reason,
-        bool handcard_visible, Card::HandlingMethod method, QList<int> disabled_ids);
+    void chooseCard(const ClientPlayer *playerName, const QString &flags, const QString &reason, bool handcard_visible, Card::HandlingMethod method, QList<int> disabled_ids,
+                    bool enableEmptyCard);
     void chooseKingdom(const QStringList &kingdoms);
     void chooseOption(const QString &skillName, const QStringList &options);
     void chooseOrder(QSanProtocol::Game3v3ChooseOrderCommand reason);
@@ -231,12 +257,20 @@ public:
     void doDiscardButton();
     void highlightSkillButton(QString skill_name, bool highlight);
     bool isHighlightStatus(Client::Status status);
-
+    void setLordBGM(QString lord = QString());
+    void setLordBackdrop(QString lord = QString());
+    void anyunSelectSkill(); //for anyun
+    void addlog(QStringList l); //for client test
     void doSkinChange(const QString &generalName, int skinIndex);
     inline QPointF tableCenterPos()
     {
         return m_tableCenterPos;
     }
+
+    void showPile(const QList<int> &card_ids, const QString &name, const ClientPlayer *target);
+    QString getCurrentShownPileName();
+    void hidePile();
+
 protected:
     virtual void mousePressEvent(QGraphicsSceneMouseEvent *event);
     virtual void mouseMoveEvent(QGraphicsSceneMouseEvent *event);
@@ -256,23 +290,29 @@ private:
     const QSanRoomSkin::RoomLayout *_m_roomLayout;
     const QSanRoomSkin::PhotoLayout *_m_photoLayout;
     const QSanRoomSkin::CommonLayout *_m_commonLayout;
-    const QSanRoomSkin* _m_roomSkin;
+    const QSanRoomSkin *_m_roomSkin;
     QGraphicsItem *_m_last_front_item;
     double _m_last_front_ZValue;
     GenericCardContainer *_getGenericCardContainer(Player::Place place, Player *player);
     QMap<int, QList<QList<CardItem *> > > _m_cardsMoveStash;
-    Button *add_robot, *fill_robots, *return_to_main_menu;
+    Button *add_robot;
+    Button *fill_robots;
+    Button *return_to_main_menu;
     QList<Photo *> photos;
     QMap<QString, Photo *> name2photo;
     Dashboard *dashboard;
     TablePile *m_tablePile;
     QMainWindow *main_window;
-    QSanButton *ok_button, *cancel_button, *discard_button;
+    QSanButton *ok_button;
+    QSanButton *cancel_button;
+    QSanButton *discard_button;
     QSanButton *trust_button;
-    QMenu *miscellaneous_menu, *change_general_menu;
+    QMenu *miscellaneous_menu;
+    QMenu *change_general_menu;
     Window *prompt_box;
     Window *pindian_box;
-    CardItem *pindian_from_card, *pindian_to_card;
+    CardItem *pindian_from_card;
+    CardItem *pindian_to_card;
     QGraphicsItem *control_panel;
     QMap<PlayerCardContainer *, const ClientPlayer *> item2player;
     QDialog *m_choiceDialog; // Dialog for choosing generals, suits, card/equip, or kingdoms
@@ -284,6 +324,7 @@ private:
 
     QList<QGraphicsPixmapItem *> role_items;
     CardContainer *card_container;
+    CardContainer *pileContainer;
 
     QList<QSanSkillButton *> m_skillButtons;
 
@@ -296,7 +337,10 @@ private:
     QList<const Player *> selected_targets;
 
     GuanxingBox *guanxing_box;
+    ChooseGeneralBox *m_chooseGeneralBox;
+    ChooseOptionsBox *m_chooseOptionsBox;
     ChooseTriggerOrderBox *m_chooseTriggerOrderBox;
+    PlayerCardBox *m_playerCardBox;
     QList<CardItem *> gongxin_items;
 
     ClientLogBox *log_box;
@@ -322,12 +366,15 @@ private:
 
     // for 3v3 & 1v1 mode
     QSanSelectableItem *selector_box;
-    QList<CardItem *> general_items, up_generals, down_generals;
+    QList<CardItem *> general_items;
+    QList<CardItem *> up_generals;
+    QList<CardItem *> down_generals;
     CardItem *to_change;
     QList<QGraphicsRectItem *> arrange_rects;
     QList<CardItem *> arrange_items;
     Button *arrange_button;
-    KOFOrderBox *enemy_box, *self_box;
+    KOFOrderBox *enemy_box;
+    KOFOrderBox *self_box;
     QPointF m_tableCenterPos;
     ReplayerControlBar *m_replayControl;
 
@@ -337,11 +384,11 @@ private:
         {
             m_card_ids = move.card_ids;
         }
-        inline bool operator ==(const _MoveCardsClassifier &other) const
+        inline bool operator==(const _MoveCardsClassifier &other) const
         {
             return m_card_ids == other.m_card_ids;
         }
-        inline bool operator <(const _MoveCardsClassifier &other) const
+        inline bool operator<(const _MoveCardsClassifier &other) const
         {
             return m_card_ids.first() < other.m_card_ids.first();
         }
@@ -387,11 +434,12 @@ private:
     void doLightboxAnimation(const QString &name, const QStringList &args);
     void doHuashen(const QString &name, const QStringList &args);
     void doIndicate(const QString &name, const QStringList &args);
+    void doBattleArray(const QString &name, const QStringList &args);
     EffectAnimation *animations;
     bool pindian_success;
 
     // re-layout attempts
-    bool game_started;
+
     void _dispersePhotos(QList<Photo *> &photos, QRectF disperseRegion, Qt::Orientation orientation, Qt::Alignment align);
 
     void _cancelAllFocus();
@@ -403,16 +451,14 @@ private:
     QSet<HeroSkinContainer *> m_heroSkinContainers;
 
 private slots:
-    void fillCards(const QList<int> &card_ids, const QList<int> &disabled_ids = QList<int>());
+    void fillCards(const QList<int> &card_ids, const QList<int> &disabled_ids = QList<int>(), const QList<int> &shownHandcard_ids = QList<int>());
     void updateSkillButtons();
-    void acquireSkill(const ClientPlayer *player, const QString &skill_name);
+    void acquireSkill(const ClientPlayer *player, const QString &skill_name, const bool &head = true);
     void updateSelectedTargets();
     void updateTrustButton();
     void onSkillActivated();
     void onSkillDeactivated();
     void doTimeout();
-
-
 
     void startInXs();
     void hideAvatars();
@@ -427,7 +473,7 @@ private slots:
     void showPlayerCards();
     void updateRolesBox();
     void updateRoles(const QString &roles);
-    void addSkillButton(const Skill *skill, bool from_left = false);
+    void addSkillButton(const Skill *skill, bool head = true); //bool from_left = false
 
     void resetPiles();
     void removeLightBox();
@@ -451,9 +497,9 @@ private slots:
     void takeAmazingGrace(ClientPlayer *taker, int card_id, bool move_cards);
 
     void attachSkill(const QString &skill_name, bool from_left);
-    void detachSkill(const QString &skill_name);
+    void detachSkill(const QString &skill_name, bool head);
 
-    void doGongxin(const QList<int> &card_ids, bool enable_heart, QList<int> enabled_ids);
+    void doGongxin(const QList<int> &card_ids, bool enable_heart, QList<int> enabled_ids, QList<int> shownHandcard_ids = QList<int>());
 
     void startAssign();
 
@@ -478,9 +524,9 @@ private slots:
 signals:
     void restart();
     void return_to_start();
+    void cancel_role_box_expanding();
 };
 
 extern RoomScene *RoomSceneInstance;
 
 #endif
-

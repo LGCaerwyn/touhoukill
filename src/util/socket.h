@@ -2,8 +2,8 @@
 #define _SOCKET_H
 
 #include <QObject>
-#include <QTcpSocket>
 #include <QTcpServer>
+#include <QTcpSocket>
 
 class ClientSocket;
 
@@ -30,6 +30,7 @@ public:
     virtual bool isConnected() const = 0;
     virtual QString peerName() const = 0;
     virtual QString peerAddress() const = 0;
+    virtual quint32 ipv4Address() const = 0;
 
 signals:
     void message_got(const char *msg);
@@ -41,4 +42,3 @@ signals:
 typedef char buffer_t[16000];
 
 #endif
-

@@ -23,7 +23,7 @@ class WrappedCard : public Card
     Q_OBJECT
 
 public:
-    Q_INVOKABLE WrappedCard(Card *card);
+    Q_INVOKABLE explicit WrappedCard(Card *card);
     ~WrappedCard();
 
     inline virtual void setId(int id)
@@ -68,7 +68,6 @@ public:
     {
         Q_ASSERT(m_card != NULL);
         m_card->onNullified(target);
-
     }
     inline virtual bool isModified() const
     {
@@ -177,7 +176,7 @@ public:
     inline virtual QString toString(bool hidden = false) const
     {
         Q_UNUSED(hidden)
-            return QString::number(m_id);
+        return QString::number(m_id);
     }
     inline virtual bool isNDTrick() const
     {
@@ -185,9 +184,9 @@ public:
     }
 
     // card target selection
-    inline virtual bool targetFixed() const
+    inline virtual bool targetFixed(const Player *Self) const
     {
-        return m_card->targetFixed();
+        return m_card->targetFixed(Self);
     }
     inline virtual bool targetsFeasible(const QList<const Player *> &targets, const Player *Self) const
     {
@@ -195,14 +194,12 @@ public:
     }
 
     // @todo: the following two functions should be merged into one.
-    inline virtual bool targetFilter(const QList<const Player *> &targets,
-        const Player *to_select, const Player *Self) const
+    inline virtual bool targetFilter(const QList<const Player *> &targets, const Player *to_select, const Player *Self) const
     {
         return m_card->targetFilter(targets, to_select, Self);
     }
 
-    inline virtual bool targetFilter(const QList<const Player *> &targets, const Player *to_select,
-        const Player *Self, int &maxVotes) const
+    inline virtual bool targetFilter(const QList<const Player *> &targets, const Player *to_select, const Player *Self, int &maxVotes) const
     {
         Q_ASSERT(m_card != NULL);
         return m_card->targetFilter(targets, to_select, Self, maxVotes);
@@ -267,4 +264,3 @@ protected:
 };
 
 #endif
-

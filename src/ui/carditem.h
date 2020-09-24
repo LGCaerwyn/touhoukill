@@ -1,13 +1,14 @@
 #ifndef _CARD_ITEM_H
 #define _CARD_ITEM_H
 
-#include "card.h"
 #include "QSanSelectableItem.h"
+#include "SkinBank.h"
+#include "card.h"
 #include "settings.h"
+
 #include <QAbstractAnimation>
 #include <QMutex>
 #include <QSize>
-#include "SkinBank.h"
 
 class FilterSkill;
 class General;
@@ -17,8 +18,8 @@ class CardItem : public QSanSelectableItem
     Q_OBJECT
 
 public:
-    CardItem(const Card *card);
-    CardItem(const QString &general_name);
+    explicit CardItem(const Card *card);
+    explicit CardItem(const QString &general_name);
     ~CardItem();
 
     virtual QRectF boundingRect() const;
@@ -34,8 +35,7 @@ public:
     // For move card animation
     void setHomePos(QPointF home_pos);
     QPointF homePos() const;
-    QAbstractAnimation *getGoBackAnimation(bool doFadeEffect, bool smoothTransition = false,
-        int duration = Config.S_MOVE_CARD_ANIMATION_DURATION);
+    QAbstractAnimation *getGoBackAnimation(bool doFadeEffect, bool smoothTransition = false, int duration = Config.S_MOVE_CARD_ANIMATION_DURATION);
     void goBack(bool playAnimation, bool doFade = true);
     inline QAbstractAnimation *getCurrentAnimation()
     {
@@ -68,8 +68,11 @@ public:
     }
     bool isEquipped() const;
 
-    void setFrozen(bool is_frozen);
-
+    void setFrozen(bool is_frozen, bool update_movable = true);
+    inline bool isFrozen()
+    {
+        return frozen;
+    }
     inline void showFootnote()
     {
         _m_showFootnote = true;
@@ -95,18 +98,24 @@ public:
         emit clicked();
     }
 
+    void setOuterGlowEffectEnabled(const bool &willPlay);
+    bool isOuterGlowEffectEnabled() const;
+
+    void setOuterGlowColor(const QColor &color);
+    QColor getOuterGlowColor() const;
 
 private slots:
     void currentAnimationDestroyed();
+    void animationFinished();
 
 protected:
     void _initialize();
-    QAbstractAnimation *m_currentAnimation;
+
     QImage _m_footnoteImage;
     bool _m_showFootnote;
     QString footnote;
     // QGraphicsPixmapItem *_m_footnoteItem;
-    QMutex m_animationMutex;
+
     double m_opacityAtHome;
     bool m_isSelected;
     bool _m_isUnknownGeneral;
@@ -120,13 +129,21 @@ protected:
     virtual void hoverLeaveEvent(QGraphicsSceneHoverEvent *);
     virtual void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget);
     //virtual void contextMenuEvent(QGraphicsSceneContextMenuEvent *);
+    bool auto_back, frozen;
+
+    QAbstractAnimation *m_currentAnimation;
+    QMutex m_animationMutex;
 
 private:
     int m_cardId;
     QString _m_frameType, _m_avatarName;
     QPointF home_pos;
     QPointF _m_lastMousePressScenePos;
-    bool auto_back, frozen;
+
+    bool outerGlowEffectEnabled;
+    QColor outerGlowColor;
+    QGraphicsDropShadowEffect *outerGlowEffect;
+
 signals:
     void toggle_discards();
     void clicked();
@@ -136,8 +153,8 @@ signals:
     void enter_hover();
     void leave_hover();
     void movement_animation_finished();
-
+    void general_changed();
+    void hoverChanged(const bool &enter);
 };
 
 #endif
-

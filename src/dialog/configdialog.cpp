@@ -1,15 +1,16 @@
 #include "configdialog.h"
-#include "ui_configdialog.h"
-#include "settings.h"
 #include "engine.h"
+#include "settings.h"
+#include "ui_configdialog.h"
 
-#include <QFileDialog>
-#include <QDesktopServices>
-#include <QFontDialog>
 #include <QColorDialog>
+#include <QDesktopServices>
+#include <QFileDialog>
+#include <QFontDialog>
 
 ConfigDialog::ConfigDialog(QWidget *parent)
-    : QDialog(parent), ui(new Ui::ConfigDialog)
+    : QDialog(parent)
+    , ui(new Ui::ConfigDialog)
 {
     ui->setupUi(this);
 
@@ -44,8 +45,9 @@ ConfigDialog::ConfigDialog(QWidget *parent)
     ui->autoTargetCheckBox->setChecked(Config.EnableAutoTarget);
     ui->intellectualSelectionCheckBox->setChecked(Config.EnableIntellectualSelection);
     ui->defaultHeroskinCheckBox->setChecked(Config.DefaultHeroSkin);
-
     ui->doubleClickCheckBox->setChecked(Config.EnableDoubleClick);
+    ui->autoUpdateCheckBox->setChecked(Config.EnableAutoUpdate);
+    ui->autoUpdateChannelLineEdit->setText(Config.value("AutoUpdateChannel", QStringLiteral("Global")).toString());
     ui->bubbleChatBoxDelaySpinBox->setSuffix(tr(" second"));
     ui->bubbleChatBoxDelaySpinBox->setValue(Config.BubbleChatBoxDelaySeconds);
 
@@ -64,7 +66,6 @@ ConfigDialog::ConfigDialog(QWidget *parent)
     palette.setColor(QPalette::Base, aver >= 208 ? Qt::black : Qt::white);
     ui->textEditFontLineEdit->setPalette(palette);
 
-
     ui->enableAutoSaveCheckBox->setChecked(Config.EnableAutoSaveRecord);
     ui->networkOnlyCheckBox->setChecked(Config.NetworkOnly);
 
@@ -81,7 +82,6 @@ ConfigDialog::ConfigDialog(QWidget *parent)
     connect(ui->enableAutoSaveCheckBox, &QCheckBox::toggled, ui->resetRecordPathButton, &QPushButton::setEnabled);
 
     ui->recordPathSetupLineEdit->setText(Config.RecordSavePath);
-
 }
 
 void ConfigDialog::showFont(QLineEdit *lineedit, const QFont &font)
@@ -97,10 +97,7 @@ ConfigDialog::~ConfigDialog()
 
 void ConfigDialog::on_browseBgButton_clicked()
 {
-    QString filename = QFileDialog::getOpenFileName(this,
-        tr("Select a background image"),
-        "backdrop/",
-        tr("Images (*.png *.bmp *.jpg)"));
+    QString filename = QFileDialog::getOpenFileName(this, tr("Select a background image"), "backdrop/", tr("Images (*.png *.bmp *.jpg)"));
 
     if (!filename.isEmpty()) {
         ui->bgPathLineEdit->setText(filename);
@@ -130,10 +127,7 @@ void ConfigDialog::on_resetBgButton_clicked()
 
 void ConfigDialog::on_browseTableBgButton_clicked()
 {
-    QString filename = QFileDialog::getOpenFileName(this,
-        tr("Select a tableBg image"),
-        "backdrop/",
-        tr("Images (*.png *.bmp *.jpg)"));
+    QString filename = QFileDialog::getOpenFileName(this, tr("Select a tableBg image"), "backdrop/", tr("Images (*.png *.bmp *.jpg)"));
 
     if (!filename.isEmpty()) {
         ui->tableBgPathLineEdit->setText(filename);
@@ -156,12 +150,9 @@ void ConfigDialog::on_resetTableBgButton_clicked()
     emit tableBg_changed();
 }
 
-
 void ConfigDialog::on_browseRecordPathButton_clicked()
 {
-    QString path = QFileDialog::getExistingDirectory(this,
-        tr("Select a Record Paths"),
-        "records/");
+    QString path = QFileDialog::getExistingDirectory(this, tr("Select a Record Paths"), "records/");
 
     if (!path.isEmpty() && ui->recordPathSetupLineEdit->text() != path) {
         ui->recordPathSetupLineEdit->setText(path);
@@ -179,7 +170,7 @@ void ConfigDialog::on_resetRecordPathButton_clicked()
         Config.RecordSavePath = path;
     }
 }
-
+#include "audio.h"
 void ConfigDialog::saveConfig()
 {
     float volume = ui->bgmVolumeSlider->value() / 100.0;
@@ -188,7 +179,7 @@ void ConfigDialog::saveConfig()
     volume = ui->effectVolumeSlider->value() / 100.0;
     Config.EffectVolume = volume;
     Config.setValue("EffectVolume", volume);
-
+    Audio::setBGMVolume(Config.BGMVolume);
     bool enabled = ui->enableEffectCheckBox->isChecked();
     Config.EnableEffects = enabled;
     Config.setValue("EnableEffects", enabled);
@@ -227,7 +218,6 @@ void ConfigDialog::saveConfig()
     Config.DefaultHeroSkin = ui->defaultHeroskinCheckBox->isChecked();
     Config.setValue("DefaultHeroSkin", Config.DefaultHeroSkin);
 
-
     Config.BubbleChatBoxDelaySeconds = ui->bubbleChatBoxDelaySpinBox->value();
     Config.setValue("BubbleChatBoxDelaySeconds", Config.BubbleChatBoxDelaySeconds);
 
@@ -238,14 +228,16 @@ void ConfigDialog::saveConfig()
     Config.setValue("NetworkOnly", Config.NetworkOnly);
 
     Config.setValue("RecordSavePath", Config.RecordSavePath);
+
+    Config.setValue("EnableAutoUpdate", ui->autoUpdateCheckBox->isChecked());
+    Config.EnableAutoUpdate = ui->autoUpdateCheckBox->isChecked();
+
+    Config.setValue("AutoUpdateChannel", ui->autoUpdateChannelLineEdit->text());
 }
 
 void ConfigDialog::on_browseBgMusicButton_clicked()
 {
-    QString filename = QFileDialog::getOpenFileName(this,
-        tr("Select a background music"),
-        "audio/system",
-        tr("Audio files (*.wav *.mp3 *.ogg)"));
+    QString filename = QFileDialog::getOpenFileName(this, tr("Select a background music"), "audio/system", tr("Audio files (*.wav *.mp3 *.ogg)"));
     if (!filename.isEmpty()) {
         ui->bgMusicPathLineEdit->setText(filename);
         Config.setValue("BackgroundMusic", filename);
@@ -271,7 +263,6 @@ void ConfigDialog::on_changeAppFontButton_clicked()
         QApplication::setFont(font);
     }
 }
-
 
 void ConfigDialog::on_setTextEditFontButton_clicked()
 {
@@ -299,4 +290,3 @@ void ConfigDialog::on_setTextEditColorButton_clicked()
         ui->textEditFontLineEdit->setPalette(palette);
     }
 }
-

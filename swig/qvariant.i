@@ -8,6 +8,7 @@ public:
     QString toString() const;
     QStringList toStringList() const;
     bool toBool() const;
+	QList<QVariant> toList() const;
 };
 
 %extend QVariant {
@@ -149,6 +150,30 @@ public:
 
     MarkChangeStruct toMarkChange() const{
         return $self->value<MarkChangeStruct>();
+    }
+
+	void setValue(BrokenEquipChangedStruct *b) {
+        $self->setValue(QVariant::fromValue(*b));
+    }
+
+    BrokenEquipChangedStruct toBrokenEquipChange() const{
+        return $self->value<BrokenEquipChangedStruct>();
+    }
+
+	void setValue(ShownCardChangedStruct *s) {
+        $self->setValue(QVariant::fromValue(*s));
+    }
+
+    ShownCardChangedStruct toShownCardChange() const{
+        return $self->value<ShownCardChangedStruct>();
+    }
+
+	void setValue(ShowGeneralStruct *s) {
+        $self->setValue(QVariant::fromValue(*s));
+    }
+
+    ShowGeneralStruct toShowGeneralChange() const{
+        return $self->value<ShowGeneralStruct>();
     }
 
     void setValue(QList<int> intlist) {

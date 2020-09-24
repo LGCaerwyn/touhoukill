@@ -6,21 +6,21 @@ class QGroupBox;
 class QLabel;
 class QRadioButton;
 
-#include "socket.h"
-#include "detector.h"
 #include "clientstruct.h"
+#include "detector.h"
+#include "socket.h"
 
-#include <QDialog>
-#include <QLineEdit>
-#include <QSpinBox>
-#include <QCheckBox>
 #include <QButtonGroup>
+#include <QCheckBox>
 #include <QComboBox>
+#include <QDialog>
 #include <QLayoutItem>
+#include <QLineEdit>
 #include <QListWidget>
+#include <QMultiHash>
+#include <QSpinBox>
 #include <QSplitter>
 #include <QTabWidget>
-#include <QMultiHash>
 
 class Package;
 
@@ -29,7 +29,7 @@ class Select3v3GeneralDialog : public QDialog
     Q_OBJECT
 
 public:
-    Select3v3GeneralDialog(QDialog *parent);
+    explicit Select3v3GeneralDialog(QDialog *parent);
 
 private:
     QTabWidget *tab_widget;
@@ -51,7 +51,7 @@ public:
     BanlistDialog(QWidget *parent, bool view = false);
 
 private:
-    QList<QListWidget *>lists;
+    QList<QListWidget *> lists;
     QListWidget *list;
     int item;
     QStringList ban_list;
@@ -74,7 +74,7 @@ class ServerDialog : public QDialog
     Q_OBJECT
 
 public:
-    ServerDialog(QWidget *parent);
+    explicit ServerDialog(QWidget *parent);
     bool config();
 
 private:
@@ -89,10 +89,13 @@ private:
     QGroupBox *create3v3Box();
     QGroupBox *createXModeBox();
 
+    QGroupBox *createHegemonyBox();
+
     QLineEdit *server_name_edit;
     QSpinBox *timeout_spinbox;
     QCheckBox *nolimit_checkbox;
     QCheckBox *random_seat_checkbox;
+    QCheckBox *assign_latest_general_checkbox;
     QCheckBox *enable_cheat_checkbox;
     QCheckBox *free_choose_checkbox;
     QCheckBox *free_assign_checkbox;
@@ -110,7 +113,7 @@ private:
     QCheckBox *forbid_same_ip_checkbox;
     QCheckBox *disable_chat_checkbox;
     QCheckBox *second_general_checkbox;
-    QCheckBox *scene_checkbox;    //changjing
+    QCheckBox *scene_checkbox; //changjing
     QCheckBox *same_checkbox;
     QCheckBox *basara_checkbox;
     QCheckBox *hegemony_checkbox;
@@ -155,6 +158,12 @@ private:
     QButtonGroup *extension_group;
     QButtonGroup *mode_group;
 
+    QGroupBox *hegemonyBox;
+    QComboBox *hegemony_first_show;
+    QComboBox *hegemony_companion;
+    QComboBox *hegemony_half_hp_draw;
+    QComboBox *hegemony_careerist_kill;
+
 private slots:
 
     void onOkButtonClicked();
@@ -165,6 +174,8 @@ private slots:
 
     void doCustomAssign();
     void setMiniCheckBox();
+
+    void checkCurrentBtnIsHegemonyMode(bool v);
 };
 
 class Scenario;
@@ -194,7 +205,7 @@ private:
 private slots:
     void processNewConnection(ClientSocket *socket);
     void processRequest(const char *request);
-    void cleanup();
+    void cleanupSimc();
     void gameOver();
 
 signals:
@@ -202,4 +213,3 @@ signals:
 };
 
 #endif
-

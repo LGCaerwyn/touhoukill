@@ -5,6 +5,7 @@
 "photoHandCardNum-default": "image/fullskin/system/handcard/%1.png",
 "photoHandCardNum-default2": "image/fullskin/system/handcard/qun.png",
 "photoFaceTurnedMask": "image/fullskin/generals/faceturned.png",
+"photoFaceTurnedMaskHegemony": "image/fullskin/generals/faceturned_hegemony.png",
 "photoBlankGeneral": "image/fullskin/generals/blank.png",
 "photoChain": "image/system/chain.png",
 "photoPhase0": "image/system/phase/round_start.png",
@@ -18,12 +19,14 @@
 "photoFocusFrame1": "image/system/frame/responding.png",
 "photoFocusFrame2": "image/system/frame/sos.png",
 "photoFrameWhenSelected": "image/system/frame/photoSelected.png",
+"photoDisableShowLock": "image/system/lock.png",
 "dashboardLeftFrame": "image/system/dashboard-equip.png",
 "dashboardRightFrame": "image/system/dashboard-avatar.png",
 "dashboardMiddleFrame": "image/system/dashboard-hand.png",
 "dashboardHandCardNum-default": "image/fullskin/system/handcard/%1.png",
 "dashboardHandCardNum-default2": "image/fullskin/system/handcard/qun.png",
 "dashboardFaceTurnedMask": "image/generals/big/faceturned.png",
+"dashboardFaceTurnedMaskHegemony": "image/generals/big/faceturned_hegemony.png",
 "dashboardBlankGeneral": "image/fullskin/generals/blank.png",
 "dashboardChain": ["image/system/chain.png", [0, 0, 134, 19]],
 "dashboardPhase0": "image/system/phase/round_start.png",
@@ -34,6 +37,7 @@
 "dashboardPhase5": "image/system/phase/discard.png",
 "dashboardPhase6": "image/system/phase/finish.png",
 "dashboardFrameWhenSelected": "image/system/frame/dashboardSelected.png",
+"dashboardDisableShowLock": "image/system/lock.png",
 "magatamasBg0": "image/fullskin/system/magatamas/bg1.png",
 "magatamasBg1": "image/fullskin/system/magatamas/bg1.png",
 "magatamasBg2": "image/fullskin/system/magatamas/bg2.png",
@@ -46,9 +50,17 @@
 "magatamas3": "image/system/magatamas/3.png",
 "magatamas4": "image/system/magatamas/4.png",
 "magatamas5": "image/system/magatamas/5.png",
+"magatamasDying0": "image/system/magatamas/0d.png",
+"magatamasDying1": "image/system/magatamas/1d.png",
+"magatamasDying2": "image/system/magatamas/2d.png",
+"magatamasDying3": "image/system/magatamas/3d.png",
+"magatamasDying4": "image/system/magatamas/4d.png",
+"magatamasDying5": "image/system/magatamas/5d.png",
 "tableBg": "backdrop/default.jpg",
 "photoExtraSkillBg": "image/system/huashenSkillBg.png",
 "dashboardExtraSkillBg": "image/system/huashenSkillBg.png",
+"hiddenMark": "image/system/hidden-mark.png",
+
 
 // general default directories
 "playerGeneralIcon-default-0": ["image/generals/avatar/%1.png", [71, 28, 134, 134], [40, 40]],
@@ -157,6 +169,10 @@
 // icons
 "saveMe": "image/system/death/save-me.png",
 "playerActioned": "image/system/3v3/actioned.png",
+"photoSeatNum-default": "image/system/seat-num/photo/%1.png",
+"dashboardSeatNum-default": "image/system/seat-num/dashboard/%1.png",
+
+
 // card relevant
 "handCardBack": "image/system/card-back.png",
 "generalCardBack": "image/system/unknown.png",
@@ -164,6 +180,8 @@
 // equips
 "photoEquip-default": "image/fullskin/small-equips/%1.png",
 "dashboardEquip-default": "image/equips/%1.png",
+"photoEquipBroken-default": "image/fullskin/small-equips/blank.png", //%1_broken
+"dashboardEquipBroken-default": "image/equips/blank.png",//%1_broken
 "dashboardKingdomColorMask-default": "image/fullskin/kingdom/frame/dashboard/%1.png",
 
 // kingdoms
@@ -182,6 +200,18 @@
 "cardTianyi-default": "image/system/tianyi/%1.png",
 "judgeCardIcon-default": "image/icon/%1.png",
 
+
+//role combo box (hegemony)
+"expandingRoleBox": "image/system/roles/expanding.png",
+"roleBoxKingdomMask-default": "image/system/kingdom-mask/%1.png",
+
+//choose general box
+"chooseGeneralBoxSplitLine": "image/system/choose-general-box/split-line.png",
+"chooseGeneralBoxDestSeat": "image/system/choose-general-box/dest-seat.png",
+
+//general card item
+"generalCardItemCompanionFont-default": "image/system/companions/prompt/%1.png",
+"generalCardItemCompanionIcon-default": "image/system/companions/icons/%1.png",
 
 "headIcon": "image/system/head.png",
 "deputyIcon": "image/system/deputy.png",

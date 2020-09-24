@@ -32,21 +32,21 @@ function SmartAI:yicunEffective(card, to, from)
 				minus = 1
 			end
 		end
-		if from:getHandcardNum() - minus >= to:getHandcardNum() then
+		if from:getHandcardNum() - minus > to:getHandcardNum() then
 			return true
 		end
 	end
 	return false
 end
 
-
+sgs.ai_skill_invoke.yicun =  true
 
 sgs.ai_skill_invoke.moyi = function(self, data)
 		local to =data:toPlayer()
 		return self:isFriend(to)
 end
-sgs.ai_choicemade_filter.skillInvoke.moyi = function(self, player, args)
-	local to=player:getTag("moyi-target"):toPlayer()
+sgs.ai_choicemade_filter.skillInvoke.moyi = function(self, player, args, data)
+	local to=data:toPlayer()
 	if to then
 		if args[#args] == "yes" then
 			sgs.updateIntention(player, to, -60)
@@ -68,7 +68,7 @@ sgs.ai_skill_use_func.LeitingCard = function(card, use, self)
 	local temp
 	local hearts={}
 	local spades={}
-	local cards = self.player:getHandcards()
+	local cards = self.player:getCards("hes")
 	for _,c in sgs.qlist(cards) do
 		if c:getSuit()==sgs.Card_Heart then
 			table.insert(hearts,c)
@@ -76,6 +76,7 @@ sgs.ai_skill_use_func.LeitingCard = function(card, use, self)
 			table.insert(spades,c)
 		end
 	end
+	
 	cards = sgs.QList2Table(cards)
 	if #cards>0 then
 		self:sortByKeepValue(cards)
@@ -125,13 +126,16 @@ end
 sgs.ai_skill_cardask["@leiting"] = function(self, data)
 	local temp =self.player:getTag("temp_leiting"):toInt()
 	self.player:removeTag("temp_leiting")
-	if temp then
+	if temp > -1 and self.room:getCardOwner(temp) and self.room:getCardOwner(temp):objectName() == self.player:objectName()
+		and self.room:getCardPlace(temp) == sgs.Player_PlaceHand  then
 		return "$" .. temp
 	end
-	local cards = self.player:getHandcards()
-	cards = sgs.QList2Table(cards)
-	self:sortByKeepValue(cards)
-	return "$" .. cards[1]:getId()
+
+	return "."
+	--local cards = self.player:getHandcards()
+	--cards = sgs.QList2Table(cards)
+	--self:sortByKeepValue(cards)
+	--return "$" .. cards[1]:getId()
 end
 sgs.ai_cardneed.leiting = function(to, card, self)
 	if not self:willSkipPlayPhase(to) then
@@ -170,7 +174,7 @@ function SmartAI:canNizhuan(player, attacker)
 	return false
 end
 
-
+sgs.ai_skill_invoke.guizha =  true
 sgs.ai_skill_cardask["@guizha"] = function(self, data)
 	for _,card in sgs.qlist(self.player:getCards("hs") ) do
 		if card:isKindOf("Peach") then
@@ -247,11 +251,11 @@ sgs.ai_skill_invoke.langying =function(self,data)
 			end
 		end
 	end
-	if slash_source and self:isFriend(slash_source)
-	and slash_source:getPhase() == sgs.Player_Play
-	and slash_source:hasSkill("sidie")   then
-		return false
-	end
+	--if slash_source and self:isFriend(slash_source)
+	--and slash_source:getPhase() == sgs.Player_Play
+	--and slash_source:hasSkill("sidie")   then
+	--  return false
+	--end
 
 	local hasDenfense=self.player:getArmor() or self.player:getDefensiveHorse()
 	if not hasDenfense then
@@ -297,17 +301,17 @@ function SmartAI:yuanfeiValue(player)
 		value = value + (2 * player:getHandcardNum())
 		value = value + 2 * player:getPile("wooden_ox"):length()
 		if not self.player:inMyAttackRange(player) then
-			local distance = self.player:distanceTo(player) 
+			local distance = self.player:distanceTo(player)
 			local equipRange = 1
 			for _,c in sgs.qlist(cards) do
 				if c:isKindOf("Weapon") and sgs.weapon_range[c:getClassName()] >= distance  then
 					value = value + 5
 					break
-				elseif c:isKindOf("OffensiveHorse") and not self.player:getOffensiveHorse() and distance == 2 then 
+				elseif c:isKindOf("OffensiveHorse") and not self.player:getOffensiveHorse() and distance == 2 then
 					value = value + 5
 					break
 				end
-			end		
+			end
 		end
 	end
 	return value, attackCard
@@ -378,25 +382,6 @@ sgs.ai_card_intention.YuanfeiCard = 60
 sgs.ai_card_intention.YuanfeiNearCard = 60
 
 
--- sgs.ai_skill_discard.feitou = function(self)
-	-- local need_feitou
-
-	-- if self:getOverflow(player)>0 then
-		-- need_feitou=true
-	-- else
-		-- need_feitou= self:getCardsNum("Slash") == 0
-	-- end
-	-- if self:cautionChangshi()  then
-		-- need_feitou= false
-	-- end
-	-- local to_discard = {}
-	-- if not need_feitou then return to_discard end
-	-- local cards=self.player:getCards("hes")
-	-- cards = sgs.QList2Table(cards)
-	-- self:sortByKeepValue(cards)
-	-- table.insert(to_discard, cards[1]:getEffectiveId())
-	-- return to_discard
--- end
 
 sgs.ai_skill_invoke.feitou = true
 local feitou_skill = {}
@@ -432,32 +417,6 @@ sgs.ai_skill_invoke.shizhu =function(self,data)
 	return self:getCardsNum("Peach") == 0
 end
 
-
-sgs.ai_skill_invoke.aige =function(self,data)
-	local target=data:toPlayer()
-	return self:isEnemy(target)
-end
-sgs.ai_choicemade_filter.skillInvoke.aige = function(self, player, args)
-	local to = player:getTag("aige_target"):toPlayer()
-	if  to and  args[#args] == "yes" then
-		sgs.updateIntention(player, to, 50)
-	end
-end
-
-sgs.ai_skill_invoke.jingtao =function(self,data)
-	local target =self.player:getTag("jingtao_target"):toPlayer()
-	if self:isEnemy(target) then
-		return true
-	else
-		return false
-	end
-end
-sgs.ai_choicemade_filter.skillInvoke.jingtao = function(self, player, args)
-	local to = player:getTag("jingtao_target"):toPlayer()
-	if  to and  args[#args] == "yes" then
-		sgs.updateIntention(player, to, 50)
-	end
-end
 
 
 local liange_skill = {}
@@ -499,3 +458,28 @@ end
 sgs.ai_use_value.LiangeCard = 7
 sgs.ai_use_priority.LiangeCard = sgs.ai_use_priority.Peach + 0.2
 sgs.ai_card_intention.LiangeCard = -70
+
+sgs.ai_skill_invoke.tianxie =function(self,data)
+	local effect = self.player:getTag("tianxie"):toCardEffect()
+	if not effect.card:hasFlag("tianxieEffected_".. effect.to:objectName()) then
+		return true
+	else
+		if effect.from and   self:isEnemy(effect.from) then
+			return true
+		end
+	end
+	return false
+end
+
+sgs.ai_skill_invoke.huobao =function(self,data)
+	local target = self.room:getCurrent()
+	return target and self:isEnemy(target)
+end
+sgs.ai_choicemade_filter.skillInvoke.huobao = function(self, player, args)
+	local target = self.room:getCurrent()
+	if target  and args[#args] == "yes" then
+		sgs.updateIntention(player, target, 50)
+	end
+end
+
+sgs.ai_skill_invoke.duobao =  true

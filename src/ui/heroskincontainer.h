@@ -8,8 +8,6 @@
 
 #include <QGraphicsObject>
 
-
-
 class SanShadowTextFont;
 class SkinItem;
 class QScrollBar;
@@ -19,8 +17,7 @@ class HeroSkinContainer : public QGraphicsObject
     Q_OBJECT
 
 public:
-    HeroSkinContainer(const QString &generalName,
-        const QString &kingdom, QGraphicsItem *parent = 0);
+    HeroSkinContainer(const QString &generalName, const QString &kingdom, QGraphicsItem *parent = 0);
 
     ~HeroSkinContainer()
     {
@@ -43,7 +40,6 @@ public:
     static int getNextSkinIndex(const QString &generalName, int skinIndex);
     void swapWithSkinItemUsed(int skinIndex);
 
-
 protected:
     virtual void mousePressEvent(QGraphicsSceneMouseEvent *);
     virtual void wheelEvent(QGraphicsSceneWheelEvent *event);
@@ -64,7 +60,6 @@ private:
 
     QList<SkinItem *> m_skins;
     QMap<int, SkinItem *> m_skinIndexToItem;
-
 
     qreal m_originalZValue;
 

@@ -3,14 +3,33 @@
 
 config = {
 	developers = {
-	} ,
+	},
+	
+	withHeroSkin = false,
+	withBgm = false,
 
 	kingdoms = {
-	 "zhu", "pc98", "hmx","yym","yyc","zhan","fsl","dld","xlc","slm","hzc","wai","touhougod" ,
-	 --"gzz"
+		"zhu",
+		"pc98",
+		"hmx",
+		"yym",
+		"yyc",
+		"zhan",
+		"fsl",
+		"dld",
+		"xlc",
+		"slm",
+		"hzc",
+		"gzz",
+		"tkz",
+		"wai",
+		"touhougod"
+	},
+	hegemony_kingdoms = { 
+	"wei", "qun", "shu", "wu"
 	},
 	kingdom_colors = {
-		pc98 = "#0000ff";
+		pc98 = "#a699cc";
 		zhu ="#853dcc",
 		hmx = "#cc1414",
 		yym = "#3d3dcc",
@@ -21,18 +40,26 @@ config = {
 		xlc = "#3dcccc",
 		slm ="#66cc99",
 		hzc ="#aacc66",
-		gzz = "#202020" ,
+		gzz = "#005AD7" ,
+		tkz = "#48D1CC",
+		gxs = "#ff8080",
 		wai = "#cc7014",
 		touhougod = "#96943D",
+		
+		wei = "#547998",
+		shu = "#D0796C",
+		wu = "#4DB873",
+		qun = "#8A807A",
+		god = "#96943D"
 	},
 
 	package_names = {
 		--卡牌包
 		"StandardCard",
 		"StandardExCard",
+		"TestCard",
 		"Maneuvering",
-
-		"touhoucard",
+		"HegemonyCard",
 
 		--武将包
 		"Protagonist",
@@ -46,23 +73,15 @@ config = {
 		"TH12",
 		"TH13",
 		"TH14",
-		--"TH15", --0.8不对应
+		"TH15",
+		"TH16", 
 		"TH99",
-		--"THXWM", --基于契合等问题，暂时移除
 		"THNDJ",
 		"TouhouGod",
+		"HegemonyGeneral",
 		"Standard", --此包内带pattern的定义 不能屏蔽。。。
 		"Test",
-
-	},
-
-	surprising_generals = {
-		"Rara" ,
-		"Fsu0413" ,
-		"lzxqqqq1" ,
-		"lzxqqqq2" ,
-		"funima" ,
-		"jiaoshenmeanimei" ,
+		"Playground", -- 发布前再次屏蔽掉
 	},
 
 	hulao_packages = {
@@ -135,43 +154,85 @@ config = {
 	basara_ban = {
 	},
 
-	hegemony_ban = {
+	hegemony_ban = {		
+	"zun",
+    "yukari_god",
+    "remilia_god",
+    "cirno_god",
+    "utsuho_god",
+    "suika_god",
+    "flandre_god",
+    "sakuya_god",
+    "youmu_god",
+    "reisen_god",
+    "sanae_god",
+    "reimu_god",
+    "shikieiki_god",
+    "meirin_god",
+    "eirin_god",
+	"kanako_god",
+    "byakuren_god",
+	"koishi_god",
+	"suwako_god",
+	"miko_god",
+	"kaguya_god",
+	"komachi_god",
+	"yuyuko_god",
+	"satori_god",
+    "aya_god",
+	"seiga_god",
+	"nue_god",
+	"marisa_god",
+	"patchouli_god",
+	"alice_god",
 	},
-
+	
 	pairs_ban = {
 	},
 
 	convert_pairs = {
 	},
 
+
+
 	bgm_convert_pairs = {
+		--BGM： 由于开始尝试加入arrange代替原曲，曲目对应关系可能有变，以后转换列表还要重新整理。
+		
 		"kosuzu->akyuu",
 		"tokiko->rinnosuke",
-		"yatsuhashi->benben",
-		"aya_xwm->aya",
-		"eirin_god->eirin",
 		"unzan->ichirin",
-		"kaguya_god->kaguya",
-		"mokou_sp->mokou",
-		"nue_slm->nue",
-		"remilia_xwm->remilia_god",
-		"sanae_slm|sanae_sp->sanae",
-		"satori_xwm->satori",
-		"shikieiki_god->shikieiki",
-		"moukou_xwm->shirasawa",
 		"yorihime->toyohime",
-		"youmu_ndj|youmu_slm->youmu",
-		"yukari_sp->yukari",
-		"ran_sp->ran",
 		"youki->youmu",
-		"yuyuko_sp->yuyuko",
-		"myouren->byakuren_god",
-		"leira->prismriver",
-		"cirno_sp->cirno",
-		"mamizou_sp->mamizou",
-		"seiga_god->seiga",
-		"satori_god->satori",
-		"sakuya_sp->sakuya_god",
-		"yuyuko_god->yuyuko_xwm"
+		"myouren->byakuren",
+		"leira|lunasa|merlin|lyrica->prismriver",
+		"reisen2->tewi",
+		"merry->renko",
+		"lunar|star->sunny",
+		"shanghai->alice",
+		"yatsuhashi->benben",
+		"mai->satono",
+		"lilywhite_sp->lilywhite",
+	},
+
+	backdrop_convert_pairs = {
+		"yukimai->shinki",
+		"lunar|star->sunny",
+		"reisen2->tewi",
+		"seiran->ringo",
+		"seija_sp->seija",
+		"rumia_sp->rumia",
+		"lunasa|merlin|lyrica->prismriver",
+	},
+	latest_generals = {
+		"satori_god","marisa_god",
+		"nue_god",
+		
+		"chen",
+		"sumireko_sp", "yorigamis",
+		"parsee",
+		"futo",
+		"okina", "okina_sp","eternity", "nemuno", "aun", "narumi", "satono", "mai", "lilywhite_sp",
+		"eirin_ndj", "tenshi_ndj",
+		"yuka_god", "patchouli_god", "tenshi_god",
 	}
 }

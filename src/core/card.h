@@ -1,9 +1,9 @@
 #ifndef _CARD_H
 #define _CARD_H
 
-#include <QObject>
-#include <QMap>
 #include <QIcon>
+#include <QMap>
+#include <QObject>
 
 class Room;
 class Player;
@@ -25,7 +25,6 @@ class Card : public QObject
     Q_PROPERTY(int number READ getNumber WRITE setNumber)
     Q_PROPERTY(QString number_string READ getNumberString CONSTANT)
     Q_PROPERTY(QString type READ getType CONSTANT)
-    Q_PROPERTY(bool target_fixed READ targetFixed)
     Q_PROPERTY(bool mute READ isMute CONSTANT)
     Q_PROPERTY(bool equipped READ isEquipped)
     Q_PROPERTY(Color color READ getColor)
@@ -39,15 +38,29 @@ public:
     // enumeration type
     enum Suit
     {
-        Spade, Club, Heart, Diamond, NoSuitBlack, NoSuitRed, NoSuit, SuitToBeDecided = -1
+        Spade,
+        Club,
+        Heart,
+        Diamond,
+        NoSuitBlack,
+        NoSuitRed,
+        NoSuit,
+        SuitToBeDecided = -1
     };
     enum Color
     {
-        Red, Black, Colorless
+        Red,
+        Black,
+        Colorless
     };
     enum HandlingMethod
     {
-        MethodNone, MethodUse, MethodResponse, MethodDiscard, MethodRecast, MethodPindian
+        MethodNone,
+        MethodUse,
+        MethodResponse,
+        MethodDiscard,
+        MethodRecast,
+        MethodPindian
     };
 
     static const Suit AllSuits[4];
@@ -55,7 +68,10 @@ public:
     // card types
     enum CardType
     {
-        TypeSkill, TypeBasic, TypeTrick, TypeEquip
+        TypeSkill,
+        TypeBasic,
+        TypeTrick,
+        TypeEquip
     };
 
     // constructor
@@ -86,6 +102,9 @@ public:
     QString getDescription(bool yellow = true) const;
 
     virtual bool isMute() const;
+    virtual bool canDamage() const;
+    virtual bool canRecover() const;
+    virtual bool hasEffectValue() const;
     virtual bool willThrow() const;
     virtual bool canRecast() const;
     void setCanRecast(bool can);
@@ -119,21 +138,19 @@ public:
     virtual void addSubcards(const QList<int> &subcards_list);
     virtual int subcardsLength() const;
 
-
-
     virtual QString getType() const = 0;
     virtual QString getSubtype() const = 0;
     virtual CardType getTypeId() const = 0;
     virtual bool isNDTrick() const;
 
     // card target selection
-    virtual bool targetFixed() const;
+    virtual bool targetFixed(const Player *Self) const;
     virtual bool targetsFeasible(const QList<const Player *> &targets, const Player *Self) const;
     // @todo: the following two functions should be merged into one.
     virtual bool targetFilter(const QList<const Player *> &targets, const Player *to_select, const Player *Self) const;
-    virtual bool targetFilter(const QList<const Player *> &targets, const Player *to_select, const Player *Self,
-        int &maxVotes) const;
+    virtual bool targetFilter(const QList<const Player *> &targets, const Player *to_select, const Player *Self, int &maxVotes) const;
     virtual bool isAvailable(const Player *player) const;
+    virtual bool ignoreCardValidty(const Player *player) const;
 
     inline virtual const Card *getRealCard() const
     {
@@ -148,9 +165,13 @@ public:
     virtual void onEffect(const CardEffectStruct &effect) const;
     virtual bool isCancelable(const CardEffectStruct &effect) const;
 
+    virtual QString showSkill() const;
+    virtual void setShowSkill(const QString &skill_name);
+
     inline virtual bool isKindOf(const char *cardType) const
     {
-        Q_ASSERT(cardType); return inherits(cardType);
+        Q_ASSERT(cardType);
+        return inherits(cardType);
     }
     inline virtual QStringList getFlags() const
     {
@@ -189,10 +210,14 @@ protected:
     Suit m_suit;
     int m_number;
     int m_id;
+    bool can_damage;
+    bool can_recover;
+    bool has_effectvalue;
     QString m_skillName;
     Card::HandlingMethod handling_method;
 
     mutable QStringList flags;
+    QString show_skill;
 };
 
 class SkillCard : public Card
@@ -213,13 +238,33 @@ protected:
     QString user_string;
 };
 
+class ShowDistanceCard : public SkillCard
+{
+    Q_OBJECT
+
+public:
+    Q_INVOKABLE ShowDistanceCard();
+
+    const Card *validate(CardUseStruct &card_use) const;
+};
+
+class ArraySummonCard : public SkillCard
+{
+    Q_OBJECT
+
+public:
+    Q_INVOKABLE ArraySummonCard(const QString &name);
+
+    const Card *validate(CardUseStruct &card_use) const;
+};
+
 class DummyCard : public SkillCard
 {
     Q_OBJECT
 
 public:
     DummyCard();
-    DummyCard(const QList<int> &subcards);
+    explicit DummyCard(const QList<int> &subcards);
 
     virtual QString getSubtype() const;
     virtual QString getType() const;
@@ -227,4 +272,3 @@ public:
 };
 
 #endif
-
