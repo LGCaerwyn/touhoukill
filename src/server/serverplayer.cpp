@@ -1,6 +1,5 @@
 #include "serverplayer.h"
 #include "ai.h"
-#include "banpair.h"
 #include "engine.h"
 #include "gamerule.h"
 #include "lua-wrapper.h"
@@ -19,11 +18,11 @@ ServerPlayer::ServerPlayer(Room *room)
     , m_expectedReplySerial(0)
     , m_isClientResponseReady(false)
     , m_isWaitingReply(false)
-    , socket(NULL)
+    , socket(nullptr)
     , room(room)
-    , ai(NULL)
+    , ai(nullptr)
     , trust_ai(new TrustAI(this))
-    , recorder(NULL)
+    , recorder(nullptr)
     , _m_phases_index(0)
 {
     semas = new QSemaphore *[S_NUM_SEMAPHORES];
@@ -53,7 +52,7 @@ void ServerPlayer::broadcastSkillInvoke(const Card *card) const
 
     QString skill_name = card->getSkillName();
     const Skill *skill = Sanguosha->getSkill(skill_name);
-    if (skill == NULL) {
+    if (skill == nullptr) {
         if (card->getCommonEffectName().isNull())
             broadcastSkillInvoke(card->objectName());
         else
@@ -154,7 +153,7 @@ void ServerPlayer::clearOnePrivatePile(QString pile_name)
             }
         }
     }
-    room->throwCard(dummy, reason, NULL, NULL, notifyLog);
+    room->throwCard(dummy, reason, nullptr, nullptr, notifyLog);
     dummy->deleteLater();
 
     piles.remove(pile_name);
@@ -195,7 +194,7 @@ void ServerPlayer::throwAllCards()
     QList<const Card *> tricks = getJudgingArea();
     foreach (const Card *trick, tricks) {
         CardMoveReason reason(CardMoveReason::S_REASON_THROW, objectName());
-        room->throwCard(trick, reason, NULL);
+        room->throwCard(trick, reason, nullptr);
     }
 }
 
@@ -218,7 +217,7 @@ QList<int> ServerPlayer::forceToDiscard(int discard_num, bool include_equip, boo
 {
     QList<int> to_discard;
 
-    QString flags = "h";
+    QString flags = "hs";
     if (include_equip)
         flags.append("e");
 
@@ -254,7 +253,7 @@ int ServerPlayer::getHandcardNum() const
 
 void ServerPlayer::setSocket(ClientSocket *socket)
 {
-    if (this->socket) {
+    if (this->socket != nullptr) {
         disconnect(this->socket);
         this->socket->disconnect(this);
         this->socket->disconnectFromHost();
@@ -263,7 +262,7 @@ void ServerPlayer::setSocket(ClientSocket *socket)
 
     disconnect(this, SLOT(sendMessage(QString)));
 
-    if (socket) {
+    if (socket != nullptr) {
         connect(socket, SIGNAL(disconnected()), this, SIGNAL(disconnected()));
         connect(socket, SIGNAL(message_got(const char *)), this, SLOT(getMessage(const char *)));
         connect(this, SIGNAL(message_ready(QString)), this, SLOT(sendMessage(QString)));
@@ -285,7 +284,7 @@ void ServerPlayer::unicast(const QString &message)
 {
     emit message_ready(message);
 
-    if (recorder)
+    if (recorder != nullptr)
         recorder->recordLine(message);
 }
 
@@ -309,7 +308,7 @@ void ServerPlayer::startRecord()
 
 void ServerPlayer::saveRecord(const QString &filename)
 {
-    if (recorder)
+    if (recorder != nullptr)
         recorder->save(filename);
 }
 
@@ -326,22 +325,12 @@ QStringList ServerPlayer::getSelected() const
 QString ServerPlayer::findReasonable(const QStringList &generals, bool no_unreasonable)
 {
     foreach (QString name, generals) {
-        if (Config.Enable2ndGeneral) {
-            if (getGeneral()) {
-                if (!BanPair::isBanned(getGeneralName()) && BanPair::isBanned(getGeneralName(), name))
-                    continue;
-            } else {
-                if (BanPair::isBanned(name))
-                    continue;
-            }
-        }
         if (Config.GameMode == "zombie_mode") {
             QStringList ban_list = Config.value("Banlist/Zombie").toStringList();
             if (ban_list.contains(name))
                 continue;
         }
-        if (Config.GameMode.endsWith("p") || Config.GameMode.endsWith("pd") || Config.GameMode.endsWith("pz") || Config.GameMode.contains("_mini_")
-            || Config.GameMode == "custom_scenario") {
+        if (Config.GameMode.endsWith("p") || Config.GameMode.endsWith("pd") || Config.GameMode.endsWith("pz")) {
             QStringList ban_list = Config.value("Banlist/Roles").toStringList();
             if (ban_list.contains(name))
                 continue;
@@ -363,7 +352,7 @@ void ServerPlayer::clearSelected()
 
 void ServerPlayer::sendMessage(const QString &message)
 {
-    if (socket) {
+    if (socket != nullptr) {
 #ifndef QT_NO_DEBUG
         printf("%s", qPrintable(objectName()));
 #endif
@@ -396,9 +385,9 @@ void ServerPlayer::removeCard(const Card *card, Place place)
     }
     case PlaceEquip: {
         const EquipCard *equip = qobject_cast<const EquipCard *>(card->getRealCard());
-        if (equip == NULL)
+        if (equip == nullptr)
             equip = qobject_cast<const EquipCard *>(Sanguosha->getEngineCard(card->getEffectiveId()));
-        Q_ASSERT(equip != NULL);
+        Q_ASSERT(equip != nullptr);
         equip->onUninstall(this);
 
         WrappedCard *wrapped = Sanguosha->getWrappedCard(card->getEffectiveId());
@@ -525,7 +514,7 @@ QList<const Card *> ServerPlayer::getCards(const QString &flags) const
 DummyCard *ServerPlayer::wholeHandCards() const
 {
     if (isKongcheng())
-        return NULL;
+        return nullptr;
 
     DummyCard *dummy_card = new DummyCard;
     foreach (const Card *card, handcards)
@@ -563,9 +552,9 @@ bool ServerPlayer::hasNullification() const
                     return true;
             } else if (skill->inherits("TriggerSkill")) {
                 const TriggerSkill *trigger_skill = qobject_cast<const TriggerSkill *>(skill);
-                if (trigger_skill && trigger_skill->getViewAsSkill()) {
+                if ((trigger_skill != nullptr) && (trigger_skill->getViewAsSkill() != nullptr)) {
                     const ViewAsSkill *vsskill = qobject_cast<const ViewAsSkill *>(trigger_skill->getViewAsSkill());
-                    if (vsskill && vsskill->isEnabledAtNullification(this))
+                    if ((vsskill != nullptr) && vsskill->isEnabledAtNullification(this))
                         return true;
                 }
             }
@@ -588,18 +577,18 @@ bool ServerPlayer::pindian(ServerPlayer *target, const QString &reason, const Ca
     LogMessage log2;
     bool card1_result_logged = false;
 
-    const Card *card2 = NULL;
+    const Card *card2 = nullptr;
     PindianStruct pindian_struct;
     pindian_struct.from = this;
     pindian_struct.to = target;
-    if (card1 != NULL)
+    if (card1 != nullptr)
         pindian_struct.from_card = card1;
     pindian_struct.reason = reason;
 
     PindianStruct *pindian = &pindian_struct; //for tmp record.
-    if (card1 == NULL) {
+    if (card1 == nullptr) {
         card1 = room->askForPindian(this, this, target, reason, pindian);
-        if (card1 && isShownHandcard(card1->getEffectiveId())) {
+        if ((card1 != nullptr) && isShownHandcard(card1->getEffectiveId())) {
             log2.type = "$PindianResult";
             log2.from = pindian_struct.from;
             log2.card_str = QString::number(card1->getEffectiveId());
@@ -608,7 +597,7 @@ bool ServerPlayer::pindian(ServerPlayer *target, const QString &reason, const Ca
         }
 
         CardMoveReason reason1(CardMoveReason::S_REASON_PINDIAN, objectName(), target->objectName(), pindian_struct.reason, QString());
-        room->moveCardTo(card1, this, NULL, Player::PlaceTable, reason1, false);
+        room->moveCardTo(card1, this, nullptr, Player::PlaceTable, reason1, false);
 
         card2 = room->askForPindian(target, this, target, reason, pindian);
 
@@ -617,7 +606,7 @@ bool ServerPlayer::pindian(ServerPlayer *target, const QString &reason, const Ca
             int card_id = card1->getEffectiveId();
             card1 = Sanguosha->getCard(card_id);
         }
-        if (card1 && isShownHandcard(card1->getEffectiveId())) {
+        if ((card1 != nullptr) && isShownHandcard(card1->getEffectiveId())) {
             log2.type = "$PindianResult";
             log2.from = pindian_struct.from;
             log2.card_str = QString::number(card1->getEffectiveId());
@@ -626,24 +615,24 @@ bool ServerPlayer::pindian(ServerPlayer *target, const QString &reason, const Ca
         }
 
         CardMoveReason reason1(CardMoveReason::S_REASON_PINDIAN, objectName(), target->objectName(), pindian_struct.reason, QString());
-        room->moveCardTo(card1, this, NULL, Player::PlaceTable, reason1, false);
+        room->moveCardTo(card1, this, nullptr, Player::PlaceTable, reason1, false);
 
         card2 = room->askForPindian(target, this, target, reason, pindian);
     }
-    if (card2 != NULL) {
+    if (card2 != nullptr) {
         CardMoveReason reason2(CardMoveReason::S_REASON_PINDIAN, target->objectName());
-        room->moveCardTo(card2, target, NULL, Player::PlaceTable, reason2, false);
+        room->moveCardTo(card2, target, nullptr, Player::PlaceTable, reason2, false);
     }
 
     //check whether card is empty
-    if (card1 == NULL || card2 == NULL) {
-        if (card1 != NULL) {
+    if (card1 == nullptr || card2 == nullptr) {
+        if (card1 != nullptr) {
             CardMoveReason reason1(CardMoveReason::S_REASON_PINDIAN, this->objectName(), target->objectName(), pindian_struct.reason, QString());
-            room->moveCardTo(card1, pindian_struct.from, NULL, Player::DiscardPile, reason1, true);
+            room->moveCardTo(card1, pindian_struct.from, nullptr, Player::DiscardPile, reason1, true);
         }
-        if (card2 != NULL) {
+        if (card2 != nullptr) {
             CardMoveReason reason2(CardMoveReason::S_REASON_PINDIAN, pindian_struct.to->objectName());
-            room->moveCardTo(card2, pindian_struct.to, NULL, Player::DiscardPile, reason2, true);
+            room->moveCardTo(card2, pindian_struct.to, nullptr, Player::DiscardPile, reason2, true);
         }
         //need trigger choice made?
         return false;
@@ -669,7 +658,7 @@ bool ServerPlayer::pindian(ServerPlayer *target, const QString &reason, const Ca
     RoomThread *thread = room->getThread();
     PindianStruct *pindian_star = &pindian_struct;
     QVariant data = QVariant::fromValue(pindian_star);
-    Q_ASSERT(thread != NULL);
+    Q_ASSERT(thread != nullptr);
     thread->trigger(PindianVerifying, room, data);
 
     PindianStruct *new_star = data.value<PindianStruct *>();
@@ -700,12 +689,12 @@ bool ServerPlayer::pindian(ServerPlayer *target, const QString &reason, const Ca
 
     if (room->getCardPlace(pindian_struct.from_card->getEffectiveId()) == Player::PlaceTable) {
         CardMoveReason reason1(CardMoveReason::S_REASON_PINDIAN, pindian_struct.from->objectName(), pindian_struct.to->objectName(), pindian_struct.reason, QString());
-        room->moveCardTo(pindian_struct.from_card, pindian_struct.from, NULL, Player::DiscardPile, reason1, true);
+        room->moveCardTo(pindian_struct.from_card, pindian_struct.from, nullptr, Player::DiscardPile, reason1, true);
     }
 
     if (room->getCardPlace(pindian_struct.to_card->getEffectiveId()) == Player::PlaceTable) {
         CardMoveReason reason2(CardMoveReason::S_REASON_PINDIAN, pindian_struct.to->objectName());
-        room->moveCardTo(pindian_struct.to_card, pindian_struct.to, NULL, Player::DiscardPile, reason2, true);
+        room->moveCardTo(pindian_struct.to_card, pindian_struct.to, nullptr, Player::DiscardPile, reason2, true);
     }
 
     ChoiceMadeStruct s;
@@ -730,7 +719,7 @@ void ServerPlayer::turnOver()
     log.arg = faceUp() ? "face_up" : "face_down";
     room->sendLog(log);
 
-    Q_ASSERT(room->getThread() != NULL);
+    Q_ASSERT(room->getThread() != nullptr);
     QVariant v = QVariant::fromValue(this);
     room->getThread()->trigger(TurnedOver, room, v);
 }
@@ -738,7 +727,7 @@ void ServerPlayer::turnOver()
 bool ServerPlayer::changePhase(Player::Phase from, Player::Phase to)
 {
     RoomThread *thread = room->getThread();
-    Q_ASSERT(room->getThread() != NULL);
+    Q_ASSERT(room->getThread() != nullptr);
 
     setPhase(PhaseNone);
 
@@ -1059,7 +1048,7 @@ void ServerPlayer::setAI(AI *ai)
 AI *ServerPlayer::getAI() const
 {
     if (getState() == "online")
-        return NULL;
+        return nullptr;
     else if (getState() != "robot" && !Config.EnableCheat)
         return trust_ai;
     else
@@ -1085,15 +1074,13 @@ int ServerPlayer::getGeneralMaxHp() const
 {
     int max_hp = 0;
 
-    if (getGeneral2() == NULL)
+    if (getGeneral2() == nullptr)
         max_hp = getGeneral()->getMaxHp();
     else {
         int first = getGeneral()->getMaxHp();
         int second = getGeneral2()->getMaxHp();
 
         int plan = Config.MaxHpScheme;
-        if (Config.GameMode.contains("_mini_") || Config.GameMode == "custom_scenario")
-            plan = 1;
 
         switch (plan) {
         case 3:
@@ -1126,7 +1113,7 @@ QString ServerPlayer::getGameMode() const
 
 QString ServerPlayer::getIp() const
 {
-    if (socket)
+    if (socket != nullptr)
         return socket->peerAddress();
     else
         return QString();
@@ -1134,7 +1121,7 @@ QString ServerPlayer::getIp() const
 
 quint32 ServerPlayer::ipv4Address() const
 {
-    if (socket)
+    if (socket != nullptr)
         return socket->ipv4Address();
     else
         return 0u;
@@ -1148,7 +1135,7 @@ void ServerPlayer::introduceTo(ServerPlayer *player)
     JsonArray introduce_str;
     introduce_str << objectName() << screen_name.toUtf8().toBase64() << avatar;
 
-    if (player)
+    if (player != nullptr)
         room->doNotify(player, S_COMMAND_ADD_PLAYER, introduce_str);
     else {
         QList<ServerPlayer *> players = room->getPlayers();
@@ -1443,7 +1430,7 @@ void ServerPlayer::marshal(ServerPlayer *player) const
     QString huashen_skill = this->tag.value("Huashen_skill", QString()).toString();
     QString huashen_target = this->tag.value("Huashen_target", QString()).toString();
     QString huashen_place = this->tag.value("Huashen_place", QString()).toString();
-    if (huashen_skill != NULL && huashen_target != NULL) {
+    if (huashen_skill != nullptr && huashen_target != nullptr) {
         JsonArray huanshen_arg;
         huanshen_arg << (int)QSanProtocol::S_GAME_EVENT_HUASHEN;
         huanshen_arg << objectName();
@@ -1584,6 +1571,9 @@ void ServerPlayer::addBrokenEquips(QList<int> card_ids)
     foreach (ServerPlayer *player, room->getAllPlayers(true))
         room->doNotify(player, S_COMMAND_SET_BROKEN_EQUIP, arg);
 
+    if (isCurrent())
+        setFlags("GameRule_brokenEquips");
+
     LogMessage log;
     log.type = "$AddBrokenEquip";
     log.from = this;
@@ -1681,7 +1671,7 @@ void ServerPlayer::gainAnExtraTurn()
 
 void ServerPlayer::showHiddenSkill(const QString &skill_name)
 {
-    if (skill_name == NULL)
+    if (skill_name == nullptr)
         return;
 
     if (isHegemonyGameMode(room->getMode())) {
@@ -1689,7 +1679,21 @@ void ServerPlayer::showHiddenSkill(const QString &skill_name)
             showGeneral();
         else if (!hasShownGeneral2() && ownSkill(skill_name) && inDeputySkills(skill_name))
             showGeneral(false);
-    } else { // for anyun
+    } else {
+        //for yibian
+        ServerPlayer *reimu = room->findPlayerBySkillName("yibian");
+        const Skill *skill = Sanguosha->getSkill(skill_name);
+        if ((reimu != nullptr) && !hasShownRole() && skill != nullptr && skill->getFrequency() != Skill::Eternal && !skill->isAttachedLordSkill() && !hasEquipSkill(skill_name)) {
+            QString role = getRole();
+            room->touhouLogmessage("#YibianShow", this, role, room->getAllPlayers());
+            room->broadcastProperty(this, "role");
+            room->setPlayerProperty(this, "role_shown", true); //important! to notify client
+
+            room->setPlayerProperty(this, "general_showed", true);
+            room->setPlayerProperty(this, "general2_showed", true);
+        }
+
+        // for anyun
         if (!canShowHiddenSkill() || !isHiddenSkill(skill_name))
             return;
         if (hasSkill(skill_name)) {
@@ -1709,7 +1713,7 @@ void ServerPlayer::showHiddenSkill(const QString &skill_name)
                 generalName = room->askForChoice(this, "showSameHiddenSkills", generals.join("+"));
             }
 
-            if (generalName != NULL) {
+            if (generalName != nullptr) {
                 room->touhouLogmessage("#ShowHiddenGeneral", this, generalName);
 
                 JsonArray arg;
@@ -1749,13 +1753,13 @@ void ServerPlayer::showHiddenSkill(const QString &skill_name)
 
 QStringList ServerPlayer::checkTargetModSkillShow(const CardUseStruct &use)
 {
-    if (use.card == NULL || use.card->getTypeId() == Card::TypeSkill)
+    if (use.card == nullptr || use.card->getTypeId() == Card::TypeSkill)
         return QStringList();
     if (!isHegemonyGameMode(room->getMode())) {
         if (!canShowHiddenSkill())
             return QStringList();
         QString cardskill = use.card->getSkillName(); //check double hidden skill
-        if (cardskill != NULL && use.from->isHiddenSkill(cardskill))
+        if (cardskill != nullptr && use.from->isHiddenSkill(cardskill))
             return QStringList();
     }
 
@@ -1850,9 +1854,14 @@ QStringList ServerPlayer::checkTargetModSkillShow(const CardUseStruct &use)
     }
     use.card->setFlags("-IgnoreFailed");
 
+    QList<const Player *> ps;
+    foreach (ServerPlayer *p, use.to)
+        ps << p;
     //check prohibit
     foreach (ServerPlayer *p, use.to) {
-        if (use.from->isProhibited(p, use.card) && Sanguosha->getCurrentCardUseReason() == CardUseStruct::CARD_USE_REASON_PLAY) {
+        auto useToExceptp = ps;
+        useToExceptp.removeAll(p);
+        if (use.from->isProhibited(p, use.card, useToExceptp) && Sanguosha->getCurrentCardUseReason() == CardUseStruct::CARD_USE_REASON_PLAY) {
             showTargetProhibit << "tianqu";
             break;
         } else if (use.card->isKindOf("Peach")) {
@@ -1946,32 +1955,29 @@ void ServerPlayer::showGeneral(bool head_general, bool trigger_event, bool sendL
         room->doBroadcastNotify(S_COMMAND_LOG_EVENT, arg);
         room->changePlayerGeneral(this, general_name);
 
-        //change skinhero
-        int skin_id = room->getTag(general_name + "_skin_id").toInt();
-        JsonArray val;
-        val << (int)QSanProtocol::S_GAME_EVENT_SKIN_CHANGED;
-        val << objectName();
-        val << general_name;
-        val << skin_id;
-        val << true; //head
-        room->doBroadcastNotify(QSanProtocol::S_COMMAND_LOG_EVENT, val);
-
-        if (!property("Duanchang").toString().split(",").contains("head")) {
-            sendSkillsToOthers();
-            foreach (const Skill *skill, getHeadSkillList()) { //getSkillList()
-                if (skill->getFrequency() == Skill::Limited && !skill->getLimitMark().isEmpty() && (!skill->isLordSkill() || hasLordSkill(skill->objectName()))
-                    && hasShownSkill(skill)) {
-                    JsonArray arg;
-                    arg << objectName();
-                    arg << skill->getLimitMark();
-                    arg << getMark(skill->getLimitMark());
-                    room->doBroadcastNotify(QSanProtocol::S_COMMAND_SET_MARK, arg);
-                }
-            }
+        //change skinhero //but not for ai player
+        if (getState() == "online") {
+            int skin_id = room->getTag(general_name + "_skin_id").toInt();
+            JsonArray val;
+            val << (int)QSanProtocol::S_GAME_EVENT_SKIN_CHANGED;
+            val << objectName();
+            val << general_name;
+            val << skin_id;
+            val << true; //head
+            room->doBroadcastNotify(QSanProtocol::S_COMMAND_LOG_EVENT, val);
         }
 
-        //foreach(ServerPlayer *p, room->getOtherPlayers(this, true))
-        //    room->notifyProperty(p, this, "head_skin_id");
+        sendSkillsToOthers();
+        foreach (const Skill *skill, getHeadSkillList()) { //getSkillList()
+            if (skill->getFrequency() == Skill::Limited && !skill->getLimitMark().isEmpty() && (!skill->isLordSkill() || hasLordSkill(skill->objectName()))
+                && hasShownSkill(skill)) {
+                JsonArray arg;
+                arg << objectName();
+                arg << skill->getLimitMark();
+                arg << getMark(skill->getLimitMark());
+                room->doBroadcastNotify(QSanProtocol::S_COMMAND_SET_MARK, arg);
+            }
+        }
 
     } else {
         //if (!ignore_rule && !canShowGeneral("h")) return;
@@ -1995,26 +2001,26 @@ void ServerPlayer::showGeneral(bool head_general, bool trigger_event, bool sendL
         room->changePlayerGeneral2(this, general_name);
 
         //change skinhero
-        int skin_id = room->getTag(general_name + "_skin_id").toInt();
-        JsonArray val;
-        val << (int)QSanProtocol::S_GAME_EVENT_SKIN_CHANGED;
-        val << objectName();
-        val << general_name;
-        val << skin_id;
-        val << false; // deputy?
-        room->doBroadcastNotify(QSanProtocol::S_COMMAND_LOG_EVENT, val);
+        if (getState() == "online") {
+            int skin_id = room->getTag(general_name + "_skin_id").toInt();
+            JsonArray val;
+            val << (int)QSanProtocol::S_GAME_EVENT_SKIN_CHANGED;
+            val << objectName();
+            val << general_name;
+            val << skin_id;
+            val << false; // deputy?
+            room->doBroadcastNotify(QSanProtocol::S_COMMAND_LOG_EVENT, val);
+        }
 
-        if (!property("Duanchang").toString().split(",").contains("deputy")) {
-            sendSkillsToOthers(false);
-            foreach (const Skill *skill, getDeputySkillList()) { //getSkillList()
-                if (skill->getFrequency() == Skill::Limited && !skill->getLimitMark().isEmpty() && (!skill->isLordSkill() || hasLordSkill(skill->objectName()))
-                    && hasShownSkill(skill)) {
-                    JsonArray arg;
-                    arg << objectName();
-                    arg << skill->getLimitMark();
-                    arg << getMark(skill->getLimitMark());
-                    room->doBroadcastNotify(QSanProtocol::S_COMMAND_SET_MARK, arg);
-                }
+        sendSkillsToOthers(false);
+        foreach (const Skill *skill, getDeputySkillList()) { //getSkillList()
+            if (skill->getFrequency() == Skill::Limited && !skill->getLimitMark().isEmpty() && (!skill->isLordSkill() || hasLordSkill(skill->objectName()))
+                && hasShownSkill(skill)) {
+                JsonArray arg;
+                arg << objectName();
+                arg << skill->getLimitMark();
+                arg << getMark(skill->getLimitMark());
+                room->doBroadcastNotify(QSanProtocol::S_COMMAND_SET_MARK, arg);
             }
         }
     }
@@ -2089,7 +2095,7 @@ void ServerPlayer::showGeneral(bool head_general, bool trigger_event, bool sendL
     }
 
     if (trigger_event) {
-        Q_ASSERT(room->getThread() != NULL);
+        Q_ASSERT(room->getThread() != nullptr);
 
         if (room->getTag("TheFirstToShowRewarded").isNull()) {
             setMark("TheFirstToShowReward", 1);
@@ -2197,7 +2203,7 @@ void ServerPlayer::hideGeneral(bool head_general)
     log.arg2 = getGeneral2Name();
     room->sendLog(log);
 
-    Q_ASSERT(room->getThread() != NULL);
+    Q_ASSERT(room->getThread() != nullptr);
 
     ShowGeneralStruct s;
     s.player = this;
@@ -2248,7 +2254,7 @@ void ServerPlayer::removeGeneral(bool head_general)
         disconnectSkillsFromOthers();
 
         foreach (const Skill *skill, getHeadSkillList()) {
-            if (skill)
+            if (skill != nullptr)
                 room->detachSkillFromPlayer(this, skill->objectName(), false, false, false, true); //sendlog  head deputy
         }
     } else {
@@ -2280,7 +2286,7 @@ void ServerPlayer::removeGeneral(bool head_general)
         disconnectSkillsFromOthers(false);
 
         foreach (const Skill *skill, getDeputySkillList()) {
-            if (skill)
+            if (skill != nullptr)
                 room->detachSkillFromPlayer(this, skill->objectName(), false, false, false, false);
         }
     }
@@ -2292,7 +2298,7 @@ void ServerPlayer::removeGeneral(bool head_general)
     log.arg2 = from_general;
     room->sendLog(log);
 
-    Q_ASSERT(room->getThread() != NULL);
+    Q_ASSERT(room->getThread() != nullptr);
     //QVariant _from = from_general;
     //room->getThread()->trigger(GeneralRemoved, room, this, _from);
     ShowGeneralStruct s;

@@ -48,20 +48,16 @@ class BanlistDialog : public QDialog
     Q_OBJECT
 
 public:
-    BanlistDialog(QWidget *parent, bool view = false);
+    explicit BanlistDialog(QWidget *parent, bool view = false);
 
 private:
     QList<QListWidget *> lists;
     QListWidget *list;
     int item;
     QStringList ban_list;
-    QPushButton *add2nd;
 
 private slots:
     void addGeneral(const QString &name);
-    void add2ndGeneral(const QString &name);
-    void addPair(const QString &first, const QString &second);
-    void doAdd2ndButton();
     void doAddButton();
     void doRemoveButton();
     void save();
@@ -110,9 +106,11 @@ private:
     QLabel *lord_maxchoice_label;
     QSpinBox *lord_maxchoice_spinbox;
     QSpinBox *nonlord_maxchoice_spinbox;
+    QSpinBox *landlord_maxchoice_spinbox;
+    QSpinBox *peasant_maxchoice_spinbox;
+
     QCheckBox *forbid_same_ip_checkbox;
     QCheckBox *disable_chat_checkbox;
-    QCheckBox *second_general_checkbox;
     QCheckBox *scene_checkbox; //changjing
     QCheckBox *same_checkbox;
     QCheckBox *basara_checkbox;
@@ -126,9 +124,6 @@ private:
     QLabel *scheme0_subtraction_label;
     QSpinBox *scheme0_subtraction_spinbox;
     QCheckBox *prevent_awaken_below3_checkbox;
-    QComboBox *scenario_ComboBox;
-    QComboBox *mini_scene_ComboBox;
-    QPushButton *mini_scene_button;
     QLineEdit *address_edit;
     QLineEdit *port_edit;
     QSpinBox *game_start_spinbox;
@@ -172,13 +167,11 @@ private slots:
     void edit1v1Banlist();
     void updateButtonEnablility(QAbstractButton *button);
 
-    void doCustomAssign();
     void setMiniCheckBox();
 
     void checkCurrentBtnIsHegemonyMode(bool v);
 };
 
-class Scenario;
 class ServerPlayer;
 
 class Server : public QObject
@@ -201,6 +194,10 @@ private:
     QHash<QString, ServerPlayer *> players;
     QSet<QString> addresses;
     QMultiHash<QString, QString> name2objname;
+
+private:
+    void getLack(ClientSocket *socket);
+    void getWinnersTableFile(ClientSocket *socket, const QString &tableName);
 
 private slots:
     void processNewConnection(ClientSocket *socket);

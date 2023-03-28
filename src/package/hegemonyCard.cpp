@@ -31,7 +31,7 @@ bool KnownBothHegemony::targetFilter(const QList<const Player *> &targets, const
     if (targets.length() >= total_num || to_select == Self)
         return false;
 
-    return (!to_select->hasShownGeneral() || (to_select->getGeneral2() && !to_select->hasShownGeneral2()) || !to_select->isKongcheng());
+    return (!to_select->hasShownGeneral() || ((to_select->getGeneral2() != nullptr) && !to_select->hasShownGeneral2()) || !to_select->isKongcheng());
 }
 
 bool KnownBothHegemony::targetsFeasible(const QList<const Player *> &targets, const Player *Self) const
@@ -81,7 +81,7 @@ void KnownBothHegemony::onUse(Room *room, const CardUseStruct &card_use) const
 
         CardMoveReason reason(CardMoveReason::S_REASON_RECAST, card_use.from->objectName());
         reason.m_skillName = getSkillName();
-        room->moveCardTo(this, card_use.from, NULL, Player::DiscardPile, reason);
+        room->moveCardTo(this, card_use.from, nullptr, Player::DiscardPile, reason);
         card_use.from->broadcastSkillInvoke("@recast");
 
         card_use.from->drawCards(1);
@@ -93,59 +93,81 @@ void KnownBothHegemony::onUse(Room *room, const CardUseStruct &card_use) const
     }
 }
 
+void KnownBothHegemony::doKnownBoth(const QString &choice, const CardEffectStruct &effect) const
+{
+    Room *room = effect.from->getRoom();
+    LogMessage log;
+    log.type = "#KnownBothView";
+    log.from = effect.from;
+    log.to << effect.to;
+    log.arg = choice;
+    foreach (ServerPlayer *p, room->getAllPlayers(true))
+        room->doNotify(p, QSanProtocol::S_COMMAND_LOG_SKILL, log.toJsonValue());
+
+    if (choice == "showhead" || choice == "showdeputy") {
+        QStringList list = room->getTag(effect.to->objectName()).toStringList();
+        list.removeAt(choice == "showhead" ? 1 : 0);
+        foreach (const QString &name, list) {
+            LogMessage log;
+            log.type = "$KnownBothViewGeneral";
+            log.from = effect.from;
+            log.to << effect.to;
+            log.arg = name;
+            log.arg2 = effect.to->getRole();
+            room->doNotify(effect.from, QSanProtocol::S_COMMAND_LOG_SKILL, log.toJsonValue());
+        }
+        JsonArray arg;
+        arg << objectName();
+        arg << JsonUtils::toJsonArray(list);
+        room->doNotify(effect.from, QSanProtocol::S_COMMAND_VIEW_GENERALS, arg);
+    } else
+        room->showAllCards(effect.to, effect.from);
+}
+
 void KnownBothHegemony::onEffect(const CardEffectStruct &effect) const
 {
     QStringList select;
     if (!effect.to->hasShownGeneral())
         select << "showhead";
-    if (effect.to->getGeneral2() && !effect.to->hasShownGeneral2())
+    if ((effect.to->getGeneral2() != nullptr) && !effect.to->hasShownGeneral2())
         select << "showdeputy";
     if (!effect.to->isKongcheng() && (effect.to->getShownHandcards().length() < effect.to->getHandcardNum()))
         select << "showcard";
 
     if (select.isEmpty())
         return;
+    int num = qMin(select.length(), 1 + effect.effectValue.first());
+    if (effect.from->hasSkill("kuaizhao_hegemony")) {
+        if (!effect.from->hasShownSkill("kuaizhao_hegemony") && effect.from->askForSkillInvoke("kuaizhao_hegemony", QVariant::fromValue(effect)))
+            effect.from->showHiddenSkill("kuaizhao_hegemony");
+        if (effect.from->hasShownSkill("kuaizhao_hegemony"))
+            num = select.length();
+    }
 
     Room *room = effect.from->getRoom();
-    for (int i = 0; i < (1 + effect.effectValue.first()); i += 1) {
+    for (int i = 0; i < num; i += 1) {
         effect.to->setFlags("KnownBothTarget"); //for AI
         QString choice = room->askForChoice(effect.from, objectName(), select.join("+"), QVariant::fromValue(effect.to));
         effect.to->setFlags("-KnownBothTarget");
         select.removeAll(choice);
 
-        LogMessage log;
-        log.type = "#KnownBothView";
-        log.from = effect.from;
-        log.to << effect.to;
-        log.arg = choice;
-        foreach (ServerPlayer *p, room->getAllPlayers(true)) { //room->getOtherPlayers(effect.from, true)
-            room->doNotify(p, QSanProtocol::S_COMMAND_LOG_SKILL, log.toJsonValue());
-        }
-
-        if (choice == "showhead" || choice == "showdeputy") {
-            QStringList list = room->getTag(effect.to->objectName()).toStringList();
-            list.removeAt(choice == "showhead" ? 1 : 0);
-            foreach (const QString &name, list) {
-                LogMessage log;
-                log.type = "$KnownBothViewGeneral";
-                log.from = effect.from;
-                log.to << effect.to;
-                log.arg = name;
-                log.arg2 = effect.to->getRole();
-                room->doNotify(effect.from, QSanProtocol::S_COMMAND_LOG_SKILL, log.toJsonValue());
-            }
-            JsonArray arg;
-            arg << objectName();
-            arg << JsonUtils::toJsonArray(list);
-            room->doNotify(effect.from, QSanProtocol::S_COMMAND_VIEW_GENERALS, arg);
-
-        } else {
-            room->showAllCards(effect.to, effect.from);
-        }
+        doKnownBoth(choice, effect);
 
         if (select.isEmpty())
-            break;
+            return;
     }
+
+    /*if (effect.from->hasSkill("kuaizhao_hegemony")) {
+        while (!select.isEmpty()) {
+            effect.to->setFlags("KnownBothTarget"); //for AI
+            QString choice = room->askForChoice(effect.from, objectName(), select.join("+") + "+dismiss", QVariant::fromValue(effect.to));
+            effect.to->setFlags("-KnownBothTarget");
+            if (choice == "dismiss")
+                return;
+            select.removeAll(choice);
+            doKnownBoth(choice, effect);
+        }
+    }*/
 }
 
 bool KnownBothHegemony::isAvailable(const Player *player) const
@@ -266,32 +288,50 @@ QString AwaitExhaustedHegemony::getSubtype() const
 bool AwaitExhaustedHegemony::isAvailable(const Player *player) const
 {
     bool canUse = false;
-    if (!player->isProhibited(player, this))
-        canUse = true;
-    if (!canUse) {
-        QList<const Player *> players = player->getAliveSiblings();
-        foreach (const Player *p, players) {
-            if (player->isProhibited(p, this))
-                continue;
-            if (player->isFriendWith(p)) {
-                canUse = true;
-                break;
-            }
+
+    QList<const Player *> players = player->getAliveSiblings();
+    players << player;
+
+    QList<const Player *> useTos;
+
+    foreach (const Player *p, players) {
+        if (p->isFriendWith(player))
+            useTos << p;
+    }
+
+    foreach (const Player *p, players) {
+        auto useTosExceptp = players;
+        useTosExceptp.removeAll(p);
+        if (!player->isProhibited(p, this, useTosExceptp)) {
+            canUse = true;
+            break;
         }
     }
 
     return canUse && TrickCard::isAvailable(player);
 }
 
+bool AwaitExhaustedHegemony::targetFilter(const QList<const Player *> &, const Player *to_select, const Player *Self) const
+{
+    return Self->willBeFriendWith(to_select);
+}
+
 void AwaitExhaustedHegemony::onUse(Room *room, const CardUseStruct &card_use) const
 {
     CardUseStruct new_use = card_use;
-    if (!card_use.from->isProhibited(card_use.from, this))
-        new_use.to << new_use.from;
-    foreach (ServerPlayer *p, room->getOtherPlayers(new_use.from)) {
+    QList<const Player *> useTos;
+
+    foreach (ServerPlayer *p, room->getAllPlayers()) {
+        if (p->isFriendWith(new_use.from))
+            useTos << p;
+    }
+
+    foreach (ServerPlayer *p, room->getAllPlayers()) {
+        auto useTosExceptp = useTos;
+        useTosExceptp.removeAll(p);
         if (p->isFriendWith(new_use.from)) {
-            const ProhibitSkill *skill = room->isProhibited(card_use.from, p, this);
-            if (skill) {
+            const ProhibitSkill *skill = room->isProhibited(card_use.from, p, this, useTosExceptp);
+            if (skill != nullptr) {
                 LogMessage log;
                 log.type = "#SkillAvoid";
                 log.from = p;
@@ -309,8 +349,11 @@ void AwaitExhaustedHegemony::onUse(Room *room, const CardUseStruct &card_use) co
     TrickCard::onUse(room, new_use);
 }
 
-void AwaitExhaustedHegemony::use(Room *room, ServerPlayer *source, QList<ServerPlayer *> &targets) const
+void AwaitExhaustedHegemony::use(Room *room, const CardUseStruct &card_use) const
 {
+    ServerPlayer *source = card_use.from;
+    const QList<ServerPlayer *> &targets = card_use.to;
+
     QStringList nullified_list = room->getTag("CardUseNullifiedList").toStringList();
     bool all_nullified = nullified_list.contains("_ALL_TARGETS");
     foreach (ServerPlayer *target, targets) {
@@ -320,6 +363,7 @@ void AwaitExhaustedHegemony::use(Room *room, ServerPlayer *source, QList<ServerP
         effect.to = target;
         effect.multiple = (targets.length() > 1);
         effect.nullified = (all_nullified || nullified_list.contains(target->objectName()));
+        effect.effectValue = card_use.m_effectValue;
 
         QVariantList players;
         for (int i = targets.indexOf(target); i < targets.length(); i++) {
@@ -327,8 +371,6 @@ void AwaitExhaustedHegemony::use(Room *room, ServerPlayer *source, QList<ServerP
                 players.append(QVariant::fromValue(targets.at(i)));
         }
         room->setTag("targets" + this->toString(), QVariant::fromValue(players));
-        if (hasFlag("mopao"))
-            effect.effectValue.first() = effect.effectValue.first() + 1;
         room->cardEffect(effect);
     }
 
@@ -347,7 +389,7 @@ void AwaitExhaustedHegemony::use(Room *room, ServerPlayer *source, QList<ServerP
         CardMoveReason reason(CardMoveReason::S_REASON_USE, source->objectName(), QString(), this->getSkillName(), QString());
         if (targets.size() == 1)
             reason.m_targetId = targets.first()->objectName();
-        room->moveCardTo(&dummy, source, NULL, Player::DiscardPile, reason, true);
+        room->moveCardTo(&dummy, source, nullptr, Player::DiscardPile, reason, true);
     }
 }
 
@@ -367,22 +409,22 @@ public:
         global = true;
     }
 
-    QList<SkillInvokeDetail> triggerable(TriggerEvent, const Room *room, const QVariant &data) const
+    QList<SkillInvokeDetail> triggerable(TriggerEvent, const Room *room, const QVariant &data) const override
     {
         CardUseStruct use = data.value<CardUseStruct>();
-        if (!equipAvailable(use.from, EquipCard::WeaponLocation, objectName()))
+        if (use.from == nullptr || !equipAvailable(use.from, EquipCard::WeaponLocation, objectName()))
             return QList<SkillInvokeDetail>();
 
         if (!isHegemonyGameMode(room->getMode()))
             return QList<SkillInvokeDetail>();
 
-        if (use.card != NULL && use.card->isKindOf("Slash")) {
+        if (use.card != nullptr && use.card->isKindOf("Slash")) {
             QList<SkillInvokeDetail> d;
             foreach (ServerPlayer *p, use.to) {
                 if (p->isAlive() && !p->hasShownAllGenerals()) {
                     if (!equipAvailable(use.from, EquipCard::WeaponLocation, objectName(), p))
                         continue;
-                    d << SkillInvokeDetail(this, use.from, use.from, NULL, false, p);
+                    d << SkillInvokeDetail(this, use.from, use.from, nullptr, false, p);
                 }
             }
 
@@ -392,11 +434,11 @@ public:
         return QList<SkillInvokeDetail>();
     }
 
-    bool cost(TriggerEvent, Room *room, QSharedPointer<SkillInvokeDetail> invoke, QVariant &) const
+    bool cost(TriggerEvent, Room *room, QSharedPointer<SkillInvokeDetail> invoke, QVariant &) const override
     {
         if (invoke->invoker->askForSkillInvoke(this, QVariant::fromValue(invoke->preferredTarget))) {
             const ViewHasSkill *v = Sanguosha->ViewHas(invoke->invoker, objectName(), "weapon", true);
-            if (v)
+            if (v != nullptr)
                 invoke->invoker->showHiddenSkill(v->objectName());
 
             room->setEmotion(invoke->invoker, "weapon/double_sword");
@@ -405,7 +447,7 @@ public:
         return false;
     }
 
-    bool effect(TriggerEvent, Room *room, QSharedPointer<SkillInvokeDetail> invoke, QVariant &data) const
+    bool effect(TriggerEvent, Room *room, QSharedPointer<SkillInvokeDetail> invoke, QVariant &data) const override
     {
         //canshow?
         QStringList select;
@@ -414,7 +456,7 @@ public:
             select << "discard";
         if (!target->hasShownGeneral() && target->canShowGeneral("h"))
             select << "showhead";
-        if (target->getGeneral2() && !target->hasShownGeneral2() && target->canShowGeneral("d"))
+        if ((target->getGeneral2() != nullptr) && !target->hasShownGeneral2() && target->canShowGeneral("d"))
             select << "showdeputy";
 
         if (select.isEmpty())
@@ -452,7 +494,7 @@ public:
     {
     }
 
-    virtual int getExtra(const Player *target, bool) const
+    int getExtra(const Player *target, bool) const override
     {
         foreach (const Player *p, target->getAliveSiblings()) {
             if (p->hasWeapon("SixSwords") && p->isFriendWith(target) && p->getMark("Equips_Nullified_to_Yourself") == 0)

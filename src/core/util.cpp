@@ -6,7 +6,7 @@
 #include <QVariant>
 
 extern "C" {
-int luaopen_sgs(lua_State *);
+    int luaopen_sgs(lua_State *);
 }
 
 QVariant GetValueFromLuaState(lua_State *L, const char *table_name, const char *key)
@@ -50,7 +50,7 @@ QVariant GetValueFromLuaState(lua_State *L, const char *table_name, const char *
         } else {
             QVariantMap map;
             int t = lua_gettop(L);
-            for (lua_pushnil(L); lua_next(L, t); lua_pop(L, 1)) {
+            for (lua_pushnil(L); lua_next(L, t) != 0; lua_pop(L, 1)) {
                 const char *key = lua_tostring(L, -2);
                 const char *value = lua_tostring(L, -1);
                 map[key] = value;
@@ -78,9 +78,9 @@ lua_State *CreateLuaState()
 void DoLuaScript(lua_State *L, const char *script)
 {
     int error = luaL_dofile(L, script);
-    if (error) {
+    if (error != 0) {
         QString error_msg = lua_tostring(L, -1);
-        QMessageBox::critical(NULL, QObject::tr("Lua script error"), error_msg);
+        QMessageBox::critical(nullptr, QObject::tr("Lua script error"), error_msg);
         exit(1);
     }
 }
@@ -98,7 +98,7 @@ QList<int> StringList2IntList(const QStringList &stringlist)
     QList<int> intlist;
     for (int i = 0; i < stringlist.size(); i++) {
         QString n = stringlist.at(i);
-        bool ok;
+        bool ok = false;
         intlist.append(n.toInt(&ok));
         if (!ok)
             return QList<int>();
@@ -119,7 +119,7 @@ QList<int> VariantList2IntList(const QVariantList &variantlist)
     QList<int> intlist;
     for (int i = 0; i < variantlist.size(); i++) {
         QVariant n = variantlist.at(i);
-        bool ok;
+        bool ok = false;
         intlist.append(n.toInt(&ok));
         if (!ok)
             return QList<int>();

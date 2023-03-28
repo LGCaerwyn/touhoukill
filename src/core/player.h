@@ -26,7 +26,7 @@ class Player : public QObject
     Q_PROPERTY(int dyingFactor READ getDyingFactor WRITE setDyingFactor)
     Q_PROPERTY(int maxhp READ getMaxHp WRITE setMaxHp)
     Q_PROPERTY(int chaoren READ getChaoren WRITE setChaoren)
-    //Q_PROPERTY(QList<int> shown_handcards READ getShownHandcards WRITE setShownHandcards)
+
     Q_PROPERTY(QString kingdom READ getKingdom WRITE setKingdom)
     Q_PROPERTY(bool wounded READ isWounded STORED false)
     Q_PROPERTY(QString role READ getRole WRITE setRole)
@@ -282,7 +282,7 @@ public:
 
     bool canSlash(const Player *other, const Card *slash, bool distance_limit = true, int rangefix = 0, const QList<const Player *> &others = QList<const Player *>()) const;
     bool canSlash(const Player *other, bool distance_limit = true, int rangefix = 0, const QList<const Player *> &others = QList<const Player *>()) const;
-    int getCardCount(bool include_equip = true, bool = false) const;
+    int getCardCount(bool include_equip = true, bool include_judging = false) const;
 
     QList<int> getPile(const QString &pile_name) const;
     QStringList getPileNames() const;
@@ -313,7 +313,7 @@ public:
     QString getSkillDescription(bool yellow = true, const QString &flag = QString()) const;
 
     virtual bool isProhibited(const Player *to, const Card *card, const QList<const Player *> &others = QList<const Player *>()) const;
-    bool canSlashWithoutCrossbow(const Card *slash = NULL) const;
+    bool canSlashWithoutCrossbow(const Card *slash = nullptr) const;
     virtual bool isLastHandCard(const Card *card, bool contain = false) const = 0;
 
     inline bool isJilei(const Card *card) const
@@ -371,7 +371,7 @@ public:
 
 protected:
     QMap<QString, int> marks;
-    QMap<QString, QList<int> > piles;
+    QMap<QString, QList<int>> piles;
     QMap<QString, QStringList> pile_open;
     QSet<QString> acquired_skills;
     QSet<QString> acquired_skills2;
@@ -417,8 +417,10 @@ private:
     QString next;
 
     //QMap<Card::HandlingMethod, QStringList> card_limitation;
-    QMap<Card::HandlingMethod, QMap<QString, QStringList> > card_limitation; //method, reason , pattern
+    QMap<Card::HandlingMethod, QMap<QString, QStringList>> card_limitation; //method, reason , pattern
     QStringList disable_show;
+
+    void updateYingyingguai();
 
 signals:
     void general_changed();

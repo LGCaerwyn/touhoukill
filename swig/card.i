@@ -36,7 +36,8 @@ public:
         WeaponLocation,
         ArmorLocation,
         DefensiveHorseLocation,
-        OffensiveHorseLocation
+        OffensiveHorseLocation,
+        TreasureLocation
     };
 
     EquipCard(Suit suit, int number): Card(suit, number, true) { handling_method = MethodUse; }
@@ -122,6 +123,7 @@ public:
 protected:
     DamageStruct::Nature nature;
     mutable int drank;
+    mutable int magic_drank;
 };
 
 class Analeptic: public BasicCard {

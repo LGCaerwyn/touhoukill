@@ -121,7 +121,7 @@ sgs.fake_rebel_players = {}
 --           【真夜】【暗域】【契约】【魔血】
 --lose_equip_skill【魔开】【遗忘】
 --need_kongcheng【迷彩】
---masochism_skill延时卖血不算？【浴血】【】
+--masochism_skill延时卖血不算？【浴血】【善垒】
 --wizard_skill wizard_harm_skill【命运】【绯想】【风水】【博丽】
 --priority_skill【借走】【强欲】【锁定】
 --save_skill【合咒】
@@ -198,14 +198,13 @@ function SmartAI:initialize(player)
 		local method_name = string.sub(full_method_name, method_name_start)
 		local method = self[method_name]
 		if method then
-			local success, result1, result2
-			success, result1, result2 = pcall(method, self, ...)
-			if not success then
-				self.room:writeToConsole(result1)
+			local success, result1, result2 = xpcall(method, function(err)
+				self.room:writeToConsole(err)
 				self.room:writeToConsole(method_name)
 				self.room:writeToConsole(debug.traceback())
 				self.room:outputEventStack()
-			else
+			end, self, ...)
+			if success then
 				return result1, result2
 			end
 		end
@@ -641,7 +640,14 @@ function SmartAI:adjustUsePriority(card, v)
 
 		--if self.player:hasSkill("guaili") and card:isRed() then v = v + 0.21 end
 	end
-	if card:isKindOf("Peach") and card:getSkillName() == "shende" then v = v + 0.21 end
+	
+	if card:isKindOf("Peach") then
+		if card:getSkillName() == "shende" then v = v + 0.21 end
+		--通常仙桃优先度低一些，但此时加高优先度。 未考虑异常状态对自己有利的情况 
+		if card:isKindOf("SuperPeach") and self.player:isDebuffStatus() then
+			v = v + 0.21
+		end
+	end
 	if sgs.touhouCanWoodenOx(self.player) and not self.player:getPile("wooden_ox"):isEmpty()  then  --and self.player:getMark("@tianyi_Treasure") ==0
 		local id_table = {}
 		if not card:isVirtualCard() then id_table = { card:getEffectiveId() }
@@ -1074,9 +1080,8 @@ end
 function sgs.isRolePredictable(classical)
 	if not classical and sgs.GetConfig("RolePredictable", false) then return true end
 	local mode = string.lower(global_room:getMode())
-	local isMini = (mode:find("mini") or mode:find("custom_scenario"))
-	if (not mode:find("0") and not isMini) or mode:find("02p") or mode:find("02_1v1") or mode:find("04_1v3")
-		or mode == "06_3v3" or mode == "06_xmode" or (not classical and isMini) then return true end
+	if (not mode:find("0")) or mode:find("02p") or mode:find("02_1v1") or mode:find("04_1v3")
+		or mode == "06_3v3" or mode == "06_xmode"  or mode == "03_1v2" or mode == "04_2v2" then return true end
 	return false
 end
 
@@ -1203,36 +1208,6 @@ sgs.ai_card_intention.general = function(from, to, level)
 		end
 	end
 
-	--[[
-	if global_room:getTag("humanCount") and global_room:getTag("humanCount"):toInt() ==1 then
-		local diffarr = {
-			loyalist_value  = sgs.role_evaluation[from:objectName()]["loyalist"] - loyalist_value ,
-			renegade_value  = sgs.role_evaluation[from:objectName()]["renegade"] - renegade_value
-		}
-
-		local value_changed = false
-
-		for msgtype,diffvalue in pairs(diffarr) do
-			if diffvalue ~= 0 then
-				value_changed = true
-				local log= sgs.LogMessage()
-				log.type = "#" .. msgtype .. (diffvalue > 0 and "_inc" or "_dec")
-				log.from = from
-				log.arg= math.abs(math.ceil(diffvalue))
-				global_room:sendLog(log)
-			end
-		end
-
-		if value_changed then
-			local log= sgs.LogMessage()
-			log.type = sgs.role_evaluation[from:objectName()]["loyalist"] >= 0 and  "#show_intention_loyalist" or "#show_intention_rebel"
-			log.from = from
-			log.arg  = string.format("%d", math.abs(math.ceil(sgs.role_evaluation[from:objectName()]["loyalist"])))
-			log.arg2 = string.format("%d", sgs.role_evaluation[from:objectName()]["renegade"])
-			global_room:sendLog(log)
-		end
-	end
-	]]
 	sgs.outputRoleValues(from, level)
 end
 
@@ -2775,8 +2750,8 @@ function SmartAI:askForDiscard(reason, discard_num, min_num, optional, include_e
 	if type(callback) == "function" then
 		local cb = callback(self, discard_num, min_num, optional, include_equip)
 		if cb then
-			if type(cb) == "number" and not self.player:isJilei(sgs.Sanguosha:getCard(cb)) then return { cb }
-			elseif type(cb) == "table" then
+			if type(cb) == "number" then cb = { cb } end
+			if type(cb) == "table" then
 				for _, card_id in ipairs(cb) do
 					if not exchange and self.player:isJilei(sgs.Sanguosha:getCard(card_id)) then
 						return {}
@@ -3132,6 +3107,7 @@ function SmartAI:askForCardChosen(who, flags, reason, method)
 		if card then return card:getEffectiveId() end
 	elseif type(cardchosen) == "number" then
 		sgs.ai_skill_cardchosen[string.gsub(reason, "%-", "_")] = nil
+		if cardchosen == -1 then return -1 end
 		for _, acard in sgs.qlist(who:getCards(flags)) do
 			if acard:getEffectiveId() == cardchosen then return cardchosen end
 		end
@@ -3461,6 +3437,8 @@ function SmartAI:hasHeavySlashDamage(from, slash, to, getValue)
 		dmg = dmg + from:getMark("drank")
 	end
 
+	-- 瓷偶 不一定合适，先加在这
+	if to:hasSkill("ciou") and (slash and ((slash:getClassName() == "Slash") or (slash:isKindOf("DebuffSlash")))) then dmg = dmg + 1 end
 	if to:hasArmorEffect("Vine") and not IgnoreArmor(from, to) and fireSlash then dmg = dmg + 1 end
 	if from:hasWeapon("GudingBlade") and slash and to:isKongcheng() then dmg = dmg + 1 end
     if from:hasSkill("hanbo_hegemony") and slash and not slash:isKindOf("NatureSlash") and to:isKongcheng() then dmg = dmg + 1 end
@@ -3858,6 +3836,16 @@ function SmartAI:willUsePeachTo(dying)
 		if self:getCardId("Peach") then return self:getCardId("Peach") end
 	end
 
+    --送葬带走
+	if self.player:hasSkill("songzang") and not self:isFriend(dying) then
+		local songzang_str = self:getCardId("Peach")
+		if songzang_str then
+			local songzangcard = sgs.Card_Parse(songzang_str)
+			if (songzangcard:getSkillName() == "songzang") then
+				return songzang_str 
+			end
+		end
+	end
 	--宴会用酒
 	if self.player:objectName() ~= dying:objectName() and self:isFriend(dying)
 	and  dying:hasLordSkill("yanhui") and self.player:getKingdom() == "zhan"
@@ -4432,6 +4420,7 @@ function SmartAI:damageIsEffective(to, nature, from)
 	from = from or self.room:getCurrent()
 	nature = nature or sgs.DamageStruct_Normal
 
+	if to:hasSkill("ciou") then return false end
 	if from:hasSkill("lizhi") and self:isFriend(from,to) then return false end
 	return true
 end
@@ -5862,6 +5851,9 @@ function getBestHp(player)
 	if player:hasSkill("jiushu") then
 		return player:getMaxHp()-2
 	end
+	if player:hasSkills("shanlei+bengluo") then
+		return 2
+	end
 
 	for skill,dec in pairs(arr) do
 		if player:hasSkill(skill) then
@@ -6040,18 +6032,6 @@ function SmartAI:findPlayerToDiscard(flags, include_self, isDiscard, players, re
 					table.insert(player_table, enemy)
 				end
 			end
-		end
-		for _, enemy in ipairs(enemies) do
-			--[[if self:hasSkills("jijiu|beige|mingce|weimu|qingcheng", enemy) and not self:doNotDiscard(enemy, "e") then
-				if enemy:getDefensiveHorse() and (not isDiscard or self.player:canDiscard(enemy, enemy:getDefensiveHorse():getEffectiveId())) then table.insert(player_table, enemy) end
-				if enemy:getArmor() and not self:needToThrowArmor(enemy) and (not isDiscard or self.player:canDiscard(enemy, enemy:getArmor():getEffectiveId())) then table.insert(player_table, enemy) end
-				if enemy:getOffensiveHorse() and (not enemy:hasSkill("jijiu") or enemy:getOffensiveHorse():isRed()) and (not isDiscard or self.player:canDiscard(enemy, enemy:getOffensiveHorse():getEffectiveId())) then
-					table.insert(player_table, enemy)
-				end
-				if enemy:getWeapon() and (not enemy:hasSkill("jijiu") or enemy:getWeapon():isRed()) and (not isDiscard or self.player:canDiscard(enemy, enemy:getWeapon():getEffectiveId())) then
-					table.insert(player_table, enemy)
-				end
-			end]]
 		end
 	end
 
@@ -7314,8 +7294,3 @@ end
 --dofile "lua/ai/sp-ai.lua"
 --dofile "lua/ai/special3v3-ai.lua"
 
-for _, ascenario in ipairs(sgs.Sanguosha:getModScenarioNames()) do
-	if not loaded:match(ascenario) and files:match(string.lower(ascenario)) then
-		dofile("lua/ai/" .. string.lower(ascenario) .. "-ai.lua")
-	end
-end

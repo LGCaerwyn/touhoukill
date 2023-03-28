@@ -207,7 +207,6 @@ public:
         QRect m_seatIconRegion;
         QRect m_seatIconRegionDouble; //hegemony
         QColor m_drankMaskColor;
-        QColor m_duanchangMaskColor;
         QColor m_deathEffectColor;
         QColor m_generalShadowColor; //hegemony
 
@@ -442,14 +441,15 @@ protected:
     PhotoLayout _m_photoLayout;
     CommonLayout _m_commonLayout;
     DashboardLayout _m_dashboardLayout;
-    virtual bool _loadLayoutConfig(const QVariant &layoutConfig);
-    virtual bool _loadAnimationConfig(const QVariant &animationConfig);
+    bool _loadLayoutConfig(const QVariant &layoutConfig) override;
+    bool _loadAnimationConfig(const QVariant &animationConfig) override;
 };
 
 class QSanSkinScheme
 {
     // Why do we need another layer above room skin? Because we may add lobby, login interface
     // in the future; and we may need to assemble a set of different skins into a scheme.
+
 public:
     bool load(const QVariant &configs);
     const QSanRoomSkin &getRoomSkin() const;

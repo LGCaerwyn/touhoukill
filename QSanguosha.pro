@@ -7,21 +7,28 @@ TEMPLATE = app
 CONFIG += audio
 win32: QT += winextras
 
+!equals(QT_MAJOR_VERSION, "5") {
+    error("QSanguosha requires Qt 5 after 5.6.")
+}
+
+lessThan(QT_MINOR_VERSION, 6) {
+    error("QSanguosha requires Qt 5 after 5.6.")
+}
+
 CONFIG += c++11
 CONFIG += lua
 
-VERSION = 0.9.6
+VERSION = 0.10.8
+VERSIONNUMBER = 20221211
 
 CONFIG += precompiled_header
 PRECOMPILED_HEADER = src/pch.h
 
 SOURCES += \
-    swig/sanguosha_wrap.cxx \
     src/client/aux-skills.cpp \
     src/client/client.cpp \
     src/client/clientplayer.cpp \
     src/client/clientstruct.cpp \
-    src/core/banpair.cpp \
     src/core/card.cpp \
     src/core/engine.cpp \
     src/core/general.cpp \
@@ -41,9 +48,9 @@ SOURCES += \
     src/dialog/choosegeneraldialog.cpp \
     src/dialog/configdialog.cpp \
     src/dialog/connectiondialog.cpp \
-    src/dialog/customassigndialog.cpp \
     src/dialog/distanceviewdialog.cpp \
     src/dialog/generaloverview.cpp \
+    src/dialog/updatedialog.cpp \
     src/dialog/mainwindow.cpp \
     src/dialog/roleassigndialog.cpp \
     src/package/exppattern.cpp \
@@ -65,21 +72,16 @@ SOURCES += \
     src/package/th15.cpp \
     src/package/th16.cpp \
     src/package/th17.cpp \
+    src/package/th18.cpp \
     src/package/th99.cpp \
     src/package/thndj.cpp \
     src/package/touhougod.cpp \
     src/package/hegemonyGeneral.cpp \
-    src/scenario/miniscenarios.cpp \
-    src/scenario/scenario.cpp \
-    src/scenario/scenerule.cpp \
     src/server/ai.cpp \
     src/server/gamerule.cpp \
     src/server/generalselector.cpp \
     src/server/room.cpp \
     src/server/roomthread.cpp \
-    src/server/roomthread1v1.cpp \
-    src/server/roomthread3v3.cpp \
-    src/server/roomthreadxmode.cpp \
     src/server/server.cpp \
     src/server/serverplayer.cpp \
     src/ui/bubblechatbox.cpp \
@@ -106,13 +108,13 @@ SOURCES += \
     src/ui/sansimpletextfont.cpp \
     src/ui/sanuiutils.cpp \
     src/ui/SkinBank.cpp \
+    src/ui/sgswindow.cpp \
     src/ui/skinitem.cpp \
     src/ui/sprite.cpp \
     src/ui/startscene.cpp \
     src/ui/TablePile.cpp \
     src/ui/TimedProgressBar.cpp \
     src/ui/uiUtils.cpp \
-    src/ui/window.cpp \
     src/util/detector.cpp \
     src/util/nativesocket.cpp \
     src/util/recorder.cpp \
@@ -125,7 +127,8 @@ SOURCES += \
     src/package/testCard.cpp \
     src/package/hegemonyCard.cpp \
     src/package/playground.cpp \
-    src/ui/hegemonyrolecombobox.cpp
+    src/ui/hegemonyrolecombobox.cpp \
+    src/package/peasants_vs_landlord.cpp
 
 HEADERS += \
     src/client/aux-skills.h \
@@ -133,7 +136,6 @@ HEADERS += \
     src/client/clientplayer.h \
     src/client/clientstruct.h \
     src/core/audio.h \
-    src/core/banpair.h \
     src/core/card.h \
     src/core/compiler-specific.h \
     src/core/engine.h \
@@ -154,9 +156,9 @@ HEADERS += \
     src/dialog/choosegeneraldialog.h \
     src/dialog/configdialog.h \
     src/dialog/connectiondialog.h \
-    src/dialog/customassigndialog.h \
     src/dialog/distanceviewdialog.h \
     src/dialog/generaloverview.h \
+    src/dialog/updatedialog.h \
     src/dialog/mainwindow.h \
     src/dialog/roleassigndialog.h \
     src/package/exppattern.h \
@@ -178,21 +180,16 @@ HEADERS += \
     src/package/th15.h \
     src/package/th16.h \
     src/package/th17.h \
+    src/package/th18.h \
     src/package/th99.h \
     src/package/thndj.h \
     src/package/touhougod.h \
     src/package/hegemonyGeneral.h \
-    src/scenario/miniscenarios.h \
-    src/scenario/scenario.h \
-    src/scenario/scenerule.h \
     src/server/ai.h \
     src/server/gamerule.h \
     src/server/generalselector.h \
     src/server/room.h \
     src/server/roomthread.h \
-    src/server/roomthread1v1.h \
-    src/server/roomthread3v3.h \
-    src/server/roomthreadxmode.h \
     src/server/server.h \
     src/server/serverplayer.h \
     src/ui/bubblechatbox.h \
@@ -219,13 +216,13 @@ HEADERS += \
     src/ui/sansimpletextfont.h \
     src/ui/sanuiutils.h \
     src/ui/SkinBank.h \
+    src/ui/sgswindow.h \
     src/ui/skinitem.h \
     src/ui/sprite.h \
     src/ui/startscene.h \
     src/ui/TablePile.h \
     src/ui/TimedProgressBar.h \
     src/ui/uiUtils.h \
-    src/ui/window.h \
     src/util/detector.h \
     src/util/nativesocket.h \
     src/util/recorder.h \
@@ -239,7 +236,8 @@ HEADERS += \
     src/package/testCard.h \
     src/package/hegemonyCard.h \
     src/package/playground.h \
-    src/pch.h
+    src/pch.h \
+    src/package/peasants_vs_landlord.h
 
 FORMS += \
     src/dialog/cardoverview.ui \
@@ -267,6 +265,8 @@ macx{
     ICON = resource/icon/sgs.icns
 }
 
+DEFINES += "QSGS_VERSION=\\\"$$VERSION\\\""
+DEFINES += "QSGS_VERSIONNUMBER=\\\"$$VERSIONNUMBER\\\""
 
 LIBS += -L.
 win32-msvc*{
@@ -410,14 +410,24 @@ android:DEFINES += "\"getlocaledecpoint()='.'\""
     INCLUDEPATH += src/lua
 }
 
+SWIGFILES += $$_PRO_FILE_PWD_/swig/sanguosha.i
+
+SWIG_bin = "swig"
+contains(QMAKE_HOST.os, "Windows"): SWIG_bin = "$$_PRO_FILE_PWD_/tools/swig/swig.exe"
+
+swig.commands = "$$system_path($$SWIG_bin) -c++ -lua -cppext cpp -o ${QMAKE_FILE_OUT} ${QMAKE_FILE_NAME}"
+swig.CONFIG = target_predeps
+swig.dependency_type = TYPE_C
+swig.depends = $$SWIGFILES
+swig.input = SWIGFILES
+swig.name = "Generating ${QMAKE_FILE_NAME}..."
+swig.output = ${QMAKE_FILE_BASE}_wrap.cpp
+swig.variable_out = SOURCES
+
+QMAKE_EXTRA_COMPILERS += swig
 
 !build_pass{
     system("$$dirname(QMAKE_QMAKE)/lrelease $$_PRO_FILE_PWD_/builds/sanguosha.ts -qm $$_PRO_FILE_PWD_/sanguosha.qm")
-
-    SWIG_bin = "swig"
-    contains(QMAKE_HOST.os, "Windows"): SWIG_bin = "$$_PRO_FILE_PWD_/tools/swig/swig.exe"
-
-    system("$$SWIG_bin -c++ -lua $$_PRO_FILE_PWD_/swig/sanguosha.i")
 }
 
 TRANSLATIONS += builds/sanguosha.ts

@@ -5,11 +5,12 @@
 #include <QStringList>
 #include <QTcpSocket>
 #include <QUdpSocket>
+#include <QUrl>
 
 NativeServerSocket::NativeServerSocket()
 {
     server = new QTcpServer(this);
-    daemon = NULL;
+    daemon = nullptr;
     connect(server, SIGNAL(newConnection()), this, SLOT(processNewConnection()));
 }
 

@@ -4,9 +4,6 @@
 config = {
 	developers = {
 	},
-	
-	withHeroSkin = false,
-	withBgm = false,
 
 	kingdoms = {
 		"zhu",
@@ -22,6 +19,8 @@ config = {
 		"hzc",
 		"gzz",
 		"tkz",
+		"gxs",
+		-- "hld",
 		"wai",
 		"touhougod"
 	},
@@ -43,6 +42,7 @@ config = {
 		gzz = "#005AD7" ,
 		tkz = "#48D1CC",
 		gxs = "#ff8080",
+		hld = "#ff0000",
 		wai = "#cc7014",
 		touhougod = "#96943D",
 		
@@ -62,6 +62,7 @@ config = {
 		"HegemonyCard",
 
 		--武将包
+		"PeasantsVSLandlord",
 		"Protagonist",
 		"TH0105",
 		"TH06",
@@ -74,7 +75,9 @@ config = {
 		"TH13",
 		"TH14",
 		"TH15",
-		"TH16", 
+		"TH16",
+		"TH17", 
+		-- "TH18", 
 		"TH99",
 		"THNDJ",
 		"TouhouGod",
@@ -82,6 +85,7 @@ config = {
 		"Standard", --此包内带pattern的定义 不能屏蔽。。。
 		"Test",
 		"Playground", -- 发布前再次屏蔽掉
+		
 	},
 
 	hulao_packages = {
@@ -142,6 +146,12 @@ config = {
 	roles_ban = {
 	},
 
+	peasantsvslandlord_ban = {
+	},
+	
+	contest2v2_ban = {
+	},
+	
 	kof_ban = {
 	},
 
@@ -155,36 +165,7 @@ config = {
 	},
 
 	hegemony_ban = {		
-	"zun",
-    "yukari_god",
-    "remilia_god",
-    "cirno_god",
-    "utsuho_god",
-    "suika_god",
-    "flandre_god",
-    "sakuya_god",
-    "youmu_god",
-    "reisen_god",
-    "sanae_god",
-    "reimu_god",
-    "shikieiki_god",
-    "meirin_god",
-    "eirin_god",
-	"kanako_god",
-    "byakuren_god",
-	"koishi_god",
-	"suwako_god",
-	"miko_god",
-	"kaguya_god",
-	"komachi_god",
-	"yuyuko_god",
-	"satori_god",
-    "aya_god",
-	"seiga_god",
-	"nue_god",
-	"marisa_god",
-	"patchouli_god",
-	"alice_god",
+	
 	},
 	
 	pairs_ban = {
@@ -224,15 +205,29 @@ config = {
 		"lunasa|merlin|lyrica->prismriver",
 	},
 	latest_generals = {
-		"satori_god","marisa_god",
-		"nue_god",
-		
-		"chen",
-		"sumireko_sp", "yorigamis",
-		"parsee",
-		"futo",
-		"okina", "okina_sp","eternity", "nemuno", "aun", "narumi", "satono", "mai", "lilywhite_sp",
-		"eirin_ndj", "tenshi_ndj",
-		"yuka_god", "patchouli_god", "tenshi_god",
+		-- 0.10.2
+		"kasen_sp",
+		-- 0.10.3
+		"keiki","eika","urumi","kutaka","yachie","mayumi","saki",
+		-- 0.10.5
+		"rika", "elis", "luize",
+		-- 0.10.6
+		"eirin_ndj",
 	}
 }
+
+local f = io.open("audio/bgm/version.txt")
+if f then
+	config.withBgm = f:read("*L")
+	f:close()
+else
+	config.withBgm = "N/A"
+end
+
+f = io.open("image/heroskin/version.txt")
+if f then
+	config.withHeroSkin = f:read("*L")
+	f:close()
+else
+	config.withHeroSkin = "N/A"
+end

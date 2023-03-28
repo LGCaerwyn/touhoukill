@@ -12,7 +12,7 @@ ServerInfoStruct ServerInfo;
 
 time_t ServerInfoStruct::getCommandTimeout(QSanProtocol::CommandType command, QSanProtocol::ProcessInstanceType instance, int operationRate)
 {
-    time_t timeOut;
+    time_t timeOut = 0;
     if (OperationTimeout == 0)
         return 0;
     else if (command == QSanProtocol::S_COMMAND_CHOOSE_GENERAL || command == QSanProtocol::S_COMMAND_ASK_GENERAL)
@@ -57,9 +57,6 @@ bool ServerInfoStruct::parse(const QString &str)
         QStringList ban_packages = texts.at(5).split("+");
         QList<const Package *> packages = Sanguosha->findChildren<const Package *>();
         foreach (const Package *package, packages) {
-            if (package->inherits("Scenario"))
-                continue;
-
             QString package_name = package->objectName();
             if (ban_packages.contains(package_name))
                 package_name = "!" + package_name;
@@ -137,7 +134,7 @@ ServerInfoWidget::ServerInfoWidget(bool show_lack)
         lack_label = new QLabel;
         layout->addRow(tr("Lack"), lack_label);
     } else
-        lack_label = NULL;
+        lack_label = nullptr;
 
     setLayout(layout);
 }
@@ -203,7 +200,7 @@ void ServerInfoWidget::fill(const ServerInfoStruct &info, const QString &address
 
 void ServerInfoWidget::updateLack(int count)
 {
-    if (lack_label) {
+    if (lack_label != nullptr) {
         QString path = QString("image/system/number/%1.png").arg(count);
         lack_label->setPixmap(QPixmap(path));
     }

@@ -10,16 +10,18 @@
 #include <QDialog>
 #include <QListWidget>
 
+class QLabel;
 class UdpDetector;
 
 class AvatarModel : public QAbstractListModel
 {
     Q_OBJECT
+
 public:
     explicit AvatarModel(const QList<const General *> &list);
 
-    virtual int rowCount(const QModelIndex &) const;
-    virtual QVariant data(const QModelIndex &index, int role) const;
+    int rowCount(const QModelIndex &) const override;
+    QVariant data(const QModelIndex &index, int role) const override;
 
 private:
     QList<const General *> list;
@@ -31,12 +33,12 @@ class ConnectionDialog : public QDialog
 
 public:
     explicit ConnectionDialog(QWidget *parent);
-    ~ConnectionDialog();
+    ~ConnectionDialog() override;
     void hideAvatarList();
     void showAvatarList();
 
 public slots:
-    void accept();
+    void accept() override;
 
 private slots:
     void on_detectLANButton_clicked();
@@ -55,7 +57,7 @@ private:
     QSize expandSize;
 
 private:
-    void showEvent(QShowEvent *e);
+    void showEvent(QShowEvent *e) override;
 };
 
 class UdpDetectorDialog : public QDialog

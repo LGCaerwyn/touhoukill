@@ -32,10 +32,10 @@ class JsonDocument
 {
 public:
     JsonDocument();
-    JsonDocument(const QVariant &var);
+    explicit JsonDocument(const QVariant &var);
 
-    JsonDocument(const JsonArray &array);
-    JsonDocument(const JsonObject &object);
+    explicit JsonDocument(const JsonArray &array);
+    explicit JsonDocument(const JsonObject &object);
 
     QByteArray toJson(bool isIndented = false) const;
     static JsonDocument fromJson(const QByteArray &json, bool allowComment = false);
@@ -81,8 +81,9 @@ namespace JsonUtils {
 
 inline bool isNumber(const QVariant &var)
 {
-    //three number types defined by JsonCPP
-    return var.userType() == QMetaType::Double || var.userType() == QMetaType::Int || var.userType() == QMetaType::UInt;
+    return var.userType() == QMetaType::Double || var.userType() == QMetaType::Int || var.userType() == QMetaType::UInt || var.userType() == QMetaType::Long
+        || var.userType() == QMetaType::LongLong || var.userType() == QMetaType::ULong || var.userType() == QMetaType::ULongLong || var.userType() == QMetaType::UShort
+        || var.userType() == QMetaType::Short;
 }
 
 inline bool isString(const QVariant &var)
@@ -112,6 +113,6 @@ bool tryParse(const QVariant &arg, QSize &result);
 bool tryParse(const QVariant &arg, QPoint &result);
 bool tryParse(const QVariant &arg, QColor &result);
 bool tryParse(const QVariant &arg, Qt::Alignment &align);
-}
+} // namespace JsonUtils
 
 #endif // JSON_H

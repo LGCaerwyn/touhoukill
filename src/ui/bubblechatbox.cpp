@@ -19,13 +19,13 @@ const int ANIMATION_DURATION = 500;
 class BubbleChatLabel : public QGraphicsTextItem
 {
 public:
-    explicit BubbleChatLabel(QGraphicsItem *parent = 0)
+    explicit BubbleChatLabel(QGraphicsItem *parent = nullptr)
         : QGraphicsTextItem(parent)
         , m_doc(document())
     {
     }
 
-    virtual QRectF boundingRect() const
+    QRectF boundingRect() const override
     {
         return m_rect;
     }
@@ -164,7 +164,7 @@ void BubbleChatBox::setArea(const QRect &newArea)
 
 QVariant BubbleChatBox::itemChange(GraphicsItemChange change, const QVariant &value)
 {
-    if (change == ItemSceneHasChanged && scene()) {
+    if (change == ItemSceneHasChanged && (scene() != nullptr)) {
         scene()->addItem(m_chatLabel);
     }
 

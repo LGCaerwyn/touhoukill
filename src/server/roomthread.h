@@ -47,7 +47,7 @@ public:
     void constructTriggerTable();
     bool trigger(TriggerEvent triggerEvent, Room *room);
 
-    void getSkillAndSort(TriggerEvent triggerEvent, Room *room, QList<QSharedPointer<SkillInvokeDetail> > &detailsList, const QList<QSharedPointer<SkillInvokeDetail> > &triggered,
+    void getSkillAndSort(TriggerEvent triggerEvent, Room *room, QList<QSharedPointer<SkillInvokeDetail>> &detailsList, const QList<QSharedPointer<SkillInvokeDetail>> &triggered,
                          const QVariant &data);
     bool trigger(TriggerEvent triggerEvent, Room *room,
                  QVariant &data); // player is deleted. a lot of things is able to put in data. make a struct for every triggerevent isn't absolutely unreasonable.
@@ -75,7 +75,7 @@ public:
 
     inline bool hasExtraTurn() const
     {
-        return nextExtraTurn != NULL;
+        return nextExtraTurn != nullptr;
     }
 
     inline ServerPlayer *getNextExtraTurn() const
@@ -94,7 +94,7 @@ public:
     }
 
 protected:
-    virtual void run();
+    void run() override;
 
 private:
     void _handleTurnBroken3v3(QList<ServerPlayer *> &first, QList<ServerPlayer *> &second, GameRule *game_rule);

@@ -19,14 +19,13 @@
     *********************************************************************/
 
 #include "choosegeneralbox.h"
-#include "banpair.h"
 #include "button.h"
 #include "cardcontainer.h"
 #include "choosegeneraldialog.h" //#include "freechoosedialog.h"
 #include "client.h"
 #include "clientplayer.h"
 #include "engine.h"
-#include "skinbank.h"
+#include "SkinBank.h"
 
 #include <QApplication>
 #include <QGraphicsProxyWidget>
@@ -150,9 +149,9 @@ ChooseGeneralBox::ChooseGeneralBox()
     , single_result(false)
     , m_viewOnly(false)
     , confirm(new Button(tr("fight"), 0.6))
-    , progress_bar(NULL)
+    , progress_bar(nullptr)
 {
-    confirm->setEnabled(ClientInstance->getReplayer());
+    confirm->setEnabled(ClientInstance->getReplayer() != nullptr);
     confirm->setParentItem(this);
     connect(confirm, &Button::clicked, this, &ChooseGeneralBox::reply);
 }
@@ -238,7 +237,7 @@ void ChooseGeneralBox::paintLayout(QPainter *painter)
 QRectF ChooseGeneralBox::boundingRect() const
 {
     //confirm the general count of the first and second row
-    int first_row, second_row = 0;
+    int first_row = 0, second_row = 0;
 
     //arrange them in two rows if there are more than 6 generals.
     //Number of cards in the second row cannot be greater than that in the first row
@@ -254,7 +253,7 @@ QRectF ChooseGeneralBox::boundingRect() const
 
     int height = top_blank_width + G_COMMON_LAYOUT.m_cardNormalHeight + bottom_blank_width;
 
-    if (second_row)
+    if (second_row != 0)
         height += (card_to_center_line + G_COMMON_LAYOUT.m_cardNormalHeight);
 
     //No need to reserve space for button
@@ -280,7 +279,7 @@ static bool sortByKingdom(const QString &gen1, const QString &gen2)
     const General *g1 = Sanguosha->getGeneral(gen1);
     const General *g2 = Sanguosha->getGeneral(gen2);
 
-    if (g1 != NULL && g2 != NULL)
+    if (g1 != nullptr && g2 != nullptr)
         return kingdom_priority_map[g1->getKingdom()] < kingdom_priority_map[g2->getKingdom()];
     else
         return false;
@@ -412,7 +411,7 @@ void ChooseGeneralBox::chooseGeneral(const QStringList &_generals, bool view_onl
         _initializeItems();
 
     if (view_only || ServerInfo.OperationTimeout != 0) {
-        if (!progress_bar) {
+        if (progress_bar == nullptr) {
             progress_bar = new QSanCommandProgressBar();
             progress_bar->setMaximumWidth(boundingRect().width() - 10);
             progress_bar->setMaximumHeight(12);
@@ -436,7 +435,7 @@ void ChooseGeneralBox::chooseGeneral(const QStringList &_generals, bool view_onl
 void ChooseGeneralBox::_adjust()
 {
     GeneralCardItem *item = qobject_cast<GeneralCardItem *>(sender());
-    if (item == NULL)
+    if (item == nullptr)
         return;
 
     int middle_y = top_blank_width + G_COMMON_LAYOUT.m_cardNormalHeight + card_bottom_to_split_line;
@@ -584,10 +583,10 @@ void ChooseGeneralBox::_initializeItems()
 
 void ChooseGeneralBox::reply()
 {
-    if (progress_bar != NULL) {
+    if (progress_bar != nullptr) {
         progress_bar->hide();
         progress_bar->deleteLater();
-        progress_bar = NULL;
+        progress_bar = nullptr;
     }
 
     if (m_viewOnly)
@@ -619,7 +618,7 @@ void ChooseGeneralBox::clear()
 void ChooseGeneralBox::_onItemClicked()
 {
     GeneralCardItem *item = qobject_cast<GeneralCardItem *>(sender());
-    if (item == NULL)
+    if (item == nullptr)
         return;
 
     if (single_result) {

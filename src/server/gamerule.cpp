@@ -29,7 +29,7 @@ int GameRule::getPriority() const
 
 QList<SkillInvokeDetail> GameRule::triggerable(TriggerEvent, const Room *, const QVariant &) const
 {
-    return QList<SkillInvokeDetail>() << SkillInvokeDetail(this, NULL, NULL, NULL, true);
+    return QList<SkillInvokeDetail>() << SkillInvokeDetail(this, nullptr, nullptr, nullptr, true);
 }
 
 void GameRule::onPhaseProceed(ServerPlayer *player) const
@@ -60,7 +60,7 @@ void GameRule::onPhaseProceed(ServerPlayer *player) const
                 break;
             const Card *trick = tricks.takeLast();
 
-            bool on_effect = room->cardEffect(trick, NULL, player);
+            bool on_effect = room->cardEffect(trick, nullptr, player);
             effected << trick;
             if (!on_effect)
                 trick->onNullified(player);
@@ -79,7 +79,7 @@ void GameRule::onPhaseProceed(ServerPlayer *player) const
         s.isInitial = false;
         s.n = num;
         QVariant qnum = QVariant::fromValue(s);
-        Q_ASSERT(room->getThread() != NULL);
+        Q_ASSERT(room->getThread() != nullptr);
         room->getThread()->trigger(DrawNCards, room, qnum);
         s = qnum.value<DrawNCardsStruct>();
         num = s.n;
@@ -94,7 +94,7 @@ void GameRule::onPhaseProceed(ServerPlayer *player) const
         while (player->isAlive()) {
             CardUseStruct card_use;
             room->activate(player, card_use);
-            if (card_use.card != NULL)
+            if (card_use.card != nullptr)
                 room->useCard(card_use);
             else
                 break;
@@ -128,7 +128,7 @@ bool GameRule::effect(TriggerEvent triggerEvent, Room *room, QSharedPointer<Skil
     case GameStart: {
         if (data.isNull()) {
             foreach (ServerPlayer *player, room->getPlayers()) {
-                Q_ASSERT(player->getGeneral() != NULL);
+                Q_ASSERT(player->getGeneral() != nullptr);
                 if (!isHegemonyGameMode(room->getMode()) && (player->getGeneral()->getKingdom() == "zhu" || player->getGeneral()->getKingdom() == "touhougod")
                     && player->getGeneralName() != "anjiang") {
                     QString new_kingdom = room->askForKingdom(player);
@@ -157,12 +157,29 @@ bool GameRule::effect(TriggerEvent triggerEvent, Room *room, QSharedPointer<Skil
                             room->setPlayerMark(player, skill->getLimitMark(), 1);
                     }
                 }
+                if (room->getMode() == "03_1v2") {
+                    if (player->isLord()) {
+                        room->handleAcquireDetachSkills(player, "zhubing");
+                        room->handleAcquireDetachSkills(player, "cadan");
+                    } else
+                        room->handleAcquireDetachSkills(player, "jili");
+                }
             }
             room->setTag("FirstRound", true);
             bool kof_mode = room->getMode() == "02_1v1" && Config.value("1v1/Rule", "2013").toString() != "Classical";
             QList<DrawNCardsStruct> s_list;
             foreach (ServerPlayer *p, room->getPlayers()) {
                 int n = kof_mode ? p->getMaxHp() : 4;
+                if (room->getMode() == "03_1v2" && p->isLord())
+                    n++;
+
+                if (room->getMode() == "04_2v2") {
+                    if (p->getSeat() == 1)
+                        n--;
+                    else if (p->getSeat() == 4)
+                        n++;
+                }
+
                 DrawNCardsStruct s;
                 s.player = p;
                 s.isInitial = true;
@@ -186,7 +203,7 @@ bool GameRule::effect(TriggerEvent triggerEvent, Room *room, QSharedPointer<Skil
     }
     case TurnStart: {
         ServerPlayer *player = room->getCurrent();
-        if (player == NULL)
+        if (player == nullptr)
             return false;
         if (room->getTag("FirstRound").toBool()) {
             room->setTag("FirstRound", false);
@@ -230,7 +247,7 @@ bool GameRule::effect(TriggerEvent triggerEvent, Room *room, QSharedPointer<Skil
     }
     case EventPhaseStart: {
         ServerPlayer *current = data.value<ServerPlayer *>();
-        if (current && current->getPhase() == Player::Finish && !current->getBrokenEquips().isEmpty())
+        if ((current != nullptr) && current->getPhase() == Player::Finish && !current->getBrokenEquips().isEmpty() && !current->hasFlag("GameRule_brokenEquips"))
             current->removeBrokenEquips(current->getBrokenEquips());
         break;
     }
@@ -315,7 +332,7 @@ bool GameRule::effect(TriggerEvent triggerEvent, Room *room, QSharedPointer<Skil
             if (card_use.card->hasPreAction())
                 card_use.card->doPreAction(room, card_use);
 
-            if (card_use.from) {
+            if (card_use.from != nullptr) {
                 thread->trigger(TargetSpecifying, room, data);
                 card_use = data.value<CardUseStruct>();
             }
@@ -325,20 +342,22 @@ bool GameRule::effect(TriggerEvent triggerEvent, Room *room, QSharedPointer<Skil
                 card_use = data.value<CardUseStruct>();
             }
 
-            //1) exclude SkillCard 2)changed move reason (USE) 3)keep extraData
-            if (card_use.card && card_use.card->getTypeId() != Card::TypeSkill && !(card_use.card->isVirtualCard() && card_use.card->getSubcards().isEmpty())
-                && card_use.to.isEmpty()) {
+            //2)changed move reason (USE) 3)keep extraData
+            if ((card_use.card != nullptr) && !(card_use.card->isVirtualCard() && card_use.card->getSubcards().isEmpty()) && card_use.to.isEmpty()) {
                 if (room->getCardPlace(card_use.card->getEffectiveId()) == Player::PlaceTable) {
                     CardMoveReason reason(CardMoveReason::S_REASON_USE, card_use.from->objectName(), QString(), card_use.card->getSkillName(), QString());
                     reason.m_extraData = QVariant::fromValue(card_use.card);
-                    room->moveCardTo(card_use.card, card_use.from, NULL, Player::DiscardPile, reason, true);
+                    room->moveCardTo(card_use.card, card_use.from, nullptr, Player::DiscardPile, reason, true);
                     //break;
                 }
             }
             //since use.to is empty, break the whole process
-            if (card_use.card && card_use.card->getTypeId() != Card::TypeSkill && card_use.to.isEmpty()) {
-                if (card_use.card->isKindOf("Slash") && card_use.from->isAlive())
+            if ((card_use.card != nullptr) && card_use.to.isEmpty()) {
+                if (card_use.card->isKindOf("Slash") && card_use.from->isAlive()) {
                     room->setPlayerMark(card_use.from, "drank", 0);
+                    room->setPlayerMark(card_use.from, "magic_drank", 0);
+                }
+
                 if (card_use.card->isNDTrick() && card_use.from->isAlive()) //clear magic_drank while using Nullification
                     room->setPlayerMark(card_use.from, "magic_drank", 0);
                 break;
@@ -356,16 +375,21 @@ bool GameRule::effect(TriggerEvent triggerEvent, Room *room, QSharedPointer<Skil
                         jink_list.append(QVariant(jink_num));
                     card_use.from->tag["Jink_" + card_use.card->toString()] = QVariant::fromValue(jink_list);
                 }
-                if (card_use.from && !card_use.to.isEmpty()) {
+                if ((card_use.from != nullptr) && !card_use.to.isEmpty()) {
                     thread->trigger(TargetSpecified, room, data);
                     thread->trigger(TargetConfirmed, room, data);
                 }
-                card_use = data.value<CardUseStruct>();
+
+                // only copy limited data after TargetConfirmed since the from / to / card, etc are fixed
+                CardUseStruct newcard_use = data.value<CardUseStruct>();
+                card_use.m_effectValue = newcard_use.m_effectValue;
+                card_use.nullified_list = newcard_use.nullified_list;
+
                 room->setTag("CardUseNullifiedList", QVariant::fromValue(card_use.nullified_list));
                 if (card_use.card->isNDTrick() && !card_use.card->isKindOf("Nullification"))
                     room->setCardFlag(card_use.card, "LastTrickTarget_" + card_use.to.last()->objectName());
 
-                card_use.card->use(room, card_use.from, card_use.to);
+                card_use.card->use(room, card_use);
                 if (!jink_list_backup.isEmpty())
                     card_use.from->tag["Jink_" + card_use.card->toString()] = QVariant::fromValue(jink_list_backup);
             } catch (TriggerEvent triggerEvent) {
@@ -378,7 +402,7 @@ bool GameRule::effect(TriggerEvent triggerEvent, Room *room, QSharedPointer<Skil
                         CardMoveReason reason(CardMoveReason::S_REASON_UNKNOWN, card_use.from->objectName(), QString(), card_use.card->getSkillName(), QString());
                         if (card_use.to.size() == 1)
                             reason.m_targetId = card_use.to.first()->objectName();
-                        room->moveCardTo(card_use.card, card_use.from, NULL, Player::DiscardPile, reason, true);
+                        room->moveCardTo(card_use.card, card_use.from, nullptr, Player::DiscardPile, reason, true);
                     }
                     QVariant data = QVariant::fromValue(card_use);
                     card_use.from->setFlags("Global_ProcessBroken");
@@ -398,7 +422,7 @@ bool GameRule::effect(TriggerEvent triggerEvent, Room *room, QSharedPointer<Skil
 
                     foreach (int id, Sanguosha->getRandomCards()) {
                         if (room->getCardPlace(id) == Player::PlaceTable || room->getCardPlace(id) == Player::PlaceJudge)
-                            room->moveCardTo(Sanguosha->getCard(id), NULL, Player::DiscardPile, true);
+                            room->moveCardTo(Sanguosha->getCard(id), nullptr, Player::DiscardPile, true);
                         if (Sanguosha->getCard(id)->hasFlag("using"))
                             room->setCardFlag(id, "-using");
                     }
@@ -439,12 +463,12 @@ bool GameRule::effect(TriggerEvent triggerEvent, Room *room, QSharedPointer<Skil
         break;
     }
     case PostHpReduced: {
-        ServerPlayer *player = NULL;
+        ServerPlayer *player = nullptr;
         if (data.canConvert<DamageStruct>())
             player = data.value<DamageStruct>().to;
         else if (data.canConvert<HpLostStruct>())
             player = data.value<HpLostStruct>().player;
-        if (player == NULL)
+        if (player == nullptr)
             break;
 
         if (player->getHp() >= player->dyingThreshold())
@@ -454,24 +478,23 @@ bool GameRule::effect(TriggerEvent triggerEvent, Room *room, QSharedPointer<Skil
             DamageStruct damage = data.value<DamageStruct>();
             room->enterDying(player, &damage);
         } else
-            room->enterDying(player, NULL);
+            room->enterDying(player, nullptr);
 
         break;
     }
     case AskForPeaches: {
         DyingStruct dying = data.value<DyingStruct>();
-        const Card *peach = NULL;
         int threshold = dying.who->dyingThreshold();
 
         while (dying.who->getHp() < threshold) {
-            peach = NULL;
+            CardUseStruct use;
 
             if (dying.who->isAlive())
-                peach = room->askForSinglePeach(dying.nowAskingForPeaches, dying.who);
+                room->askForSinglePeach(dying.nowAskingForPeaches, dying.who, use);
 
-            if (peach == NULL)
+            if (use.card == nullptr)
                 break;
-            room->useCard(CardUseStruct(peach, dying.nowAskingForPeaches, dying.who), false);
+            room->useCard(use, false);
             threshold = dying.who->dyingThreshold();
         }
         break;
@@ -486,7 +509,7 @@ bool GameRule::effect(TriggerEvent triggerEvent, Room *room, QSharedPointer<Skil
     }
     case ConfirmDamage: {
         DamageStruct damage = data.value<DamageStruct>();
-        if (damage.card && damage.to->getMark("SlashIsDrank") > 0) {
+        if ((damage.card != nullptr) && damage.to->getMark("SlashIsDrank") > 0) {
             LogMessage log;
             log.type = "#AnalepticBuff";
             log.from = damage.from;
@@ -507,8 +530,8 @@ bool GameRule::effect(TriggerEvent triggerEvent, Room *room, QSharedPointer<Skil
     }
     case DamageDone: {
         DamageStruct damage = data.value<DamageStruct>();
-        if (damage.from && !damage.from->isAlive())
-            damage.from = NULL;
+        if ((damage.from != nullptr) && !damage.from->isAlive())
+            damage.from = nullptr;
         data = QVariant::fromValue(damage);
         room->sendDamageLog(damage);
 
@@ -585,9 +608,6 @@ bool GameRule::effect(TriggerEvent triggerEvent, Room *room, QSharedPointer<Skil
                 }
             }
             if (effect.to->isAlive() || effect.card->isKindOf("Slash")) {
-                //record for skill tianxie
-                if (!effect.card->isKindOf("Slash"))
-                    room->setCardFlag(effect.card, "tianxieEffected_" + effect.to->objectName());
                 //do chunhua effect
                 if (effect.card->hasFlag("chunhua") && !effect.card->isKindOf("Slash")) {
                     room->touhouLogmessage("#Chunhua", effect.to, effect.card->objectName());
@@ -687,7 +707,8 @@ bool GameRule::effect(TriggerEvent triggerEvent, Room *room, QSharedPointer<Skil
                         effect.effectValue.first() = 0;
 
                     delete extraCard;
-                    effect.card->onEffect(effect); //do original effect
+                    if (effect.to->isAlive())
+                        effect.card->onEffect(effect); //do original effect
 
                     /*
                     if (effect.card->isNDTrick()) {
@@ -791,29 +812,29 @@ bool GameRule::effect(TriggerEvent triggerEvent, Room *room, QSharedPointer<Skil
         // process skill cancel, like (obsolete) kuangluan and (current) bmmaoji.
         if (room->getThread()->trigger(Cancel, room, data)) {
             effect = data.value<SlashEffectStruct>();
-            room->slashResult(effect, NULL);
+            room->slashResult(effect, nullptr);
             break;
         }
 
         if (effect.jink_num == 0) {
-            room->slashResult(effect, NULL);
+            room->slashResult(effect, nullptr);
             break;
         }
         if (effect.jink_num == 1) {
             const Card *jink = room->askForCard(effect.to, "jink", "slash-jink:" + slasher, data, Card::MethodUse, effect.from);
-            room->slashResult(effect, room->isJinkEffected(effect, jink) ? jink : NULL);
+            room->slashResult(effect, room->isJinkEffected(effect, jink) ? jink : nullptr);
         } else {
             DummyCard *jink = new DummyCard;
             // Since GameRule is created by RoomThread not Engine, and this function also runs at RoomThread not main thread, so this jink must be on the RoomThread
             // Because the RoomThread has no event loop, so a deleteLater is absolutely safe for it can be deleted only by the time of the deletion of RoomThread
             jink->deleteLater();
-            const Card *asked_jink = NULL;
+            const Card *asked_jink = nullptr;
             for (int i = effect.jink_num; i > 0; i--) {
                 QString prompt = QString("@multi-jink%1:%2::%3").arg(i == effect.jink_num ? "-start" : QString()).arg(slasher).arg(i);
                 asked_jink = room->askForCard(effect.to, "jink", prompt, data, Card::MethodUse, effect.from);
                 if (!room->isJinkEffected(effect, asked_jink)) {
                     delete jink;
-                    room->slashResult(effect, NULL);
+                    room->slashResult(effect, nullptr);
                     return false;
                 } else {
                     jink->addSubcard(asked_jink->getEffectiveId());
@@ -826,11 +847,11 @@ bool GameRule::effect(TriggerEvent triggerEvent, Room *room, QSharedPointer<Skil
     }
     case JinkEffect: {
         JinkEffectStruct j = data.value<JinkEffectStruct>();
-        if (j.jink != NULL && j.jink->getSkillName() == "xianshi") {
+        if (j.jink != nullptr && j.jink->getSkillName() == "xianshi") {
             SlashEffectStruct effect = j.slashEffect;
 
             QString xianshi_name = effect.to->property("xianshi_card").toString();
-            if (xianshi_name != NULL && effect.from && effect.to && effect.from->isAlive() && effect.to->isAlive()) {
+            if (xianshi_name != nullptr && (effect.from != nullptr) && (effect.to != nullptr) && effect.from->isAlive() && effect.to->isAlive()) {
                 Card *extraCard = Sanguosha->cloneCard(xianshi_name);
                 if (extraCard->isKindOf("Slash")) {
                     DamageStruct::Nature nature = DamageStruct::Normal;
@@ -890,10 +911,10 @@ bool GameRule::effect(TriggerEvent triggerEvent, Room *room, QSharedPointer<Skil
             }
         }
 
-        if (j.jink != NULL && j.jink->isKindOf("NatureJink")) {
+        if (j.jink != nullptr && j.jink->isKindOf("NatureJink")) {
             SlashEffectStruct effect = j.slashEffect;
             //process advanced_jink
-            if (effect.from && effect.to && effect.from->isAlive() && effect.to->isAlive()) {
+            if ((effect.from != nullptr) && (effect.to != nullptr) && effect.from->isAlive() && effect.to->isAlive()) {
                 CardEffectStruct new_effect;
                 new_effect.card = j.jink;
                 new_effect.from = effect.to;
@@ -937,16 +958,16 @@ bool GameRule::effect(TriggerEvent triggerEvent, Room *room, QSharedPointer<Skil
                 extraEffect.from = effect.from;
                 extraEffect.to = effect.to;
                 extraEffect.multiple = effect.multiple;
-                extraEffect.effectValue.first() = extraEffect.effectValue.first(); //+effect.drank;
+                extraEffect.effectValue.first() += effect.effectValue.first();
                 extraCard->onEffect(extraEffect);
             } else if (extraCard->isKindOf("Analeptic")) {
                 RecoverStruct recover;
                 recover.card = effect.slash;
                 recover.who = effect.from;
-                recover.recover = 1; //+effect.drank;
+                recover.recover += effect.effectValue.first();
                 room->recover(effect.to, recover);
             } else if (extraCard->isKindOf("AmazingGrace")) {
-                effect.from->getRoom()->doExtraAmazingGrace(effect.from, effect.to, 1);
+                effect.from->getRoom()->doExtraAmazingGrace(effect.from, effect.to, 1 + effect.effectValue.first());
             } else {
                 extraEffect.card = effect.slash;
                 extraEffect.from = effect.from;
@@ -959,13 +980,17 @@ bool GameRule::effect(TriggerEvent triggerEvent, Room *room, QSharedPointer<Skil
                     else
                         extraEffect.effectValue.last() = extraEffect.effectValue.last() + effect.drank;
                 }
+                extraEffect.effectValue.first() += effect.effectValue.first();
                 extraCard->onEffect(extraEffect);
             }
 
             delete extraCard;
-            //effect.drank = 0;
+            effect.effectValue.first() -= effect.magic_drank;
+            effect.magic_drank = 0;
         }
 
+        if (effect.to->isDead())
+            break;
         //@todo: I want IronSlash to obtain function debuffEffect() from "Slash"  as an inheritance, But the variant slasheffect.slash is "Card".
         //using dynamic_cast may bring some terrible troubles.
         if (effect.slash->isKindOf("DebuffSlash") && !effect.slash->hasFlag("chunhua_black")) {
@@ -977,13 +1002,15 @@ bool GameRule::effect(TriggerEvent triggerEvent, Room *room, QSharedPointer<Skil
                 PowerSlash::debuffEffect(effect);
         }
 
-        if (effect.drank > 0)
-            effect.to->setMark("SlashIsDrank", effect.drank);
+        if (effect.drank > 0 || effect.magic_drank > 0) {
+            int drank_num = (effect.slash->isKindOf("LightSlash") || effect.slash->isKindOf("PowerSlash")) ? effect.drank : effect.drank + effect.magic_drank;
+            effect.to->setMark("SlashIsDrank", drank_num);
+        }
 
         DamageStruct d = DamageStruct(effect.slash, effect.from, effect.to, 1 + effect.effectValue.last(), effect.nature);
         foreach (ServerPlayer *p, room->getAllPlayers(true)) {
             if (effect.slash->hasFlag("WushenDamage_" + p->objectName())) {
-                d.from = p->isAlive() ? p : NULL;
+                d.from = p->isAlive() ? p : nullptr;
                 d.by_user = false;
                 break;
             }
@@ -998,7 +1025,7 @@ bool GameRule::effect(TriggerEvent triggerEvent, Room *room, QSharedPointer<Skil
         if (isHegemonyGameMode(room->getMode())) {
             if (!player->hasShownGeneral())
                 player->showGeneral(true, false, false);
-            if (player->getGeneral2() && !player->hasShownGeneral2())
+            if ((player->getGeneral2() != nullptr) && !player->hasShownGeneral2())
                 player->showGeneral(false, false, false);
         }
 
@@ -1024,26 +1051,38 @@ bool GameRule::effect(TriggerEvent triggerEvent, Room *room, QSharedPointer<Skil
     case BuryVictim: {
         DeathStruct death = data.value<DeathStruct>();
         bool skipRewardAndPunish = death.who->hasFlag("skipRewardAndPunish") ? true : false;
+        if (room->getMode() == "03_1v2" || room->getMode() == "04_2v2")
+            skipRewardAndPunish = true;
         death.who->bury();
 
-        if (room->getTag("SkipNormalDeathProcess").toBool())
-            return false;
-
-        ServerPlayer *killer = NULL;
+        ServerPlayer *killer = nullptr;
         if (death.useViewAsKiller)
             killer = death.viewAsKiller;
-        else if (death.damage)
+        else if (death.damage != nullptr)
             killer = death.damage->from;
 
-        if (killer) {
+        if (killer != nullptr) {
             room->setPlayerMark(killer, "multi_kill_count", killer->getMark("multi_kill_count") + 1);
             int kill_count = killer->getMark("multi_kill_count");
             if (kill_count > 1 && kill_count < 8)
                 room->setEmotion(killer, QString("multi_kill%1").arg(QString::number(kill_count)));
         }
 
-        if (killer && !skipRewardAndPunish)
+        if (room->getTag("SkipNormalDeathProcess").toBool())
+            return false;
+
+        if ((killer != nullptr) && !skipRewardAndPunish)
             rewardAndPunish(killer, death.who);
+
+        //reward teamate
+        if (room->getMode() == "04_2v2") {
+            foreach (ServerPlayer *p, room->getAlivePlayers()) {
+                if (death.who->getRole() == p->getRole()) {
+                    room->touhouLogmessage("#contest2v2Buff", p);
+                    p->drawCards(1);
+                }
+            }
+        }
 
         //if lord dead in hegemony mode?
 
@@ -1061,7 +1100,7 @@ bool GameRule::effect(TriggerEvent triggerEvent, Room *room, QSharedPointer<Skil
             }
 
             changeGeneral1v1(death.who);
-            if (death.damage == NULL) {
+            if (death.damage == nullptr) {
                 QVariant v = QVariant::fromValue(death.who);
                 room->getThread()->trigger(Debut, room, v);
             } else
@@ -1069,7 +1108,7 @@ bool GameRule::effect(TriggerEvent triggerEvent, Room *room, QSharedPointer<Skil
             return false;
         } else if (room->getMode() == "06_XMode") {
             changeGeneralXMode(death.who);
-            if (death.damage != NULL)
+            if (death.damage != nullptr)
                 death.who->setFlags("Global_DebutFlag");
             return false;
         }
@@ -1087,7 +1126,7 @@ bool GameRule::effect(TriggerEvent triggerEvent, Room *room, QSharedPointer<Skil
         log.card_str = QString::number(judge->card->getEffectiveId());
         room->sendLog(log);
 
-        room->moveCardTo(judge->card, NULL, judge->who, Player::PlaceJudge,
+        room->moveCardTo(judge->card, nullptr, judge->who, Player::PlaceJudge,
                          CardMoveReason(CardMoveReason::S_REASON_JUDGE, judge->who->objectName(), QString(), QString(), judge->reason), true);
         judge->updateResult();
         break;
@@ -1104,7 +1143,7 @@ bool GameRule::effect(TriggerEvent triggerEvent, Room *room, QSharedPointer<Skil
         int delay = Config.AIDelay;
         if (judge->time_consuming)
             delay /= 1.25;
-        Q_ASSERT(room->getThread() != NULL);
+        Q_ASSERT(room->getThread() != nullptr);
         room->getThread()->delay(delay);
         if (judge->play_animation) {
             room->sendJudgeResult(judge);
@@ -1118,11 +1157,11 @@ bool GameRule::effect(TriggerEvent triggerEvent, Room *room, QSharedPointer<Skil
 
         if (room->getCardPlace(judge->card->getEffectiveId()) == Player::PlaceJudge) {
             CardMoveReason reason(CardMoveReason::S_REASON_JUDGEDONE, judge->who->objectName(), QString(), judge->reason);
-            if (judge->retrial_by_response) {
+            if (judge->retrial_by_response != nullptr) {
                 reason.m_extraData = QVariant::fromValue(judge->retrial_by_response);
             }
 
-            room->moveCardTo(judge->card, judge->who, NULL, Player::DiscardPile, reason, true);
+            room->moveCardTo(judge->card, judge->who, nullptr, Player::DiscardPile, reason, true);
         }
 
         break;
@@ -1148,12 +1187,12 @@ bool GameRule::effect(TriggerEvent triggerEvent, Room *room, QSharedPointer<Skil
             room->gameOver(winner); // if all hasShownGenreal, and they are all friend, game over.
             return true;
         }
-        if (player->getMark("TheFirstToShowReward") > 0 && room->getScenario() == NULL) { //Config.RewardTheFirstShowingPlayer &&room->getTag("TheFirstToShowRewarded").isNull() &&
+        if (player->getMark("TheFirstToShowReward") > 0) {
             player->setMark("TheFirstToShowReward", 0);
             if (Config.HegemonyFirstShowReward == "Postponed") {
                 player->gainMark("@Pioneer");
                 QString attachName = "pioneer_attach";
-                if (player && !player->hasSkill(attachName))
+                if ((player != nullptr) && !player->hasSkill(attachName))
                     room->attachSkillToPlayer(player, attachName);
             } else if (Config.HegemonyFirstShowReward == "Instant") {
                 if (player->askForSkillInvoke("FirstShowReward")) {
@@ -1175,7 +1214,7 @@ bool GameRule::effect(TriggerEvent triggerEvent, Room *room, QSharedPointer<Skil
                 if (Config.HegemonyCompanionReward == "Postponed") {
                     player->gainMark("@CompanionEffect");
                     QString attachName = "companion_attach";
-                    if (player && !player->hasSkill(attachName))
+                    if ((player != nullptr) && !player->hasSkill(attachName))
                         room->attachSkillToPlayer(player, attachName);
                 } else {
                     QStringList choices;
@@ -1205,7 +1244,7 @@ bool GameRule::effect(TriggerEvent triggerEvent, Room *room, QSharedPointer<Skil
                     //bonus Postpone
                     player->gainMark("@HalfLife");
                     QString attachName = "halflife_attach";
-                    if (player && !player->hasSkill(attachName))
+                    if ((player != nullptr) && !player->hasSkill(attachName))
                         room->attachSkillToPlayer(player, attachName);
                 } else {
                     LogMessage log;
@@ -1222,7 +1261,7 @@ bool GameRule::effect(TriggerEvent triggerEvent, Room *room, QSharedPointer<Skil
     case BeforeCardsMove: { //to be record? not effect
         CardsMoveOneTimeStruct move = data.value<CardsMoveOneTimeStruct>();
         ServerPlayer *player = qobject_cast<ServerPlayer *>(move.from);
-        if (player != NULL) {
+        if (player != nullptr) {
             QList<int> shownIds;
             foreach (int id, move.card_ids) {
                 if (player->isShownHandcard(id))
@@ -1265,7 +1304,7 @@ void GameRule::changeGeneral1v1(ServerPlayer *player) const
         player->tag.remove("1v1ChangeGeneral");
     } else {
         QStringList list = player->tag["1v1Arrange"].toStringList();
-        if (player->getAI())
+        if (player->getAI() != nullptr)
             new_general = list.first();
         else
             new_general = room->askForGeneral(player, list);
@@ -1277,9 +1316,9 @@ void GameRule::changeGeneral1v1(ServerPlayer *player) const
         player->setPhase(Player::NotActive);
         room->broadcastProperty(player, "phase");
     }
-    room->revivePlayer(player);
+    room->revivePlayer(player, false);
     room->changeHero(player, new_general, true, true);
-    Q_ASSERT(player->getGeneral() != NULL);
+    Q_ASSERT(player->getGeneral() != nullptr);
     if (player->getGeneral()->getKingdom() == "zhu" || player->getGeneral()->getKingdom() == "touhougod") {
         QString new_kingdom = room->askForKingdom(player);
         room->setPlayerProperty(player, "kingdom", new_kingdom);
@@ -1344,7 +1383,7 @@ void GameRule::changeGeneralXMode(ServerPlayer *player) const
     leader->tag["XModeBackup"] = QVariant::fromValue(backup);
     room->revivePlayer(player);
     room->changeHero(player, general, true, true);
-    Q_ASSERT(player->getGeneral() != NULL);
+    Q_ASSERT(player->getGeneral() != nullptr);
     if (player->getGeneral()->getKingdom() == "zhu" || player->getGeneral()->getKingdom() == "touhougod") {
         QString new_kingdom = room->askForKingdom(player);
         room->setPlayerProperty(player, "kingdom", new_kingdom);
@@ -1388,7 +1427,7 @@ void GameRule::changeGeneralXMode(ServerPlayer *player) const
 
 void GameRule::rewardAndPunish(ServerPlayer *killer, ServerPlayer *victim) const
 {
-    Q_ASSERT(killer->getRoom() != NULL);
+    Q_ASSERT(killer->getRoom() != nullptr);
     Room *room = killer->getRoom();
     if (killer->isDead() || room->getMode() == "06_XMode")
         return;
@@ -1448,6 +1487,13 @@ QString GameRule::getWinner(ServerPlayer *victim) const
             else
                 winner = "renegade+rebel";
         }
+    } else if (room->getMode() == "04_2v2") {
+        QString role = victim->getRole();
+        QStringList alive_roles = room->aliveRoles(victim);
+        if (alive_roles.length() == 1)
+            winner = alive_roles.first();
+        else if (alive_roles.length() == 2 && alive_roles.first() == alive_roles.last())
+            winner = alive_roles.first();
     } else if (isHegemonyGameMode(room->getMode())) {
         QList<ServerPlayer *> players = room->getAlivePlayers();
         ServerPlayer *win_player = players.first();
@@ -1455,7 +1501,7 @@ QString GameRule::getWinner(ServerPlayer *victim) const
             QStringList winners;
             if (!win_player->hasShownGeneral())
                 win_player->showGeneral(true, false, false);
-            if (win_player->getGeneral2() && !win_player->hasShownGeneral2())
+            if ((win_player->getGeneral2() != nullptr) && !win_player->hasShownGeneral2())
                 win_player->showGeneral(false, false, false);
 
             foreach (ServerPlayer *p, room->getPlayers()) {
@@ -1466,8 +1512,8 @@ QString GameRule::getWinner(ServerPlayer *victim) const
         } else {
             QList<ServerPlayer *> winners;
             int careerist_threshold = (room->getPlayers().length() / 2);
-            QMap<QString, QList<ServerPlayer *> > role_count;
-            QMap<QString, QList<ServerPlayer *> > dead_role_count;
+            QMap<QString, QList<ServerPlayer *>> role_count;
+            QMap<QString, QList<ServerPlayer *>> dead_role_count;
             QMap<QString, QString> role_judge;
             foreach (ServerPlayer *p, room->getAllPlayers(true)) {
                 QString role = p->getRole();
@@ -1531,7 +1577,7 @@ QString GameRule::getWinner(ServerPlayer *victim) const
                 winner_names << p->objectName();
                 if (!p->hasShownGeneral())
                     p->showGeneral(true, false, false);
-                if (p->getGeneral2() && !p->hasShownGeneral2())
+                if ((p->getGeneral2() != nullptr) && !p->hasShownGeneral2())
                     p->showGeneral(false, false, false);
             }
             winner = winner_names.join("+");

@@ -127,7 +127,7 @@ public:
     virtual bool isVirtualCard() const;
     virtual bool isEquipped() const;
     virtual QString getCommonEffectName() const;
-    virtual bool match(const QString &pattern) const;
+    virtual bool matchTypeOrName(const QString &pattern) const;
 
     virtual void addSubcard(int card_id);
     virtual void addSubcard(const Card *card);
@@ -161,7 +161,7 @@ public:
 
     virtual void doPreAction(Room *room, const CardUseStruct &card_use) const;
     virtual void onUse(Room *room, const CardUseStruct &card_use) const;
-    virtual void use(Room *room, ServerPlayer *source, QList<ServerPlayer *> &targets) const;
+    virtual void use(Room *room, const CardUseStruct &card_use) const;
     virtual void onEffect(const CardEffectStruct &effect) const;
     virtual bool isCancelable(const CardEffectStruct &effect) const;
 
@@ -229,13 +229,18 @@ public:
     void setUserString(const QString &user_string);
     QString getUserString() const;
 
-    virtual QString getSubtype() const;
-    virtual QString getType() const;
-    virtual CardType getTypeId() const;
-    virtual QString toString(bool hidden = false) const;
+    QString getSubtype() const override;
+    QString getType() const override;
+    CardType getTypeId() const override;
+    QString toString(bool hidden = false) const override;
 
 protected:
     QString user_string;
+
+    // Card interface
+public:
+    void onUse(Room *room, const CardUseStruct &card_use) const override;
+    void use(Room *room, const CardUseStruct &card_use) const override;
 };
 
 class ShowDistanceCard : public SkillCard
@@ -245,7 +250,7 @@ class ShowDistanceCard : public SkillCard
 public:
     Q_INVOKABLE ShowDistanceCard();
 
-    const Card *validate(CardUseStruct &card_use) const;
+    const Card *validate(CardUseStruct &card_use) const override;
 };
 
 class ArraySummonCard : public SkillCard
@@ -253,9 +258,9 @@ class ArraySummonCard : public SkillCard
     Q_OBJECT
 
 public:
-    Q_INVOKABLE ArraySummonCard(const QString &name);
+    Q_INVOKABLE explicit ArraySummonCard(const QString &name);
 
-    const Card *validate(CardUseStruct &card_use) const;
+    const Card *validate(CardUseStruct &card_use) const override;
 };
 
 class DummyCard : public SkillCard
@@ -266,9 +271,9 @@ public:
     DummyCard();
     explicit DummyCard(const QList<int> &subcards);
 
-    virtual QString getSubtype() const;
-    virtual QString getType() const;
-    virtual QString toString(bool hidden = false) const;
+    QString getSubtype() const override;
+    QString getType() const override;
+    QString toString(bool hidden = false) const override;
 };
 
 #endif

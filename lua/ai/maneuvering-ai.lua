@@ -131,6 +131,10 @@ function SmartAI:shouldUseAnaleptic(target, slash)
 	if not self:touhouNeedAvoidAttack(fakeDamage,self.player,target) or fakeDamage.damage<2 then
 		return false
 	end
+	
+	-- 夺志 用酒为了无效对面的牌，一定可以打输出，就算有zhancao、shishi、luanying之类的技能无效了酒，也值得用
+	-- 暂且加在这里算了，之后看看需不需要调
+	if self.player:hasSkill("duozhi") then return true end
 
 	if target:hasArmorEffect("SilverLion") and not self.player:hasWeapon("QinggangSword") then
 		return
@@ -169,7 +173,8 @@ function SmartAI:shouldUseAnaleptic(target, slash)
 	end
 
 	if self.player:hasWeapon("Blade") and self:invokeTouhouJudge() then return true end
-	if self.player:hasFlag("zuiyue") then return true end
+	if self.player:hasSkill("zuiyue") and self.player:hasFlag("zuiyue") and not self.player:hasFlag("zuiyue_used") then return true end
+	if self.player:hasSkill("xieli") then return true end
 	--勇仪主动吃酒
 	if  self:canGuaili(slash) then
 		return true
@@ -183,7 +188,6 @@ function SmartAI:shouldUseAnaleptic(target, slash)
 
 	if self.player:hasWeapon("Axe") and self.player:getCards("hes"):length() > 4 then return true end
 
-
 	if getKnownCard(target, self.player, "Jink", true, "hes") >= 1 and not (self:getOverflow() > 0 and self:getCardsNum("Analeptic", nil, nil, "MagicAnaleptic") > 1) then return false end
 	return self:getCardsNum("Analeptic", nil, nil, "MagicAnaleptic") > 1 or getCardsNum("Jink", target) < 1 or sgs.card_lack[target:objectName()]["Jink"] == 1
 end
@@ -192,6 +196,7 @@ function SmartAI:useCardAnaleptic(card, use)
 	if self:cautionDoujiu(self.player,card) then
 		return
 	end
+	
 	if not self.player:hasEquip(card) and not self:hasLoseHandcardEffective() and not self:isWeak()
 		and sgs.Analeptic_IsAvailable(self.player, card) then
 		use.card = card
@@ -204,15 +209,34 @@ function SmartAI:searchForAnaleptic(use, enemy, slash)
 	if not use.to then return nil end
 
 	--使用酒不过getTurnUseCard。。。 而是过getCardId getCardId无法处理0牌转化。 只好暂时耦合
-	if use.from:hasFlag("zuiyue") and use.from:hasSkill("zuiyue") then
-		local ana = sgs.cloneCard("analeptic", sgs.Card_NoSuit, 0)
-		ana:setSkillName("zuiyue")
-		if sgs.Analeptic_IsAvailable(self.player, ana) then
-			return ana
+	local viewAsAnalaptic = sgs.cloneCard("analeptic", sgs.Card_NoSuit, 0)
+	if use.from:hasFlag("zuiyue") and not use.from:hasFlag("zuiyue_used") and use.from:hasSkill("zuiyue") then
+		viewAsAnalaptic:setSkillName("zuiyue")
+		if sgs.Analeptic_IsAvailable(self.player, viewAsAnalaptic) then
+			return viewAsAnalaptic
+		end
+	end
+	
+	if use.from:hasSkill("xieli") then
+		-- 对于xieli，千万不能横置武器和-1，否则。。。。。。。。。。
+		-- 优先度：+1 防具 宝物
+		viewAsAnalaptic:setSkillName("_xieli")
+		if sgs.Analeptic_IsAvailable(self.player, viewAsAnalaptic) then
+			local prio = { "DefensiveHorse", "Armor", "Treasure" }
+			
+			local xieli
+			for _, p in ipairs(prio) do
+				if self.player["get" .. p](self.player) and not self.player:isBrokenEquip(self.player["get" .. p](self.player):getId()) then
+					xieli = self.player["get" .. p](self.player):getId()
+				end
+			end
+			if xieli then
+				return sgs.Card_Parse("@XieliCard=" .. tostring(xieli))
+			end
 		end
 	end
 
-	local analeptic = self:getCard("Analeptic", nil, "MagicAnaleptic")
+	local analeptic = self:getCard("Analeptic")
 	if not analeptic then return nil end
 
 	local analepticAvail = 1 + sgs.Sanguosha:correctCardTarget(sgs.TargetModSkill_Residue, self.player, analeptic)
@@ -233,11 +257,12 @@ function SmartAI:searchForAnaleptic(use, enemy, slash)
 
 
 
-	local card_str = self:getCardId("Analeptic", nil, nil, "MagicAnaleptic")
+	local card_str = self:getCardId("Analeptic")
+	--local card_str = self:getCardId("Analeptic", nil, nil, "MagicAnaleptic")
 	if card_str then  return sgs.Card_Parse(card_str) end
 
 	for _, anal in ipairs(cards) do
-		if (anal:getClassName() == "Analeptic" and not anal:isKindOf("MagicAnaleptic")) and not (anal:getEffectiveId() == slash:getEffectiveId()) then
+		if anal:getClassName() == "Analeptic"  and not (anal:getEffectiveId() == slash:getEffectiveId()) then
 			return anal
 		end
 	end
@@ -488,9 +513,10 @@ function SmartAI:isGoodChainTarget(who, source, nature, damagecount, slash)
 end
 
 --铁索能不能有其他目标时，不要锁卖血流啊
---静电对策需要详细写
+--静电对策需要详细写 --ai usecard都不check targetsFeasible的。。。。
 function SmartAI:useCardIronChain(card, use)
-	local needTarget = (card:getSkillName() == "xihua" or card:getSkillName() == "qiji" or card:getSkillName() == "chaoren")
+	local needTarget = (card:getSkillName() == "xihua" or card:getSkillName() == "qiji" or sgs.Sanguosha:getCurrentCardUsePattern() == "@@mengxiang-card2"
+	       or card:getSkillName() == "chaoren" or card:getSkillName() == "xiuye")
 	if not needTarget then
 		needTarget = self.player:getPile("wooden_ox"):contains(card:getEffectiveId())
 	end
@@ -635,7 +661,7 @@ sgs.ai_skill_cardask["@fire-attack"] = function(self, data, pattern, target)
 						or self:isGoodChainTarget(target) or target:hasArmorEffect("Vine") then
 					needKeepPeach = false
 				end
-				if (self.player:hasSkill("fengxiang") and self.player:getCards("h"):contains(acard)) then
+				if (self.player:hasSkill("fengxiang") and self.player:getCards("hs"):contains(acard)) then
 					needKeepPeach = false
 				end
 				if lord and not self:isEnemy(lord) and sgs.isLordInDanger() and self:getCardsNum("Peach") == 1 and self.player:aliveCount() > 2 then
@@ -825,7 +851,7 @@ sgs.ai_skill_cardask["@fire_attack_show"] = function(self, data)
 	local cards = {}
 	local card_ids = self.player:getTag("fireattack_tempmove"):toIntList()
 
-	for _, c in sgs.qlist(self.player:getCards("h")) do
+	for _, c in sgs.qlist(self.player:getCards("hs")) do
 		if not card_ids:contains(c:getEffectiveId()) then
 			table.insert(cards, c)
 		end

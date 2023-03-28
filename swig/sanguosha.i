@@ -565,6 +565,7 @@ struct SlashEffectStruct {
     ServerPlayer *to;
 
     int drank;
+    int magic_drank;
 
     DamageStruct::Nature nature;
     bool multiple;
@@ -1075,7 +1076,7 @@ public:
     virtual bool isVirtualCard() const;
     virtual bool isEquipped() const;
     virtual QString getCommonEffectName() const;
-    virtual bool match(const char *pattern) const;
+    virtual bool matchTypeOrName(const char *pattern) const;
 
     virtual void addSubcard(int card_id);
     virtual void addSubcard(const Card *card);
@@ -1107,7 +1108,7 @@ public:
 
     virtual void doPreAction(Room *room, const CardUseStruct &card_use) const;
     virtual void onUse(Room *room, const CardUseStruct &card_use) const;
-    virtual void use(Room *room, ServerPlayer *source, QList<ServerPlayer *> &targets) const;
+    virtual void use(Room *room, const CardUseStruct &card_use) const;
     virtual void onEffect(const CardEffectStruct &effect) const;
     virtual bool isCancelable(const CardEffectStruct &effect) const;
 
@@ -1200,8 +1201,6 @@ public:
     QString translate(const char *to_translate, bool addHegemony = false) const;
     lua_State *getLuaState() const;
 
-    int getMiniSceneCounts();
-
     void addPackage(Package *package);
     void addBanPackage(const char *package_name);
     QStringList getBanPackages() const;
@@ -1229,9 +1228,6 @@ public:
     QList<const Skill *> getRelatedSkills(const char *skill_name) const;
     const Skill *getMainSkill(const char *skill_name) const;
 
-    QStringList getModScenarioNames() const;
-    void addScenario(Scenario *scenario);
-    const Scenario *getScenario(const char *name) const;
     void addPackage(const char *name);
 
     const General *getGeneral(const char *name) const;
@@ -1281,7 +1277,7 @@ public:
     bool isGeneralHidden(const char *general_name) const;
 };
 
-extern Engine *Sanguosha;
+extern Engine *const Sanguosha;
 
 class Skill: public QObject {
 public:
@@ -1301,6 +1297,8 @@ public:
     Frequency getFrequency() const;
     QStringList getSources() const;
 	QString getLimitMark() const;
+
+    QString getShowType() const;
 };
 
 %extend Skill {
@@ -1352,7 +1350,7 @@ public:
     void delay(unsigned long msecs = 1000);
 };
 
-class Room: public QThread {
+class Room: public QObject {
 public:
     enum GuanxingType { GuanxingUpOnly = 1, GuanxingBothSides = 0, GuanxingDownOnly = -1 };
 
@@ -1364,7 +1362,6 @@ public:
     bool canPause(ServerPlayer *p) const;
     int getLack() const;
     QString getMode() const;
-    const Scenario *getScenario() const;
     RoomThread *getThread() const;
     ServerPlayer *getCurrent() const;
     void setCurrent(ServerPlayer *current);
@@ -1560,7 +1557,6 @@ public:
     ServerPlayer *askForPlayerChosen(ServerPlayer *player, const QList<ServerPlayer *> &targets, const char *reason,
                                      const char *prompt = NULL, bool optional = false, bool notify_skill = false);
     QString askForGeneral(ServerPlayer *player, const char *generals, char *default_choice = NULL);
-    const Card *askForSinglePeach(ServerPlayer *player, ServerPlayer *dying);
     void addPlayerHistory(ServerPlayer *player, const char *key, int times = 1);
 
     void speakCommand(ServerPlayer *player, const char *arg);

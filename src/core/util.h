@@ -12,7 +12,7 @@ class QVariant;
 #include "compiler-specific.h"
 #include <algorithm>
 
-template <typename T> void qShuffle(QList<T> &list)
+template<typename T> void qShuffle(QList<T> &list)
 {
     int n = list.length();
     for (int i = 0; i < n; i++) {
@@ -36,8 +36,8 @@ bool isNormalGameMode(const QString &mode);
 bool isHegemonyGameMode(const QString &mode);
 
 // cannot use do...while false here......
-#define DELETE_OVER_SCOPE(type, var)            \
-    QScopedPointer<type> __##var##_scoped(var); \
-    Q_UNUSED(__##var##_scoped);
+#define DELETE_OVER_SCOPE(type, var)                \
+    QScopedPointer<type> _qsgs_##var##_scoped(var); \
+    Q_UNUSED(_qsgs_##var##_scoped);
 
 #endif

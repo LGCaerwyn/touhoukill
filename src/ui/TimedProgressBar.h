@@ -10,6 +10,7 @@
 class TimedProgressBar : public QProgressBar
 {
     Q_OBJECT
+
 public:
     inline TimedProgressBar()
         : m_hasTimer(false)
@@ -56,7 +57,7 @@ signals:
     void timerStep(time_t val, time_t max);
 
 protected:
-    virtual void timerEvent(QTimerEvent *);
+    void timerEvent(QTimerEvent *) override;
     bool m_hasTimer;
     bool m_autoHide;
     int m_timer;
@@ -81,7 +82,7 @@ public:
     void setCountdown(QSanProtocol::Countdown countdown);
 
 protected:
-    virtual void paintEvent(QPaintEvent *);
+    void paintEvent(QPaintEvent *) override;
     QSanProtocol::ProcessInstanceType m_instanceType;
 };
 

@@ -155,7 +155,7 @@ QWidget *GeneralSearch::createInfoTab()
     i = 0;
     foreach (QString extension, extensions) {
         const Package *package = Sanguosha->findChild<const Package *>(extension);
-        if (package == NULL || package->getType() != Package::GeneralPack)
+        if (package == nullptr || package->getType() != Package::GeneralPack)
             continue;
         QCheckBox *checkbox = new QCheckBox;
         checkbox->setObjectName(extension);
@@ -251,7 +251,7 @@ static GeneralOverview *Overview;
 
 GeneralOverview *GeneralOverview::getInstance(QWidget *main_window)
 {
-    if (Overview == NULL)
+    if (Overview == nullptr)
         Overview = new GeneralOverview(main_window);
 
     return Overview;
@@ -326,13 +326,17 @@ void GeneralOverview::fillGenerals(const QList<const General *> &generals, bool 
             name = Sanguosha->translate(general->objectName());
         kingdom = Sanguosha->translate(general->getKingdom());
         //gender = general->isMale() ? tr("Male") : (general->isFemale() ? tr("Female") : tr("NoGender"));
+
         max_hp = QString::number(general->getMaxHp());
+        if (general->objectName().endsWith("hegemony"))
+            max_hp = QString::number(double(general->getMaxHp()) / 2);
+
         package = Sanguosha->translate(general->getPackage());
 
         QString nickname = Sanguosha->translate("#" + general_name);
         if (nickname.startsWith("#") && general_name.contains("_"))
             nickname = Sanguosha->translate("#" + general_name.split("_").first());
-        QTableWidgetItem *nickname_item;
+        QTableWidgetItem *nickname_item = nullptr;
         if (!nickname.startsWith("#"))
             nickname_item = new QTableWidgetItem(nickname);
         else
@@ -412,10 +416,10 @@ void GeneralOverview::fillGenerals(const QList<const General *> &generals, bool 
 
 void GeneralOverview::resetButtons()
 {
-    QLayoutItem *child;
-    while ((child = button_layout->takeAt(0))) {
+    QLayoutItem *child = nullptr;
+    while ((child = button_layout->takeAt(0)) != nullptr) {
         QWidget *widget = child->widget();
-        if (widget)
+        if (widget != nullptr)
             delete widget;
     }
 }
@@ -448,11 +452,13 @@ bool GeneralOverview::hasSkin(const QString &general_name)
 QString GeneralOverview::getIllustratorInfo(const QString &general_name)
 {
     QString unique_general = general_name;
-    if (unique_general.endsWith("_hegemony"))
+    if (general_name.endsWith("_hegemony")) {
         unique_general = unique_general.replace("_hegemony", "");
+    }
     int skin_index = Config.value(QString("HeroSkin/%1").arg(unique_general), 0).toInt();
     QString suffix = (skin_index > 0) ? QString("_%1").arg(skin_index) : QString();
-    QString illustrator_text = Sanguosha->translate(QString("illustrator:%1%2").arg(unique_general).arg(suffix));
+    QString key = (general_name.endsWith("_hegemony") && skin_index == 0) ? general_name : unique_general;
+    QString illustrator_text = Sanguosha->translate(QString("illustrator:%1%2").arg(key).arg(suffix));
     if (!illustrator_text.startsWith("illustrator:"))
         return illustrator_text;
     else {
@@ -471,7 +477,8 @@ QString GeneralOverview::getOriginInfo(const QString &general_name)
         unique_general = unique_general.replace("_hegemony", "");
     int skin_index = Config.value(QString("HeroSkin/%1").arg(unique_general), 0).toInt();
     QString suffix = (skin_index > 0) ? QString("_%1").arg(skin_index) : QString();
-    QString illustrator_text = Sanguosha->translate(QString("origin:%1%2").arg(unique_general).arg(suffix));
+    QString key = (general_name.endsWith("_hegemony") && skin_index == 0) ? general_name : unique_general;
+    QString illustrator_text = Sanguosha->translate(QString("origin:%1%2").arg(key).arg(suffix));
     if (!illustrator_text.startsWith("origin:"))
         return illustrator_text;
     else {
@@ -533,7 +540,7 @@ void GeneralOverview::addCopyAction(QCommandLinkButton *button)
 void GeneralOverview::copyLines()
 {
     QAction *action = qobject_cast<QAction *>(sender());
-    if (action) {
+    if (action != nullptr) {
         QClipboard *clipboard = QApplication::clipboard();
         clipboard->setText(action->data().toString());
     }
@@ -550,7 +557,7 @@ void GeneralOverview::on_tableWidget_itemSelectionChanged()
     QList<const Skill *> skills = general->getVisibleSkillList();
     foreach (QString skill_name, general->getRelatedSkillNames()) {
         const Skill *skill = Sanguosha->getSkill(skill_name);
-        if (skill && skill->isVisible())
+        if ((skill != nullptr) && skill->isVisible())
             skills << skill;
     }
 
@@ -572,36 +579,6 @@ void GeneralOverview::on_tableWidget_itemSelectionChanged()
         connect(death_button, SIGNAL(clicked()), general, SLOT(lastWord()));
 
         addCopyAction(death_button);
-    }
-
-    QString declaration_title = Sanguosha->translate("lord_declaration");
-    QString declaration = Sanguosha->translate("$" + general->objectName());
-    if (declaration.startsWith("$") && general->objectName().contains("_"))
-        declaration = Sanguosha->translate(("$") + general->objectName().split("_").first());
-
-    if (!declaration.startsWith("$")) {
-        QCommandLinkButton *declaration_button = new QCommandLinkButton(declaration_title, declaration);
-
-        QString declaration_path = "audio/declaration/" + general_name + ".ogg";
-        declaration_button->setObjectName(declaration_path);
-        button_layout->addWidget(declaration_button);
-        connect(declaration_button, SIGNAL(clicked()), general, SLOT(playAudioEffect()));
-
-        addCopyAction(declaration_button);
-    }
-
-    if (general_name.contains("caocao")) {
-        QCommandLinkButton *win_button = new QCommandLinkButton(tr("Victory"),
-                                                                tr("Six dragons lead my chariot, "
-                                                                   "I will ride the wind with the greatest speed."
-                                                                   "With all of the feudal lords under my command,"
-                                                                   "to rule the world with one name!"));
-
-        button_layout->addWidget(win_button);
-        addCopyAction(win_button);
-
-        win_button->setObjectName("audio/system/win-cc.ogg");
-        connect(win_button, SIGNAL(clicked()), this, SLOT(playAudioEffect()));
     }
 
     QString designer_text = Sanguosha->translate("designer:" + general->objectName());
@@ -636,13 +613,13 @@ void GeneralOverview::on_tableWidget_itemSelectionChanged()
 
     button_layout->addStretch();
     ui->skillTextEdit->append(general->getSkillDescription(true, false));
-    ui->changeGeneralButton->setEnabled(Self && Self->getGeneralName() != general->objectName());
+    ui->changeGeneralButton->setEnabled((Self != nullptr) && Self->getGeneralName() != general->objectName());
 }
 
 void GeneralOverview::playAudioEffect()
 {
     QObject *button = sender();
-    if (button) {
+    if (button != nullptr) {
         QString source = button->objectName();
         if (!source.isEmpty())
             Sanguosha->playAudioEffect(source);
@@ -652,8 +629,8 @@ void GeneralOverview::playAudioEffect()
 void GeneralOverview::askTransfiguration()
 {
     QPushButton *button = qobject_cast<QPushButton *>(sender());
-    bool isSecondaryHero = (button && button->objectName() == ui->changeGeneral2Button->objectName());
-    if (ServerInfo.EnableCheat && Self) {
+    bool isSecondaryHero = ((button != nullptr) && button->objectName() == ui->changeGeneral2Button->objectName());
+    if (ServerInfo.EnableCheat && (Self != nullptr)) {
         if (isSecondaryHero)
             ui->changeGeneral2Button->setEnabled(false);
         else
@@ -667,7 +644,7 @@ void GeneralOverview::askTransfiguration()
 
 void GeneralOverview::on_tableWidget_itemDoubleClicked(QTableWidgetItem *)
 {
-    if (ServerInfo.EnableCheat && Self) {
+    if (ServerInfo.EnableCheat && (Self != nullptr)) {
         askTransfiguration();
     }
 }
@@ -689,14 +666,18 @@ void GeneralOverview::askChangeSkin()
         Config.beginGroup("HeroSkin");
         Config.remove(unique_general);
         Config.endGroup();
-        if (n > 1)
-            pixmap = G_ROOM_SKIN.getCardMainPixmap(unique_general);
-        else
+        if (n > 1) {
+            if (general_name.endsWith("_hegemony"))
+                pixmap = G_ROOM_SKIN.getCardMainPixmap(general_name);
+
+            if (pixmap.width() <= 1 && pixmap.height() <= 1)
+                pixmap = G_ROOM_SKIN.getCardMainPixmap(unique_general);
+        } else
             return;
     }
     ui->generalPhoto->setPixmap(pixmap);
-    ui->illustratorLineEdit->setText(getIllustratorInfo(unique_general));
-    ui->originLineEdit->setText(getOriginInfo(unique_general));
+    ui->illustratorLineEdit->setText(getIllustratorInfo(general_name)); //unique_general
+    ui->originLineEdit->setText(getOriginInfo(general_name)); //unique_general
 }
 
 void GeneralOverview::startSearch(bool include_hidden, const QString &nickname, const QString &name, const QStringList &genders, const QStringList &kingdoms, int lower, int upper,

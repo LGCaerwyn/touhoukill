@@ -1,4 +1,5 @@
 #include "configdialog.h"
+#include "audio.h"
 #include "engine.h"
 #include "settings.h"
 #include "ui_configdialog.h"
@@ -47,7 +48,6 @@ ConfigDialog::ConfigDialog(QWidget *parent)
     ui->defaultHeroskinCheckBox->setChecked(Config.DefaultHeroSkin);
     ui->doubleClickCheckBox->setChecked(Config.EnableDoubleClick);
     ui->autoUpdateCheckBox->setChecked(Config.EnableAutoUpdate);
-    ui->autoUpdateChannelLineEdit->setText(Config.value("AutoUpdateChannel", QStringLiteral("Global")).toString());
     ui->bubbleChatBoxDelaySpinBox->setSuffix(tr(" second"));
     ui->bubbleChatBoxDelaySpinBox->setValue(Config.BubbleChatBoxDelaySeconds);
 
@@ -170,7 +170,7 @@ void ConfigDialog::on_resetRecordPathButton_clicked()
         Config.RecordSavePath = path;
     }
 }
-#include "audio.h"
+
 void ConfigDialog::saveConfig()
 {
     float volume = ui->bgmVolumeSlider->value() / 100.0;
@@ -179,7 +179,9 @@ void ConfigDialog::saveConfig()
     volume = ui->effectVolumeSlider->value() / 100.0;
     Config.EffectVolume = volume;
     Config.setValue("EffectVolume", volume);
+#ifdef AUDIO_SUPPORT
     Audio::setBGMVolume(Config.BGMVolume);
+#endif
     bool enabled = ui->enableEffectCheckBox->isChecked();
     Config.EnableEffects = enabled;
     Config.setValue("EnableEffects", enabled);
@@ -231,8 +233,6 @@ void ConfigDialog::saveConfig()
 
     Config.setValue("EnableAutoUpdate", ui->autoUpdateCheckBox->isChecked());
     Config.EnableAutoUpdate = ui->autoUpdateCheckBox->isChecked();
-
-    Config.setValue("AutoUpdateChannel", ui->autoUpdateChannelLineEdit->text());
 }
 
 void ConfigDialog::on_browseBgMusicButton_clicked()
@@ -253,7 +253,7 @@ void ConfigDialog::on_resetBgMusicButton_clicked()
 
 void ConfigDialog::on_changeAppFontButton_clicked()
 {
-    bool ok;
+    bool ok = false;
     QFont font = QFontDialog::getFont(&ok, Config.AppFont, this);
     if (ok) {
         Config.AppFont = font;
@@ -266,7 +266,7 @@ void ConfigDialog::on_changeAppFontButton_clicked()
 
 void ConfigDialog::on_setTextEditFontButton_clicked()
 {
-    bool ok;
+    bool ok = false;
     QFont font = QFontDialog::getFont(&ok, Config.UIFont, this);
     if (ok) {
         Config.UIFont = font;

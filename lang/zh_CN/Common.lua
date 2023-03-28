@@ -73,6 +73,10 @@ CommonTranslationTable = {
 	["female"] = "女性",
 	["discardPile"] = "弃牌堆",
 	["drawPileTop"] = "牌堆顶",
+	
+	["PlaceDelayedTrick"] = "判定区" ,
+	["PlaceEquip"] = "装备区" ,
+	["PlaceHand"] = "手牌区" ,
 
 	["use upon"] = "对",
 	["yourself"] = "你",
@@ -115,7 +119,7 @@ CommonTranslationTable = {
 	["#Damage"] = "%from 对 %to 造成了 %arg 点伤害[%arg2]",
 	["#DamageNoSource"] = "%to 受到了 %arg 点伤害[%arg2]",
 	["#Recover"] = "%from 回复了 %arg 点体力",
-	["#AskForPeaches"] = "%from 向 %to 求桃，一共需要 %arg 张【<font color=\"yellow\"><b>桃</b></font>】",
+	["#AskForPeaches"] = "%from 向 %to 求桃，一共需要回复 %arg 点体力",
 	["#ChooseKingdom"] = "%from 选择了 %arg 势力",
 	["#NullificationDetails"] = "【<font color=\"yellow\"><b>无懈可击</b></font>】的目标是 %from 对 %to 的锦囊 【%arg】",
 	["#SkillAvoid"] = "%from 的“%arg”被触发，不能被选择为此 【%arg2】 的目标",
@@ -268,7 +272,8 @@ CommonTranslationTable = {
 	["CompanionEffect:recover"] = "回复1点体力",
 	["CompanionEffect:draw"] = "摸两张牌",
 	
-	
+	["#contest2v2Buff"]= "%from 执行队友阵亡效果。",
+	["04_2v2"] = "欢乐2v2",
 }
 
 return CommonTranslationTable

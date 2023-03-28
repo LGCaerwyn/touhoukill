@@ -4,8 +4,10 @@
 #include "protocol.h"
 #include "settings.h"
 #include "uiUtils.h"
+#include <cmath>
 
 #include <QCoreApplication>
+#include <QDir>
 #include <QFile>
 #include <QGraphicsPixmapItem>
 #include <QGraphicsProxyWidget>
@@ -97,7 +99,7 @@ const char *QSanRoomSkin::S_SKIN_KEY_CHOOSE_GENERAL_BOX_DEST_SEAT = "chooseGener
 const char *QSanRoomSkin::S_SKIN_KEY_GENERAL_CARD_ITEM_COMPANION_FONT = "generalCardItemCompanionFont-%1";
 const char *QSanRoomSkin::S_SKIN_KEY_GENERAL_CARD_ITEM_COMPANION_ICON = "generalCardItemCompanionIcon-%1";
 
-QSanSkinFactory *QSanSkinFactory::_sm_singleton = NULL;
+QSanSkinFactory *QSanSkinFactory::_sm_singleton = nullptr;
 QHash<QString, int *> IQSanComponentSkin::QSanSimpleTextFont::_m_fontBank;
 
 IQSanComponentSkin::QSanSimpleTextFont::QSanSimpleTextFont()
@@ -224,7 +226,7 @@ void IQSanComponentSkin::QSanShadowTextFont::paintText(QGraphicsPixmapItem *pixm
 
 QString QSanRoomSkin::getButtonPixmapPath(const QString &groupName, const QString &buttonName, QSanButton::ButtonState state) const
 {
-    const char *key;
+    const char *key = nullptr;
     QString qkey = QString(QSanRoomSkin::S_SKIN_KEY_BUTTON).arg(groupName);
     QByteArray arr = qkey.toLatin1();
     key = arr.constData();
@@ -310,7 +312,7 @@ QPixmap QSanRoomSkin::getCardMainPixmap(const QString &cardName, bool cache, boo
         name = name.mid(4);
     else if (name.endsWith("_hegemony")) {
         const General *general = Sanguosha->getGeneral(name);
-        if (!general)
+        if (general == nullptr)
             name = name.replace("_hegemony", "");
     }
 
@@ -345,8 +347,8 @@ QPixmap QSanRoomSkin::getCardAvatarPixmap(const QString &generalName, bool heroS
         name = name.mid(3);
     else if (ServerInfo.GameMode == "02_1v1" && name.startsWith("kof_"))
         name = name.mid(4);
-    else if (name.endsWith("_hegemony"))
-        name = name.replace("_hegemony", "");
+    //else if (name.endsWith("_hegemony"))
+    //    name = name.replace("_hegemony", "");
     return getGeneralPixmap(name, S_GENERAL_ICON_SIZE_TINY, heroSkin);
 }
 
@@ -360,9 +362,18 @@ QPixmap QSanRoomSkin::getGeneralPixmap(const QString &generalName, GeneralIconSi
     if (size == S_GENERAL_ICON_SIZE_CARD)
         return getCardMainPixmap(name, false, heroSkin);
     else {
-        if (name.endsWith("_hegemony"))
+        if (name.endsWith("_hegemony")) {
             name = name.replace("_hegemony", "");
+            /*if (size != S_GENERAL_ICON_SIZE_TINY) {
+               /*QDir dir("image/generals/full/avatar");
+               dir.setNameFilters(QStringList(QString("%1.png").arg(generalName)));
+                QStringList tmpFiles = dir.entryList(QDir::Files | QDir::NoDotAndDotDot);
+                if (!tmpFiles.isEmpty())
+                  
+            }*/
+        }
         QString key = QString(S_SKIN_KEY_PLAYER_GENERAL_ICON).arg(size).arg(name);
+
         if (isImageKeyDefined(key))
             return getPixmap(key, QString(), false, heroSkin);
         else {
@@ -395,7 +406,7 @@ QString QSanRoomSkin::getPlayerAudioEffectPath(const QString &eventName, const Q
     if (fileName.isEmpty()) {
         const Skill *skill = Sanguosha->getSkill(eventName);
         QStringList fileNames;
-        if (skill)
+        if (skill != nullptr)
             fileNames = skill->getSources();
         if (!fileNames.isEmpty()) {
             if (index < 0)
@@ -521,7 +532,7 @@ bool IQSanComponentSkin::load(const QString &layoutConfigName, const QString &im
         JsonDocument layoutDoc = JsonDocument::fromFilePath(layoutConfigName);
         if (!layoutDoc.isValid() || !layoutDoc.isObject()) {
             errorMsg = QString("Error when reading layout config file \"%1\": \n%2").arg(layoutConfigName).arg(layoutDoc.errorString());
-            QMessageBox::warning(NULL, "Config Error", errorMsg);
+            QMessageBox::warning(nullptr, "Config Error", errorMsg);
             success = false;
         }
         success = _loadLayoutConfig(layoutDoc.toVariant());
@@ -531,7 +542,7 @@ bool IQSanComponentSkin::load(const QString &layoutConfigName, const QString &im
         JsonDocument imageDoc = JsonDocument::fromFilePath(imageConfigName);
         if (!imageDoc.isValid() || !imageDoc.isObject()) {
             errorMsg = QString("Error when reading image config file \"%1\": \n%2").arg(imageConfigName).arg(imageDoc.errorString());
-            QMessageBox::warning(NULL, "Config Error", errorMsg);
+            QMessageBox::warning(nullptr, "Config Error", errorMsg);
             success = false;
         }
         success = _loadImageConfig(imageDoc.toVariant());
@@ -541,7 +552,7 @@ bool IQSanComponentSkin::load(const QString &layoutConfigName, const QString &im
         JsonDocument audioDoc = JsonDocument::fromFilePath(audioConfigName);
         if (!audioDoc.isValid() || !audioDoc.isObject()) {
             errorMsg = QString("Error when reading audio config file \"%1\": \n%2").arg(audioConfigName).arg(audioDoc.errorString());
-            QMessageBox::warning(NULL, "Config Error", errorMsg);
+            QMessageBox::warning(nullptr, "Config Error", errorMsg);
             success = false;
         }
         _m_audioConfig = audioDoc.object();
@@ -551,7 +562,7 @@ bool IQSanComponentSkin::load(const QString &layoutConfigName, const QString &im
         JsonDocument animDoc = JsonDocument::fromFilePath(animationConfigName);
         if (!animDoc.isValid() || !animDoc.isObject()) {
             errorMsg = QString("Error when reading animation config file \"%1\": \n%2").arg(animationConfigName).arg(animDoc.errorString());
-            QMessageBox::warning(NULL, "Config Error", errorMsg);
+            QMessageBox::warning(nullptr, "Config Error", errorMsg);
             success = false;
         }
         _m_animationConfig = animDoc.object();
@@ -665,15 +676,40 @@ QPixmap IQSanComponentSkin::getPixmap(const QString &key, const QString &arg, bo
         }
     }
 
-    // Hero skin?
+    //process general image and Hero skin
     QString general_name = fileName.split("/").last().split(".").first();
-    if ((Sanguosha->getGeneral(general_name) || Sanguosha->getGeneral(general_name + "_hegemony")) && heroSkin) {
+    bool isGeneral = (Sanguosha->getGeneral(general_name) != nullptr) || (Sanguosha->getGeneral(general_name + "_hegemony") != nullptr);
+    if (isGeneral && heroSkin) {
         int skin_index = Config.value(QString("HeroSkin/%1").arg(general_name), 0).toInt();
         if (skin_index > 0) {
             fileName.replace("image/", "image/heroskin/");
             fileName.replace(general_name, QString("%1_%2").arg(general_name).arg(skin_index));
+        } else if (isHegemonyGameMode(ServerInfo.GameMode) && fileName.contains("image/fullskin/generals/full")) { //ignore avatar
+            QString tmpFileName = fileName;
+            tmpFileName.replace(general_name, QString("%1").arg(general_name + "_hegemony"));
+            if (QFile::exists(tmpFileName))
+                fileName = tmpFileName;
         }
     }
+
+    //test version
+    /*if (isGeneral && heroSkin) {
+        QString unique_general = general_name;
+        unique_general = unique_general.replace("_hegemony", "");
+        int skin_index = Config.value(QString("HeroSkin/%1").arg(unique_general), 0).toInt();
+        if (skin_index > 0) {
+            fileName.replace("image/", "image/heroskin/");
+            fileName.replace(general_name, QString("%1_%2").arg(unique_general).arg(skin_index));
+        }
+        else if (isHegemonyGameMode(ServerInfo.GameMode) 
+            && (fileName.contains("image/fullskin/generals/full") || fileName.contains("image/generals/avatar"))) {
+            if (!QFile::exists(fileName)) {
+                QString tmpFileName = fileName;
+                tmpFileName.replace(general_name, QString("%1").arg(unique_general));
+                fileName = tmpFileName;
+            }
+        }
+    }*/
 
     QPixmap pixmap = getPixmapFromFileName(fileName, cache);
     if (clipping) {
@@ -741,7 +777,7 @@ QAbstractAnimation *QSanRoomSkin::createHuaShenAnimation(QPixmap &huashenAvatar,
     QPropertyAnimation *animation = new QPropertyAnimation(widget, "opacity");
     animation->setLoopCount(2000);
     JsonArray huashenConfig = _m_animationConfig["huashen"].value<JsonArray>();
-    int duration;
+    int duration = 0;
     if (tryParse(huashenConfig[0], duration) && huashenConfig[1].canConvert<JsonArray>()) {
         animation->setDuration(duration);
         JsonArray keyValues = huashenConfig[1].value<JsonArray>();
@@ -749,8 +785,8 @@ QAbstractAnimation *QSanRoomSkin::createHuaShenAnimation(QPixmap &huashenAvatar,
             QVariant keyValue = keyValues[i];
             if (!keyValue.canConvert<JsonArray>() || keyValue.value<JsonArray>().length() != 2)
                 continue;
-            double step;
-            double val;
+            double step = NAN;
+            double val = NAN;
             JsonArray keyArr = keyValue.value<JsonArray>();
             if (!tryParse(keyArr[0], step) || !tryParse(keyArr[1], val))
                 continue;
@@ -862,7 +898,7 @@ bool QSanRoomSkin::_loadLayoutConfig(const QVariant &layout)
 
     for (int i = 0; i < 2; i++) {
         JsonObject playerConfig;
-        PlayerCardContainerLayout *layout;
+        PlayerCardContainerLayout *layout = nullptr;
         if (i == 0) {
             layout = &_m_photoLayout;
             playerConfig = layoutConfig[S_SKIN_KEY_PHOTO].value<JsonObject>();
@@ -964,7 +1000,6 @@ bool QSanRoomSkin::_loadLayoutConfig(const QVariant &layout)
         tryParse(playerConfig["seatIconRegion"], layout->m_seatIconRegion);
         tryParse(playerConfig["seatIconRegionDouble"], layout->m_seatIconRegionDouble);
         tryParse(playerConfig["drankMaskColor"], layout->m_drankMaskColor);
-        tryParse(playerConfig["duanchangMaskColor"], layout->m_duanchangMaskColor);
         tryParse(playerConfig["deathEffectColor"], layout->m_deathEffectColor);
         tryParse(playerConfig["generalShadowColor"], layout->m_generalShadowColor);
         tryParse(playerConfig["extraSkillArea"], layout->m_extraSkillArea);
@@ -1096,23 +1131,25 @@ const QSanRoomSkin &QSanSkinScheme::getRoomSkin() const
 
 QSanSkinFactory &QSanSkinFactory::getInstance()
 {
-    if (_sm_singleton == NULL) {
+    if (_sm_singleton == nullptr) {
 #ifdef Q_OS_WIN
         _sm_singleton = new QSanSkinFactory("skins/skinList.json");
 #else
         _sm_singleton = new QSanSkinFactory("skins/skinListAlt.json");
 #endif
 
-        QObject::connect(qApp, &QCoreApplication::aboutToQuit, []() { _sm_singleton->destroyInstance(); });
+        QObject::connect(qApp, &QCoreApplication::aboutToQuit, []() {
+            _sm_singleton->destroyInstance();
+        });
     }
     return *_sm_singleton;
 }
 
 void QSanSkinFactory::destroyInstance()
 {
-    if (_sm_singleton) {
+    if (_sm_singleton != nullptr) {
         delete _sm_singleton;
-        _sm_singleton = NULL;
+        _sm_singleton = nullptr;
     }
 }
 
@@ -1161,6 +1198,14 @@ void QSanRoomSkin::getHeroSkinContainerGeneralIconPathAndClipRegion(const QStrin
     QString unique_general = generalName;
     if (unique_general.endsWith("_hegemony"))
         unique_general = unique_general.replace("_hegemony", "");
+    if (skinIndex == 0 && isHegemonyGameMode(ServerInfo.GameMode)) {
+        QDir dir("image/fullskin/generals/full");
+        dir.setNameFilters(QStringList(QString("%1.png").arg(generalName)));
+        QStringList tmpFiles = dir.entryList(QDir::Files | QDir::NoDotAndDotDot);
+        if (!tmpFiles.isEmpty())
+            unique_general = generalName;
+    }
+
     QString customSkinBaseKey = QString(S_HERO_SKIN_KEY_GENERAL_ICON).arg(unique_general);
     QString customSkinKey = QString("%1-%2").arg(customSkinBaseKey).arg(skinIndex);
 
@@ -1171,7 +1216,7 @@ void QSanRoomSkin::getHeroSkinContainerGeneralIconPathAndClipRegion(const QStrin
     keys << customSkinKey << customSkinBaseKey << defaultSkinKey << defaultSkinBaseKey;
 
     int key_count = keys.count();
-    int i;
+    int i = 0;
     QString skin_key;
     for (i = 0; i < key_count; ++i) {
         skin_key = keys[i];

@@ -3,7 +3,11 @@
 
 #include "card.h"
 #include "package.h"
+
 #include <QDialog>
+
+class QAbstractButton;
+class QButtonGroup;
 
 class Fsu0413GainianDialog : public QDialog
 {
@@ -32,17 +36,6 @@ signals:
     void onButtonClick();
 };
 
-class Fsu0413Fei2ZhaiCard : public SkillCard
-{
-    Q_OBJECT
-
-public:
-    Q_INVOKABLE Fsu0413Fei2ZhaiCard();
-
-    virtual void onUse(Room *room, const CardUseStruct &card_use) const;
-    virtual void use(Room *room, ServerPlayer *source, QList<ServerPlayer *> &targets) const;
-};
-
 class Fsu0413JbdNashaCard : public SkillCard
 {
     Q_OBJECT
@@ -50,8 +43,8 @@ class Fsu0413JbdNashaCard : public SkillCard
 public:
     Q_INVOKABLE Fsu0413JbdNashaCard();
 
-    virtual bool targetFilter(const QList<const Player *> &targets, const Player *to_select, const Player *Self) const;
-    virtual void onEffect(const CardEffectStruct &effect) const;
+    bool targetFilter(const QList<const Player *> &targets, const Player *to_select, const Player *Self) const override;
+    void onEffect(const CardEffectStruct &effect) const override;
 };
 
 class PlaygroundPackage : public Package

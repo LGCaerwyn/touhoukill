@@ -13,7 +13,7 @@ static CardOverview *Overview;
 
 CardOverview *CardOverview::getInstance(QWidget *main_window)
 {
-    if (Overview == NULL)
+    if (Overview == nullptr)
         Overview = new CardOverview(main_window);
 
     return Overview;
@@ -163,7 +163,7 @@ void CardOverview::askCard()
 
 void CardOverview::on_tableWidget_itemDoubleClicked(QTableWidgetItem *)
 {
-    if (Self)
+    if (Self != nullptr)
         askCard();
 }
 

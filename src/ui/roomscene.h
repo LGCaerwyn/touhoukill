@@ -45,7 +45,7 @@ class ScriptExecutor : public QDialog
     Q_OBJECT
 
 public:
-    ScriptExecutor(QWidget *parent);
+    explicit ScriptExecutor(QWidget *parent);
 
 public slots:
     void doScript();
@@ -56,10 +56,10 @@ class DeathNoteDialog : public QDialog
     Q_OBJECT
 
 public:
-    DeathNoteDialog(QWidget *parent);
+    explicit DeathNoteDialog(QWidget *parent);
 
 protected:
-    virtual void accept();
+    void accept() override;
 
 private:
     QComboBox *killer;
@@ -71,10 +71,10 @@ class DamageMakerDialog : public QDialog
     Q_OBJECT
 
 public:
-    DamageMakerDialog(QWidget *parent);
+    explicit DamageMakerDialog(QWidget *parent);
 
 protected:
-    virtual void accept();
+    void accept() override;
 
 private:
     QComboBox *damage_source;
@@ -105,16 +105,16 @@ class ReplayerControlBar : public QGraphicsObject
     Q_OBJECT
 
 public:
-    ReplayerControlBar(Dashboard *dashboard);
+    explicit ReplayerControlBar(Dashboard *dashboard);
     static QString FormatTime(int secs);
-    virtual QRectF boundingRect() const;
+    QRectF boundingRect() const override;
 
 public slots:
     void setTime(int secs);
     void setSpeed(qreal speed);
 
 protected:
-    virtual void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget);
+    void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget) override;
     static const int S_BUTTON_GAP = 3;
     static const int S_BUTTON_WIDTH = 25;
     static const int S_BUTTON_HEIGHT = 21;
@@ -131,7 +131,7 @@ class TimeLabel : public QGraphicsObject
 
 public:
     TimeLabel();
-    virtual QRectF boundingRect() const;
+    QRectF boundingRect() const override;
     void initializeLabel();
     void startCounting();
 
@@ -139,7 +139,7 @@ public slots:
     void updateTimerLabel();
 
 protected:
-    virtual void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget);
+    void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget) override;
 
 private:
     // Widget For Timer Label
@@ -155,13 +155,13 @@ public:
     explicit CommandLinkDoubleClickButton(QWidget *parent = Q_NULLPTR);
     explicit CommandLinkDoubleClickButton(const QString &text, QWidget *parent = Q_NULLPTR);
     explicit CommandLinkDoubleClickButton(const QString &text, const QString &description, QWidget *parent = Q_NULLPTR);
-    ~CommandLinkDoubleClickButton();
+    ~CommandLinkDoubleClickButton() override;
 
 signals:
     void double_clicked(QPrivateSignal);
 
 protected:
-    void mouseDoubleClickEvent(QMouseEvent *event);
+    void mouseDoubleClickEvent(QMouseEvent *event) override;
 };
 
 class RoomScene : public QGraphicsScene
@@ -169,8 +169,8 @@ class RoomScene : public QGraphicsScene
     Q_OBJECT
 
 public:
-    RoomScene(QMainWindow *main_window);
-    ~RoomScene();
+    explicit RoomScene(QMainWindow *main_window);
+    ~RoomScene() override;
     void changeTextEditBackground();
     void adjustItems();
     void showIndicator(const QString &from, const QString &to);
@@ -187,11 +187,7 @@ public:
 
     inline bool isCancelButtonEnabled() const
     {
-        return cancel_button != NULL && cancel_button->isEnabled();
-    }
-    inline void setGuhuoLog(const QString &log)
-    {
-        guhuo_log = log;
+        return cancel_button != nullptr && cancel_button->isEnabled();
     }
 
     bool m_skillButtonSank;
@@ -272,12 +268,12 @@ public slots:
     void hidePile();
 
 protected:
-    virtual void mousePressEvent(QGraphicsSceneMouseEvent *event);
-    virtual void mouseMoveEvent(QGraphicsSceneMouseEvent *event);
-    virtual void mouseReleaseEvent(QGraphicsSceneMouseEvent *event);
-    virtual void keyReleaseEvent(QKeyEvent *event);
+    void mousePressEvent(QGraphicsSceneMouseEvent *event) override;
+    void mouseMoveEvent(QGraphicsSceneMouseEvent *event) override;
+    void mouseReleaseEvent(QGraphicsSceneMouseEvent *event) override;
+    void keyReleaseEvent(QKeyEvent *event) override;
     //this method causes crashes
-    virtual void contextMenuEvent(QGraphicsSceneContextMenuEvent *event);
+    void contextMenuEvent(QGraphicsSceneContextMenuEvent *event) override;
     QMutex m_roomMutex;
     QMutex m_zValueMutex;
 
@@ -294,7 +290,7 @@ private:
     QGraphicsItem *_m_last_front_item;
     double _m_last_front_ZValue;
     GenericCardContainer *_getGenericCardContainer(Player::Place place, Player *player);
-    QMap<int, QList<QList<CardItem *> > > _m_cardsMoveStash;
+    QMap<int, QList<QList<CardItem *>>> _m_cardsMoveStash;
     Button *add_robot;
     Button *fill_robots;
     Button *return_to_main_menu;
@@ -319,8 +315,6 @@ private:
 
     QGraphicsRectItem *pausing_item;
     QGraphicsSimpleTextItem *pausing_text;
-
-    QString guhuo_log;
 
     QList<QGraphicsPixmapItem *> role_items;
     CardContainer *card_container;
@@ -380,7 +374,7 @@ private:
 
     struct _MoveCardsClassifier
     {
-        inline _MoveCardsClassifier(const CardsMoveStruct &move)
+        inline explicit _MoveCardsClassifier(const CardsMoveStruct &move)
         {
             m_card_ids = move.card_ids;
         }
@@ -407,8 +401,8 @@ private:
 
     void selectTarget(int order, bool multiple);
     void selectNextTarget(bool multiple);
-    void unselectAllTargets(const QGraphicsItem *except = NULL);
-    void updateTargetsEnablity(const Card *card = NULL);
+    void unselectAllTargets(const QGraphicsItem *except = nullptr);
+    void updateTargetsEnablity(const Card *card = nullptr);
 
     void callViewAsSkill();
     void cancelViewAsSkill();
@@ -517,7 +511,6 @@ private slots:
     void changeGeneral(const QString &general);
     void revealGeneral(bool self, const QString &general);
 
-    void skillStateChange(const QString &skill_name);
     void trust();
     void skillInvalidityChange(ClientPlayer *player);
 

@@ -13,9 +13,6 @@ class Settings : public QSettings
 {
     Q_OBJECT
 
-private:
-    void loadSettingsFromConfigIni();
-
 public:
     explicit Settings();
     void init();
@@ -113,6 +110,9 @@ public:
     static const int S_MOVE_CARD_ANIMATION_DURATION;
     static const int S_JUDGE_ANIMATION_DURATION;
     static const int S_JUDGE_LONG_DELAY;
+
+    bool AutoUpdateNeedsRestart;
+    bool AutoUpdateDataRececived;
 };
 
 Settings *configInstance();

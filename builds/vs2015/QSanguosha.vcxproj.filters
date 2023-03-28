@@ -31,9 +31,6 @@
     <Filter Include="package">
       <UniqueIdentifier>{12921f3f-26ad-402c-a6a2-9865e25d3ec8}</UniqueIdentifier>
     </Filter>
-    <Filter Include="scenario">
-      <UniqueIdentifier>{6db79ca9-2e4f-498e-b52b-c59736aabf0f}</UniqueIdentifier>
-    </Filter>
     <Filter Include="ui">
       <UniqueIdentifier>{ffa117bb-84ff-4371-9304-3f2c80af7d0e}</UniqueIdentifier>
     </Filter>
@@ -60,6 +57,9 @@
     <Filter Include="Form Files">
       <UniqueIdentifier>{c1f0d23e-0665-4100-990b-a5a0d4709b14}</UniqueIdentifier>
     </Filter>
+    <Filter Include="package\scenario">
+      <UniqueIdentifier>{6db79ca9-2e4f-498e-b52b-c59736aabf0f}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\swig\sanguosha_wrap.cxx">
@@ -78,9 +78,6 @@
       <Filter>client</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\core\audio.cpp">
-      <Filter>core</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\core\banpair.cpp">
       <Filter>core</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\core\card.cpp">
@@ -119,9 +116,6 @@
     <ClCompile Include="..\..\src\dialog\distanceviewdialog.cpp">
       <Filter>dialog</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\dialog\customassigndialog.cpp">
-      <Filter>dialog</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\dialog\connectiondialog.cpp">
       <Filter>dialog</Filter>
     </ClCompile>
@@ -145,15 +139,6 @@
     </ClCompile>
     <ClCompile Include="..\..\src\package\exppattern.cpp">
       <Filter>package</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\scenario\miniscenarios.cpp">
-      <Filter>scenario</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\scenario\scenario.cpp">
-      <Filter>scenario</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\scenario\scenerule.cpp">
-      <Filter>scenario</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\ui\chatwidget.cpp">
       <Filter>ui</Filter>
@@ -180,9 +165,6 @@
       <Filter>ui</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\ui\pixmapanimation.cpp">
-      <Filter>ui</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\ui\window.cpp">
       <Filter>ui</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\ui\startscene.cpp">
@@ -224,12 +206,6 @@
     <ClCompile Include="..\..\src\server\roomthread.cpp">
       <Filter>server</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\server\roomthread1v1.cpp">
-      <Filter>server</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\server\roomthread3v3.cpp">
-      <Filter>server</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\server\server.cpp">
       <Filter>server</Filter>
     </ClCompile>
@@ -260,18 +236,6 @@
     <ClCompile Include="..\..\src\core\record-analysis.cpp">
       <Filter>core</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\server\roomthreadxmode.cpp">
-      <Filter>server</Filter>
-    </ClCompile>
-    <ClCompile Include="Debug\moc_roomthreadxmode.cpp">
-      <Filter>Generated Files\Debug</Filter>
-    </ClCompile>
-    <ClCompile Include="Release\moc_roomthreadxmode.cpp">
-      <Filter>Generated Files\Release</Filter>
-    </ClCompile>
-    <ClCompile Include="Release\moc_window.cpp">
-      <Filter>Generated Files\Release</Filter>
-    </ClCompile>
     <ClCompile Include="Release\moc_startscene.cpp">
       <Filter>Generated Files\Release</Filter>
     </ClCompile>
@@ -297,15 +261,6 @@
       <Filter>Generated Files\Release</Filter>
     </ClCompile>
     <ClCompile Include="Release\moc_server.cpp">
-      <Filter>Generated Files\Release</Filter>
-    </ClCompile>
-    <ClCompile Include="Release\moc_scenario.cpp">
-      <Filter>Generated Files\Release</Filter>
-    </ClCompile>
-    <ClCompile Include="Release\moc_roomthread3v3.cpp">
-      <Filter>Generated Files\Release</Filter>
-    </ClCompile>
-    <ClCompile Include="Release\moc_roomthread1v1.cpp">
       <Filter>Generated Files\Release</Filter>
     </ClCompile>
     <ClCompile Include="Release\moc_roomthread.cpp">
@@ -339,9 +294,6 @@
       <Filter>Generated Files\Release</Filter>
     </ClCompile>
     <ClCompile Include="Release\moc_nativesocket.cpp">
-      <Filter>Generated Files\Release</Filter>
-    </ClCompile>
-    <ClCompile Include="Release\moc_miniscenarios.cpp">
       <Filter>Generated Files\Release</Filter>
     </ClCompile>
     <ClCompile Include="Release\moc_maneuvering.cpp">
@@ -378,9 +330,6 @@
       <Filter>Generated Files\Release</Filter>
     </ClCompile>
     <ClCompile Include="Release\moc_dashboard.cpp">
-      <Filter>Generated Files\Release</Filter>
-    </ClCompile>
-    <ClCompile Include="Release\moc_customassigndialog.cpp">
       <Filter>Generated Files\Release</Filter>
     </ClCompile>
     <ClCompile Include="Release\moc_connectiondialog.cpp">
@@ -473,9 +422,6 @@
     <ClCompile Include="Debug\moc_connectiondialog.cpp">
       <Filter>Generated Files\Debug</Filter>
     </ClCompile>
-    <ClCompile Include="Debug\moc_customassigndialog.cpp">
-      <Filter>Generated Files\Debug</Filter>
-    </ClCompile>
     <ClCompile Include="Debug\moc_dashboard.cpp">
       <Filter>Generated Files\Debug</Filter>
     </ClCompile>
@@ -512,9 +458,6 @@
     <ClCompile Include="Debug\moc_maneuvering.cpp">
       <Filter>Generated Files\Debug</Filter>
     </ClCompile>
-    <ClCompile Include="Debug\moc_miniscenarios.cpp">
-      <Filter>Generated Files\Debug</Filter>
-    </ClCompile>
     <ClCompile Include="Debug\moc_nativesocket.cpp">
       <Filter>Generated Files\Debug</Filter>
     </ClCompile>
@@ -548,15 +491,6 @@
     <ClCompile Include="Debug\moc_roomthread.cpp">
       <Filter>Generated Files\Debug</Filter>
     </ClCompile>
-    <ClCompile Include="Debug\moc_roomthread1v1.cpp">
-      <Filter>Generated Files\Debug</Filter>
-    </ClCompile>
-    <ClCompile Include="Debug\moc_roomthread3v3.cpp">
-      <Filter>Generated Files\Debug</Filter>
-    </ClCompile>
-    <ClCompile Include="Debug\moc_scenario.cpp">
-      <Filter>Generated Files\Debug</Filter>
-    </ClCompile>
     <ClCompile Include="Debug\moc_server.cpp">
       <Filter>Generated Files\Debug</Filter>
     </ClCompile>
@@ -582,9 +516,6 @@
       <Filter>Generated Files\Debug</Filter>
     </ClCompile>
     <ClCompile Include="Debug\moc_startscene.cpp">
-      <Filter>Generated Files\Debug</Filter>
-    </ClCompile>
-    <ClCompile Include="Debug\moc_window.cpp">
       <Filter>Generated Files\Debug</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\main.cpp" />
@@ -946,6 +877,51 @@
     <ClCompile Include="Release\moc_hegemonyCard.cpp">
       <Filter>Generated Files\Release</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\dialog\updatedialog.cpp">
+      <Filter>dialog</Filter>
+    </ClCompile>
+    <ClCompile Include="Debug\moc_updatedialog.cpp">
+      <Filter>Generated Files\Debug</Filter>
+    </ClCompile>
+    <ClCompile Include="Release\moc_updatedialog.cpp">
+      <Filter>Generated Files\Release</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\ui\sgswindow.cpp">
+      <Filter>ui</Filter>
+    </ClCompile>
+    <ClCompile Include="Debug\moc_sgswindow.cpp">
+      <Filter>Generated Files\Debug</Filter>
+    </ClCompile>
+    <ClCompile Include="Release\moc_sgswindow.cpp">
+      <Filter>Generated Files\Release</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\package\th17.cpp">
+      <Filter>package</Filter>
+    </ClCompile>
+    <ClCompile Include="Debug\moc_th17.cpp">
+      <Filter>Generated Files\Debug</Filter>
+    </ClCompile>
+    <ClCompile Include="Release\moc_th17.cpp">
+      <Filter>Generated Files\Release</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\package\th18.cpp">
+      <Filter>package</Filter>
+    </ClCompile>
+    <ClCompile Include="Debug\moc_th18.cpp">
+      <Filter>Generated Files\Debug</Filter>
+    </ClCompile>
+    <ClCompile Include="Release\moc_th18.cpp">
+      <Filter>Generated Files\Release</Filter>
+    </ClCompile>
+    <ClCompile Include="Debug\moc_peasants_vs_landlord.cpp">
+      <Filter>Generated Files\Debug</Filter>
+    </ClCompile>
+    <ClCompile Include="Release\moc_peasants_vs_landlord.cpp">
+      <Filter>Generated Files\Release</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\package\peasants_vs_landlord.cpp">
+      <Filter>package</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="..\..\src\server\ai.h">
@@ -961,12 +937,6 @@
       <Filter>server</Filter>
     </CustomBuild>
     <CustomBuild Include="..\..\src\server\roomthread.h">
-      <Filter>server</Filter>
-    </CustomBuild>
-    <CustomBuild Include="..\..\src\server\roomthread1v1.h">
-      <Filter>server</Filter>
-    </CustomBuild>
-    <CustomBuild Include="..\..\src\server\roomthread3v3.h">
       <Filter>server</Filter>
     </CustomBuild>
     <CustomBuild Include="..\..\src\server\server.h">
@@ -1044,12 +1014,6 @@
     <CustomBuild Include="..\..\src\package\package.h">
       <Filter>package</Filter>
     </CustomBuild>
-    <CustomBuild Include="..\..\src\scenario\scenario.h">
-      <Filter>scenario</Filter>
-    </CustomBuild>
-    <CustomBuild Include="..\..\src\scenario\miniscenarios.h">
-      <Filter>scenario</Filter>
-    </CustomBuild>
     <CustomBuild Include="..\..\src\ui\button.h">
       <Filter>ui</Filter>
     </CustomBuild>
@@ -1086,9 +1050,6 @@
     <CustomBuild Include="..\..\src\ui\startscene.h">
       <Filter>ui</Filter>
     </CustomBuild>
-    <CustomBuild Include="..\..\src\ui\window.h">
-      <Filter>ui</Filter>
-    </CustomBuild>
     <CustomBuild Include="..\..\src\util\socket.h">
       <Filter>util</Filter>
     </CustomBuild>
@@ -1104,25 +1065,16 @@
     <CustomBuild Include="..\..\src\ui\rolecombobox.h">
       <Filter>ui</Filter>
     </CustomBuild>
-    <CustomBuild Include="..\..\src\dialog\customassigndialog.h">
-      <Filter>dialog</Filter>
-    </CustomBuild>
     <CustomBuild Include="..\..\src\ui\qsanbutton.h">
       <Filter>ui</Filter>
     </CustomBuild>
     <CustomBuild Include="..\..\src\core\record-analysis.h">
       <Filter>core</Filter>
     </CustomBuild>
-    <CustomBuild Include="..\..\src\server\roomthreadxmode.h">
-      <Filter>server</Filter>
-    </CustomBuild>
     <CustomBuild Include="..\..\src\dialog\cardoverview.ui">
       <Filter>Form Files</Filter>
     </CustomBuild>
     <CustomBuild Include="..\..\src\dialog\configdialog.ui">
-      <Filter>Form Files</Filter>
-    </CustomBuild>
-    <CustomBuild Include="..\..\src\dialog\connectiondialog.ui">
       <Filter>Form Files</Filter>
     </CustomBuild>
     <CustomBuild Include="..\..\src\dialog\generaloverview.ui">
@@ -1242,6 +1194,21 @@
     <CustomBuild Include="..\..\src\package\hegemonyCard.h">
       <Filter>package</Filter>
     </CustomBuild>
+    <CustomBuild Include="..\..\src\dialog\updatedialog.h">
+      <Filter>dialog</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\src\ui\sgswindow.h">
+      <Filter>ui</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\src\package\th17.h">
+      <Filter>package</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\src\package\th18.h">
+      <Filter>package</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\src\package\peasants_vs_landlord.h">
+      <Filter>package</Filter>
+    </CustomBuild>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="..\..\resource\icon.rc" />
@@ -1291,17 +1258,11 @@
     <ClInclude Include="..\..\src\core\audio.h">
       <Filter>core</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\core\banpair.h">
-      <Filter>core</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\src\core\compiler-specific.h">
       <Filter>core</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\package\exppattern.h">
       <Filter>package</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\scenario\scenerule.h">
-      <Filter>scenario</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\core\util.h">
       <Filter>core</Filter>

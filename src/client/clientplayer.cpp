@@ -7,7 +7,7 @@
 #include <QTextDocument>
 #include <QTextOption>
 
-ClientPlayer *Self = NULL;
+ClientPlayer *Self = nullptr;
 
 ClientPlayer::ClientPlayer(Client *client)
     : Player(client)
@@ -39,7 +39,7 @@ void ClientPlayer::addCard(const Card *card, Place place)
 {
     switch (place) {
     case PlaceHand: {
-        if (card)
+        if (card != nullptr)
             known_cards << card;
         handcard_num++;
         break;
@@ -93,7 +93,7 @@ void ClientPlayer::removeCard(const Card *card, Place place)
     switch (place) {
     case PlaceHand: {
         handcard_num--;
-        if (card)
+        if (card != nullptr)
             known_cards.removeOne(card);
         break;
     }
@@ -186,8 +186,6 @@ void ClientPlayer::setFlags(const QString &flag)
 
     if (flag.endsWith("actioned"))
         emit action_taken();
-
-    emit skill_state_changed(flag);
 }
 
 void ClientPlayer::setMark(const QString &mark, int value)
@@ -199,6 +197,9 @@ void ClientPlayer::setMark(const QString &mark, int value)
     if (mark == "drank" || mark == "magic_drank")
         emit drank_changed();
 
+    if (mark == "coupling__yingyingguai")
+        emit duozhi_changed();
+
     if (!mark.startsWith("@"))
         return;
 
@@ -206,62 +207,25 @@ void ClientPlayer::setMark(const QString &mark, int value)
     // set mark doc
     QString text = "";
     QMapIterator<QString, int> itor(marks);
-    int huashen_mark = 0;
-    int yongsi_test_mark = 0, jushou_test_mark = 0;
-    int max_cards_test_mark = 0, offensive_distance_test_mark = 0, defensive_distance_test_mark = 0;
     while (itor.hasNext()) {
         itor.next();
 
         if (itor.key().startsWith("@") && itor.value() > 0) {
-#define _EXCLUDE_MARK(markname)                            \
-    do {                                                   \
-        if (itor.key() == QString("@%1").arg(#markname)) { \
-            markname##_mark = itor.value();                \
-            continue;                                      \
-        }                                                  \
-    } while (false)
+            if (this == Self && (itor.key() == "@HalfLife" || itor.key() == "@CompanionEffect" || itor.key() == "@Pioneer"))
+                continue;
 
-            _EXCLUDE_MARK(huashen);
-            _EXCLUDE_MARK(yongsi_test);
-            _EXCLUDE_MARK(jushou_test);
-            _EXCLUDE_MARK(max_cards_test);
-            _EXCLUDE_MARK(offensive_distance_test);
-            _EXCLUDE_MARK(defensive_distance_test);
-#undef _EXCLUDE_MARK
+            QString itorKey = itor.key();
+            if (itorKey == "@dimai_displaying")
+                itorKey.append(QString::number(itor.value()));
 
-            QString mark_text = QString("<img src='image/mark/%1.png' />").arg(itor.key());
-            if (itor.value() != 1)
+            QString mark_text = QString("<img src='image/mark/%1.png' />").arg(itorKey);
+            if ((itor.key() != "@dimai_displaying") && (itor.value() != 1))
                 mark_text.append(QString("<font size='4'>%1</font>").arg(itor.value()));
-            //mark_text.append(QString("%1").arg(itor.value()));
             if (this != Self)
                 mark_text.append("<br>");
             text.append(mark_text);
         }
     }
-//<img src='image/mark/%1.png' />2<br>
-// keep these marks at a certain place
-#define _SET_MARK(markname)                                                                      \
-    do {                                                                                         \
-        if (markname##_mark > 0) {                                                               \
-            QString mark_text = QString("<img src='image/mark/test/@%1.png' />").arg(#markname); \
-            if (markname##_mark != 1) {                                                          \
-                mark_text.append(QString("%1").arg(markname##_mark));                            \
-            }                                                                                    \
-            if (this != Self) {                                                                  \
-                mark_text.append("<br>");                                                        \
-                text.prepend(mark_text);                                                         \
-            } else {                                                                             \
-                text.append(mark_text);                                                          \
-            }                                                                                    \
-        }                                                                                        \
-    } while (false)
 
-    _SET_MARK(huashen);
-    _SET_MARK(yongsi_test);
-    _SET_MARK(jushou_test);
-    _SET_MARK(max_cards_test);
-    _SET_MARK(offensive_distance_test);
-    _SET_MARK(defensive_distance_test);
-#undef _SET_MARK
     mark_doc->setHtml(text);
 }

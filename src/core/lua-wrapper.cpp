@@ -37,10 +37,10 @@ QDialog *LuaViewAsSkill::getDialog() const
 {
     int dialog_type = (int)guhuo_dialog_type;
     if (dialog_type == 0)
-        return NULL;
+        return nullptr;
 
-    bool has_left = (dialog_type & 1);
-    bool has_right = (dialog_type & 2);
+    bool has_left = (dialog_type & 1) != 0;
+    bool has_right = (dialog_type & 2) != 0;
 
     return QijiDialog::getInstance(objectName(), has_left, has_right);
 }
@@ -94,9 +94,9 @@ LuaSkillCard::LuaSkillCard(const char *name, const char *skillName)
     , on_validate(0)
     , on_validate_in_response(0)
 {
-    if (name) {
+    if (name != nullptr) {
         LuaSkillCards.insert(name, this);
-        if (skillName) {
+        if (skillName != nullptr) {
             m_skillName = skillName;
             LuaSkillCardsSkillName.insert(name, skillName);
         }
@@ -106,7 +106,7 @@ LuaSkillCard::LuaSkillCard(const char *name, const char *skillName)
 
 LuaSkillCard *LuaSkillCard::clone() const
 {
-    LuaSkillCard *new_card = new LuaSkillCard(NULL, NULL);
+    LuaSkillCard *new_card = new LuaSkillCard(nullptr, nullptr);
 
     new_card->setObjectName(objectName());
     new_card->setSkillName(m_skillName);
@@ -161,11 +161,11 @@ LuaSkillCard *LuaSkillCard::Parse(const QString &str)
         subcard_str = texts.at(4);
         user_string = texts.at(5);
     } else
-        return NULL;
+        return nullptr;
 
     const LuaSkillCard *c = LuaSkillCards.value(name, NULL);
-    if (c == NULL)
-        return NULL;
+    if (c == nullptr)
+        return nullptr;
 
     LuaSkillCard *new_card = c->clone();
 

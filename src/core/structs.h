@@ -69,6 +69,7 @@ struct SlashEffectStruct
     ServerPlayer *to;
 
     int drank;
+    int magic_drank;
 
     DamageStruct::Nature nature;
     bool multiple;
@@ -105,6 +106,7 @@ struct CardUseStruct
     bool m_isLastHandcard;
     QList<int> m_showncards;
     QStringList nullified_list;
+    QList<int> m_effectValue;
 };
 
 class CardMoveReason
@@ -248,8 +250,8 @@ struct CardsMoveStruct
     {
         from_place = Player::PlaceUnknown;
         to_place = Player::PlaceUnknown;
-        from = NULL;
-        to = NULL;
+        from = nullptr;
+        to = nullptr;
         is_last_handcard = false;
     }
 
@@ -262,9 +264,9 @@ struct CardsMoveStruct
         this->to = to;
         this->reason = reason;
         is_last_handcard = false;
-        if (from)
+        if (from != nullptr)
             from_player_name = from->objectName();
-        if (to)
+        if (to != nullptr)
             to_player_name = to->objectName();
     }
 
@@ -273,11 +275,11 @@ struct CardsMoveStruct
         this->card_ids = ids;
         this->from_place = Player::PlaceUnknown;
         this->to_place = to_place;
-        this->from = NULL;
+        this->from = nullptr;
         this->to = to;
         this->reason = reason;
         is_last_handcard = false;
-        if (to)
+        if (to != nullptr)
             to_player_name = to->objectName();
     }
 
@@ -290,9 +292,9 @@ struct CardsMoveStruct
         this->to = to;
         this->reason = reason;
         is_last_handcard = false;
-        if (from)
+        if (from != nullptr)
             from_player_name = from->objectName();
-        if (to)
+        if (to != nullptr)
             to_player_name = to->objectName();
     }
 
@@ -301,11 +303,11 @@ struct CardsMoveStruct
         this->card_ids << id;
         this->from_place = Player::PlaceUnknown;
         this->to_place = to_place;
-        this->from = NULL;
+        this->from = nullptr;
         this->to = to;
         this->reason = reason;
         is_last_handcard = false;
-        if (to)
+        if (to != nullptr)
             to_player_name = to->objectName();
     }
 
@@ -338,7 +340,7 @@ struct CardsMoveStruct
     QVariant toVariant() const;
     inline bool isRelevant(const Player *player) const
     {
-        return player != NULL && (from == player || (to == player && to_place != Player::PlaceSpecial));
+        return player != nullptr && (from == player || (to == player && to_place != Player::PlaceSpecial));
     }
 };
 
@@ -452,7 +454,8 @@ struct PhaseStruct
 
 struct CardResponseStruct
 {
-    inline CardResponseStruct(const Card *card = NULL, ServerPlayer *who = NULL, bool isuse = false, bool isRetrial = false, bool isProvision = false, ServerPlayer *from = NULL)
+    inline explicit CardResponseStruct(const Card *card = nullptr, ServerPlayer *who = nullptr, bool isuse = false, bool isRetrial = false, bool isProvision = false,
+                                       ServerPlayer *from = nullptr)
         : m_card(card)
         , m_who(who)
         , m_isUse(isuse)
@@ -506,11 +509,11 @@ struct CardAskedStruct
 
 struct SkillInvokeDetail
 {
-    explicit SkillInvokeDetail(const TriggerSkill *skill = NULL, ServerPlayer *owner = NULL, ServerPlayer *invoker = NULL,
-                               const QList<ServerPlayer *> &targets = QList<ServerPlayer *>(), bool isCompulsory = false, ServerPlayer *preferredTarget = NULL,
+    explicit SkillInvokeDetail(const TriggerSkill *skill = nullptr, ServerPlayer *owner = nullptr, ServerPlayer *invoker = nullptr,
+                               const QList<ServerPlayer *> &targets = QList<ServerPlayer *>(), bool isCompulsory = false, ServerPlayer *preferredTarget = nullptr,
                                bool showHidden = true);
-    SkillInvokeDetail(const TriggerSkill *skill, ServerPlayer *owner, ServerPlayer *invoker, ServerPlayer *target, bool isCompulsory = false, ServerPlayer *preferredTarget = NULL,
-                      bool showHidden = true);
+    SkillInvokeDetail(const TriggerSkill *skill, ServerPlayer *owner, ServerPlayer *invoker, ServerPlayer *target, bool isCompulsory = false,
+                      ServerPlayer *preferredTarget = nullptr, bool showHidden = true);
 
     const TriggerSkill *skill; // the skill
     ServerPlayer *owner; // skill owner. 2 structs with the same skill and skill owner are treated as of a same skill.
@@ -689,6 +692,7 @@ enum TriggerEvent
     RemoveStateChanged,
     BrokenEquipChanged,
     ShownCardChanged,
+    RoleShownChanged,
 
     ConfirmDamage, // confirm the damage's count and damage's nature
     Predamage, // trigger the certain skill -- jueqing

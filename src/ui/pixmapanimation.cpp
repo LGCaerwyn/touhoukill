@@ -31,7 +31,7 @@
 const int PixmapAnimation::S_DEFAULT_INTERVAL = 50;
 
 PixmapAnimation::PixmapAnimation()
-    : QGraphicsItem(0)
+    : QGraphicsItem(nullptr)
 {
     m_fix_rect = false;
     hideonstop = false;
@@ -40,7 +40,7 @@ PixmapAnimation::PixmapAnimation()
 
 void PixmapAnimation::advance(int phase)
 {
-    if (phase)
+    if (phase != 0)
         current++;
 
     if (current >= frames.size())
@@ -64,7 +64,7 @@ void PixmapAnimation::setPath(const QString &path, bool playback)
 
     if (playback) {
         QList<QPixmap> frames_copy = frames;
-        for (int i = frames_copy.length() - 1; i = 0; i--)
+        for (int i = frames_copy.length() - 1; i == 0; i--)
             frames << frames_copy[i - 1];
     }
 }
@@ -189,7 +189,7 @@ PixmapAnimation *PixmapAnimation::GetPixmapAnimation(QGraphicsItem *parent, cons
         return pma;
     } else {
         delete pma;
-        return NULL;
+        return nullptr;
     }
 }
 

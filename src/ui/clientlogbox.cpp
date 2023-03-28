@@ -43,12 +43,12 @@ void ClientLogBox::appendLog(const QString &type, const QString &from_general, c
     if (type.startsWith("$")) {
         QString log_name;
         foreach (QString one_card, card_str.split("+")) {
-            const Card *card = NULL;
+            const Card *card = nullptr;
             if (type == "$JudgeResult" || type == "$PasteCard")
                 card = Sanguosha->getCard(one_card.toInt());
             else
                 card = Sanguosha->getEngineCard(one_card.toInt());
-            if (card) {
+            if (card != nullptr) {
                 if (log_name.isEmpty())
                     log_name = card->getLogName();
                 else
@@ -84,7 +84,7 @@ void ClientLogBox::appendLog(const QString &type, const QString &from_general, c
             RoomSceneInstance->showIndicator(from_general, to);
 
         const Card *card = Card::Parse(card_str);
-        if (card == NULL)
+        if (card == nullptr)
             return;
 
         QString card_name = card->getLogName();
@@ -111,14 +111,14 @@ void ClientLogBox::appendLog(const QString &type, const QString &from_general, c
             }
 
             QString subcard_str = subcard_list.join(", ");
-            if (card->getTypeId() == Card::TypeSkill && !card->isKindOf("YanxiaoCard")) {
+            if (card->getTypeId() == Card::TypeSkill) {
                 const SkillCard *skill_card = qobject_cast<const SkillCard *>(card);
                 if (subcard_list.isEmpty() || !skill_card->willThrow())
                     log = tr("%from %2 [%1] %3").arg(skill_name).arg(meth).arg(suffix);
                 else
                     log = tr("%from %3 [%1] %4, and the cost is %2").arg(skill_name).arg(subcard_str).arg(meth).arg(suffix);
             } else {
-                if (subcard_list.isEmpty() || card->getSkillName().contains("guhuo"))
+                if (subcard_list.isEmpty())
                     log = tr("%from %4 [%1] %5, %3 [%2]").arg(skill_name).arg(card_name).arg(reason).arg(meth).arg(suffix);
                 else
                     log = tr("%from %5 [%1] %6 %4 %2 as %3").arg(skill_name).arg(subcard_str).arg(card_name).arg(reason).arg(meth).arg(suffix);
@@ -157,11 +157,7 @@ void ClientLogBox::appendLog(const QString &type, const QString &from_general, c
     }
 
     log = QString("<font color='%2'>%1</font>").arg(log).arg(Config.TextEditColor.name());
-    QString final_log = append(log);
-    if (type.contains("#Guhuo"))
-        RoomSceneInstance->setGuhuoLog(final_log);
-    else if (type == "#Chanyuan")
-        RoomSceneInstance->setGuhuoLog(QString());
+    append(log);
 }
 
 QString ClientLogBox::bold(const QString &str, QColor color) const

@@ -1,5 +1,4 @@
 #include "audio.h"
-#include "banpair.h"
 #include "mainwindow.h"
 #include "server.h"
 #include "settings.h"
@@ -25,7 +24,9 @@ int main(int argc, char *argv[])
 #endif
     }
 
+#ifdef QT_NO_DEBUG
     QDir::setCurrent(qApp->applicationDirPath());
+#endif
 
 #ifdef Q_OS_LINUX
     QDir dir(QString("lua"));
@@ -46,9 +47,8 @@ int main(int argc, char *argv[])
     qApp->installTranslator(&qt_translator);
     qApp->installTranslator(&translator);
 
-    Sanguosha = new Engine;
+    Sanguosha->init();
     Config.init();
-    BanPair::loadBanPairs();
 
     if (qApp->arguments().contains("-server")) {
         Server *server = new Server(qApp);

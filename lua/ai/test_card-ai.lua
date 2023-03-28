@@ -33,6 +33,8 @@ sgs.dynamic_value.damage_card.PowerSlash = true
 
 function SmartAI:shouldUseMagicAnaleptic(trick)
 	if sgs.turncount <= 1 and self.role == "renegade" and sgs.isLordHealthy() and self:getOverflow() < 2 then return false end
+	
+	if self.player:hasSkill("duozhi") then return true end
 
 	local nul_f, nul_e = 0, 0
 	for _, f in ipairs(self.friends)do
@@ -72,9 +74,13 @@ function SmartAI:searchForMagicAnaleptic(use, enemy, trick)
 	end
 end
 
+sgs.ai_use_priority.MagicAnaleptic = sgs.ai_use_priority.Analeptic  - 0.2
 
-
-
+function SmartAI:useCardSuperPeach(...)
+	self:useCardPeach(...)
+end
+sgs.ai_use_priority.SuperPeach = 0.7
+--[[
 function SmartAI:useCardSuperPeach(card, use)
 	if self:cautionDoujiu(self.player,card) then
 		return
@@ -83,7 +89,7 @@ function SmartAI:useCardSuperPeach(card, use)
 	local targets = {}
 	local good_targets = {}
 	for _,f in ipairs (self.friends) do
-		if f:isDebuffStatus() then
+		if f:isDebuffStatus() and (not f:isRemoved()) then
 			table.insert(targets, f)
 			if f:isWounded() then
 				table.insert(good_targets, f)
@@ -100,7 +106,7 @@ function SmartAI:useCardSuperPeach(card, use)
 		if self.player:hasArmorEffect("SilverLion") then
 			for _, card in sgs.qlist(self.player:getHandcards()) do
 				if card:isKindOf("Armor") and self:evaluateArmor(card) > 0 then
-					use.to:append(self.player)
+					if use.to then use.to:append(self.player) end
 					use.card = card
 					return
 				end
@@ -168,7 +174,7 @@ function SmartAI:useCardSuperPeach(card, use)
 		end
 	end
 end
-
+]]
 sgs.ai_card_intention.SuperPeach = sgs.ai_card_intention.Peach
 
 sgs.weapon_range.Gun = 4

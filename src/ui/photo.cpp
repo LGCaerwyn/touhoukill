@@ -38,10 +38,10 @@ using namespace QSanProtocol;
 Photo::Photo()
     : PlayerCardContainer()
 {
-    _m_mainFrame = NULL;
-    m_player = NULL;
-    _m_focusFrame = NULL;
-    _m_onlineStatusItem = NULL;
+    _m_mainFrame = nullptr;
+    m_player = nullptr;
+    _m_focusFrame = nullptr;
+    _m_onlineStatusItem = nullptr;
     _m_layout = &G_PHOTO_LAYOUT;
     _m_frameType = S_FRAME_NO_FRAME;
     setAcceptHoverEvents(true);
@@ -51,21 +51,13 @@ Photo::Photo()
 
     emotion_item = new Sprite(_m_groupMain);
 
-    _m_duanchangMask = new QGraphicsRectItem(_m_groupMain);
-    _m_duanchangMask->setRect(boundingRect());
-    _m_duanchangMask->setZValue(32767.0);
-    _m_duanchangMask->setOpacity(0.4);
-    _m_duanchangMask->hide();
-    QBrush duanchang_brush(G_PHOTO_LAYOUT.m_duanchangMaskColor);
-    _m_duanchangMask->setBrush(duanchang_brush);
-
     _createControls();
 }
 
 void Photo::refresh()
 {
     PlayerCardContainer::refresh();
-    if (!m_player)
+    if (m_player == nullptr)
         return;
     QString state_str = m_player->getState();
     if (!state_str.isEmpty() && state_str != "online") {
@@ -80,7 +72,7 @@ void Photo::refresh()
         _layBetween(_m_onlineStatusItem, _m_mainFrame, _m_chainIcon);
         if (!_m_onlineStatusItem->isVisible())
             _m_onlineStatusItem->show();
-    } else if (_m_onlineStatusItem != NULL && state_str == "online")
+    } else if (_m_onlineStatusItem != nullptr && state_str == "online")
         _m_onlineStatusItem->hide();
 }
 
@@ -164,36 +156,6 @@ void Photo::tremble()
     vibrate->start(QAbstractAnimation::DeleteWhenStopped);
 }
 
-/*void Photo::showSkillName(const QString &skill_name,bool isSelf) {
-    //ClientPlayer *player = ClientInstance->getPlayer(player_name);
-    //const ClientPlayer *player = getPlayer();
-    if (!isSelf){
-    G_PHOTO_LAYOUT.m_skillNameFont.paintText(_m_skillNameItem,
-    G_PHOTO_LAYOUT.m_skillNameArea,
-    Qt::AlignLeft,
-    Sanguosha->translate(skill_name));
-    }
-    else{
-    G_DASHBOARD_LAYOUT.m_skillNameFont.paintText(_m_skillNameItem,
-    G_DASHBOARD_LAYOUT.m_skillNameArea,
-    Qt::AlignLeft,
-    Sanguosha->translate(skill_name));
-    }
-
-
-    //G_PHOTO_LAYOUT.m_skillNameFont.paintText(_m_skillNameItem,
-    //                                         G_PHOTO_LAYOUT.m_skillNameArea,
-    //                                         Qt::AlignLeft,
-    //                                         Sanguosha->translate(skill_name));
-    //
-    _m_skillNameItem->show();
-    QTimer::singleShot(1000, this, SLOT(hideSkillName()));
-    }*/
-
-//void Photo::hideSkillName() {
-//    _m_skillNameItem->hide();
-//}
-
 void Photo::hideEmotion()
 {
     QPropertyAnimation *disappear = new QPropertyAnimation(emotion_item, "opacity");
@@ -201,13 +163,6 @@ void Photo::hideEmotion()
     disappear->setEndValue(0.0);
     disappear->setDuration(500);
     disappear->start(QAbstractAnimation::DeleteWhenStopped);
-}
-
-void Photo::updateDuanchang()
-{
-    if (!m_player)
-        return;
-    _m_duanchangMask->setVisible(m_player->getMark("@duanchang") > 0);
 }
 
 const ClientPlayer *Photo::getPlayer() const
@@ -267,8 +222,8 @@ void Photo::setFrame(FrameType type)
 {
     _m_frameType = type;
     if (type == S_FRAME_NO_FRAME) {
-        if (_m_focusFrame) {
-            if (_m_saveMeIcon && _m_saveMeIcon->isVisible())
+        if (_m_focusFrame != nullptr) {
+            if ((_m_saveMeIcon != nullptr) && _m_saveMeIcon->isVisible())
                 setFrame(S_FRAME_SOS);
             else if (m_player->getPhase() != Player::NotActive)
                 setFrame(S_FRAME_PLAYING);

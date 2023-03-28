@@ -55,7 +55,7 @@ const Card *DiscardSkill::viewAs(const QList<const Card *> &cards) const
         card->addSubcards(cards);
         return card;
     } else
-        return NULL;
+        return nullptr;
 }
 
 // -------------------------------------------
@@ -81,7 +81,7 @@ bool ResponseSkill::matchPattern(const Player *player, const Card *card) const
     if (request != Card::MethodNone && player->isCardLimited(card, request))
         return false;
 
-    return pattern && pattern->match(player, card);
+    return (pattern != nullptr) && pattern->match(player, card);
 }
 
 bool ResponseSkill::viewFilter(const Card *card) const
@@ -103,7 +103,7 @@ ShowOrPindianSkill::ShowOrPindianSkill()
 
 bool ShowOrPindianSkill::matchPattern(const Player *player, const Card *card) const
 {
-    return pattern && pattern->match(player, card);
+    return (pattern != nullptr) && pattern->match(player, card);
 }
 
 // -------------------------------------------
@@ -124,13 +124,14 @@ public:
         set = names.toSet();
     }
 
-    virtual bool targetFilter(const QList<const Player *> &targets, const Player *to_select, const Player *) const
+    bool targetFilter(const QList<const Player *> &targets, const Player *to_select, const Player *) const override
     {
         return targets.isEmpty() && set.contains(to_select->objectName());
     }
 
-    void use(Room *room, ServerPlayer *source, QList<ServerPlayer *> &targets) const
+    void use(Room *, const CardUseStruct &) const override
     {
+#if 0
         ServerPlayer *target = targets.first();
 
         room->broadcastSkillInvoke("rende");
@@ -147,6 +148,7 @@ public:
             recover.who = source;
             room->recover(source, recover);
         }
+#endif
     }
 
 private:
@@ -184,7 +186,7 @@ bool YijiViewAsSkill::viewFilter(const QList<const Card *> &selected, const Card
 const Card *YijiViewAsSkill::viewAs(const QList<const Card *> &cards) const
 {
     if (cards.isEmpty() || cards.length() > max_num)
-        return NULL;
+        return nullptr;
 
     card->clearSubcards();
     card->addSubcards(cards);
@@ -206,7 +208,7 @@ public:
         set = names.toSet();
     }
 
-    virtual bool targetFilter(const QList<const Player *> &targets, const Player *to_select, const Player *) const
+    bool targetFilter(const QList<const Player *> &targets, const Player *to_select, const Player *) const override
     {
         return targets.isEmpty() && set.contains(to_select->objectName());
     }

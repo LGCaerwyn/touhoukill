@@ -1,17 +1,10 @@
 #ifndef _MAIN_WINDOW_H
 #define _MAIN_WINDOW_H
 
-#include "configdialog.h"
-#include "connectiondialog.h"
 #include "engine.h"
 
-#include <QCheckBox>
-#include <QComboBox>
-#include <QJsonObject>
+#include <QDialog>
 #include <QMainWindow>
-#include <QNetworkReply>
-#include <QSettings>
-#include <QSpinBox>
 
 namespace Ui {
 class MainWindow;
@@ -28,16 +21,19 @@ class RoomItem;
 class QProgressBar;
 class QLabel;
 class QWinTaskbarButton;
+class UpdateDialog;
+class ConnectionDialog;
+class ConfigDialog;
 
 class BroadcastBox : public QDialog
 {
     Q_OBJECT
 
 public:
-    BroadcastBox(Server *server, QWidget *parent = 0);
+    explicit BroadcastBox(Server *server, QWidget *parent = nullptr);
 
 protected:
-    virtual void accept();
+    void accept() override;
 
 private:
     Server *server;
@@ -50,65 +46,17 @@ public:
     static void preload();
 };
 
-class UpdateDialog : public QDialog
-{
-    Q_OBJECT
-
-public:
-    explicit UpdateDialog(QWidget *parent = 0);
-#if QT_VERSION >= 0x050600
-    void setInfo(const QString &v, const QVersionNumber &vn, const QString &updateScript, const QString &updatePack, const QJsonObject &updateHash);
-#else
-    void setInfo(const QString &v, const QString &vn, const QString &updateScript, const QString &updatePack, const QJsonObject &updateHash);
-#endif
-
-private:
-    QProgressBar *bar;
-    QLabel *lbl;
-    QNetworkAccessManager *downloadManager;
-    QNetworkReply *scriptReply;
-    QNetworkReply *packReply;
-    QWinTaskbarButton *taskbarButton;
-
-    QString m_updateScript;
-    QString m_updatePack;
-    QJsonObject m_updateHash;
-
-    bool m_finishedScript;
-    bool m_finishedPack;
-
-    bool m_busy;
-
-    void startUpdate();
-    bool packHashVerify(const QByteArray &arr);
-
-private slots:
-    void startDownload();
-    void downloadProgress(quint64 downloaded, quint64 total);
-    void finishedScript();
-    void errScript();
-    void finishedPack();
-    void errPack();
-
-public slots:
-    void accept() override;
-    void reject() override;
-
-protected:
-    void showEvent(QShowEvent *event) override;
-};
-
 class MainWindow : public QMainWindow
 {
     Q_OBJECT
 
 public:
-    explicit MainWindow(QWidget *parent = 0);
-    ~MainWindow();
+    explicit MainWindow(QWidget *parent = nullptr);
+    ~MainWindow() override;
     void setBackgroundBrush(bool center_as_origin);
 
 protected:
-    virtual void closeEvent(QCloseEvent *);
+    void closeEvent(QCloseEvent *) override;
 
 private:
     FitView *view;
@@ -116,17 +64,11 @@ private:
     Ui::MainWindow *ui;
     ConnectionDialog *connection_dialog;
     ConfigDialog *config_dialog;
+    UpdateDialog *update_dialog;
     QSystemTrayIcon *systray;
-    QNetworkAccessManager *autoUpdateManager;
 
     void restoreFromConfig();
-    void checkForUpdate();
 
-#if QT_VERSION >= 0x050600
-    void parseUpdateInfo(const QString &v, const QVersionNumber &vn, const QJsonObject &ob);
-#else
-    void parseUpdateInfo(const QString &v, const QString &vn, const QJsonObject &ob);
-#endif
 public slots:
     void startConnection();
 
@@ -163,8 +105,7 @@ private slots:
     void changeTableBg();
     void on_actionView_ban_list_triggered();
 
-    void updateError(QNetworkReply::NetworkError e);
-    void updateInfoReceived();
+    void on_actionDownload_Hero_Skin_and_BGM_triggered();
 };
 
 #endif

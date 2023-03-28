@@ -18,18 +18,29 @@ return
 	[":pioneer_attach"] =  "出牌阶段，你可执行首亮奖励，将手牌补至四张，并观看一名角色的一张暗置武将牌。",
 	["@pioneer_attach"] =  "你执行首亮奖励，观看一名角色的一张暗置武将牌",
 	
-	
+	["reimu_hegemony"] = "博丽灵梦",
 	["tuizhi_hegemony"] = "退治",
 	[":tuizhi_hegemony"] = "当你使用<font size=\"5\", color=\"#FF0000\"><b>♥</b></font>牌时，你可以暗置一名其他角色的一张明置的人物牌。",
 	["tuizhi_hegemony:head"] = "暗置主将",
 	["tuizhi_hegemony:deputy"] = "暗置副将",
-	["@tuizhi"] = "你可以选择一名角色，暗置其一张人物牌",
+	["@tuizhi_hegemony"] = "你可以选择一名角色，暗置其一张人物牌",
 	["tongjie_hegemony"] = "同诘",
 	[":tongjie_hegemony"] = "<font color=\"blue\"><b>锁定技，</b></font>当其他角色明置一张武将牌时，你摸一张牌；其他角色不能于你的回合内明置武将牌。",
 
-	
-    ["reimu_hegemony"] = "博丽灵梦",
+	["mofa_hegemony"] = "魔法",
+	[":mofa_hegemony"] = "<font color=\"blue\"><b>锁定技，</b></font>当你对其他角色造成伤害时，若其有暗置的人物牌，此伤害值+1；当你受到其他角色造成的伤害时，若其有暗置的人物牌，此伤害值-1。",
+	["#mofa_damage1"]= "%from 对 %to 的伤害由 %arg2 点减少到 %arg 点。",
+	["mofa_hegemony:notice1"] = "魔法： 你即将对 <font color=\"#00FF00\"><b>%src </b></font> 造成 %dest 点伤害，是否亮将增加1点伤害",
+	["mofa_hegemony:notice2"] = "魔法： 你即将收到 <font color=\"#00FF00\"><b>%src </b></font> 造成的 %dest点伤害， 是否亮将减少1点伤害",
+
+	["jiezou_hegemony"] = "借走",
+	[":jiezou_hegemony"] = "<font color=\"green\"><b>出牌阶段限一次</b></font>，你可以将一张<font size=\"5\", color=\"#808080\"><b>♠</b></font>牌当无距离限制的【顺手牵羊】使用。",
+
+    
     ["marisa_hegemony"] = "雾雨魔理沙",
+	
+	
+	
 
 --***********************
 --春（花）
@@ -71,6 +82,7 @@ return
 	
 	["seiga_hegemony"]= "霍青娥",
 	["yoshika_hegemony"]= "宫古芳香",
+	["kyouko_hegemony"] = "幽谷响子",
 	
 	["kogasa_hegemony"] = "多多良小伞",
 	["jingxia_hegemony"] = "惊吓" ,--国战削弱
@@ -79,7 +91,6 @@ return
 	["jingxia_hegemony:discard"] = "弃置来源的两张牌" ,
 	["jingxia_hegemony:discardfield"] = "弃置场上的一张牌" ,
 	
-	["kyouko_hegemony"] = "幽谷响子",
 	["kokoro_hegemony"] = "秦心",
 	["unzan_hegemony"] = "云山",
 	["bianhuan_hegemony"] = "变幻",
@@ -90,22 +101,34 @@ return
 	["shanshi_hegemony"] = "善逝" ,
 	[":shanshi_hegemony"] = "当你于一名其他角色的回合内失去牌后或一名其他角色于你的回合内失去牌后，若失去牌的角色的手牌数小于X（X为其体力值且至少为1），你可以令你与其各摸一张牌。<font color=\"green\"><b>每阶段限一次。</b></font>" ,
 	
+	["!sunny_hegemony"] = "桑尼·米尔克",
+	["sunny_hegemony"] = "桑尼",
+	["!lunar_hegemony"] = "露娜·切露德",
+	["lunar_hegemony"] = "露娜",
+	["!star_hegemony"] = "斯塔·萨菲雅",
+	["star_hegemony"] = "斯塔",
 	
 --***********************
 --夏（月）
 
 	["remilia_hegemony"] = "蕾米莉亚",
+	["!remilia_hegemony"] = "蕾米莉亚·斯卡蕾特",
 	--["skltkexue_hegemony"] = "渴血",
 	[":skltkexue_hegemony"] = "你进入濒死状态时，你可以明置此武将牌；当你向其他角色求【桃】时，若其体力值大于其体力下限，其可以失去1点体力，摸一张牌，然后令你回复1点体力。",
 	--["skltkexue_hegemony_attach"]= "渴血出桃",
 	[":skltkexue_attach_hegemony"]= "当拥有“渴血”的角色处于濒死状态时并向你求【桃】时，若你的体力值大于体力下限，你可以失去1点体力，摸一张牌，然后令其回复1点体力。",
 	
 	["flandre_hegemony"] = "芙兰朵露",
+	["!flandre_hegemony"] = "芙兰朵露·斯卡蕾特",
 	["sakuya_hegemony"] = "十六夜咲夜",
 	["patchouli_hegemony"] = "帕秋莉",
 	["!patchouli_hegemony"] = "帕秋莉·诺蕾姬",
 	["bolan_hegemony"] = "博览",
 	[":bolan_hegemony"] = "当一名角色使用普通锦囊牌时或成为普通锦囊的目标后，若其与你阵营相同，你可以亮出牌堆顶的两张牌，然后获得其中的锦囊牌和与此牌花色相同的牌。<font color=\"green\"><b>每阶段限一次。</b></font>",
+	["hezhou_hegemony"] = "合咒",
+	[":hezhou_hegemony"] = "你于回合外可以将两张类别不同的牌当【桃】使用，当以此法使用的牌因结算完毕而置入弃牌堆后，你可以令一名其他角色获得这两张牌中的锦囊牌。",
+	["@hezhou_hegemony"] = "你可以发动“合咒” ，令一名其他角色获得 <font color=\"#FF8000\"><b>%src </b></font> ",
+	
 	
 	["meirin_hegemony"] = "红美铃",
 	["beishui_hegemony"] = "背水",
@@ -147,6 +170,7 @@ return
 	[":xinyue_hegemony"] = "当你受到伤害后，你可以令来源将其手牌弃置至X张（X为你的体力值），若如此做，当前回合结束时，你将武将牌“上白泽慧音”替换为“白泽”。",
 	["xinyue_hegemony:target"] = "<font color=\"#00FF00\"><b>%src </b></font>对你造成了伤害，你可以发动“新月”，令其将手牌弃至 %arg 张。",
 
+	["keine_sp_hegemony"] = "白泽",
 	["wangyue_hegemony"] = "望月",
 	[":wangyue_hegemony"] = "当你受到伤害后，你可以将手牌补至X张（X为来源的手牌数且至多为5），若如此做，当前回合结束时，你将武将牌“白泽”替换为“上白泽慧音”。",
 	["wangyue_hegemony:target"] = "<font color=\"#00FF00\"><b>%src </b></font>对你造成了伤害，你可以发动“望月”，将手牌补至 %arg 张。",
@@ -162,7 +186,6 @@ return
 	["xingyun:recover"] = "你回复1点体力" ,
 	["@xingyun-select"]= "选择一名角色，令其摸一张牌。",
 	
-	["keine_sp_hegemony"] = "白泽",
 
 	["toyohime_hegemony"] = "绵月丰姬",
 	["yueshi_hegemony"] = "月使",
@@ -177,7 +200,7 @@ return
 	
 	["wriggle_hegemony"] = "莉格露",
 	["#wriggle_hegemony"] = "在黑暗中蠢动的光虫",
-	["!wriggle_hegemony"] = "莉格露•奈特巴格",
+	["!wriggle_hegemony"] = "莉格露·奈特巴格",
 	["yinghuo_hegemony"] = "萤火",
 	["chongqun_hegemony"] = "虫群",
 
@@ -190,8 +213,15 @@ return
 	[":zhenye_hegemony"] = "结束阶段开始时，你可以令一名其他角色翻面和令其摸X张牌（X为你的阵营的角色数），然后你翻面。",
 	["@zhenye-select-heg"]= "你可以令一名其他角色的人物牌翻面和令其摸X张牌（X为你的阵营的角色数），然后你的人物牌翻面。",
 	
-	["mystia_hegemony"]="米斯蒂娅",
+	
 	["yuka_hegemony"]= "风见幽香",
+	
+	["!mystia_hegemony"] = "米斯蒂娅·萝蕾拉",
+	["mystia_hegemony"]="米斯蒂娅",
+	[":yege_hegemony"] = "其他角色的出牌阶段开始时，若场上没有【乐不思蜀】，你可以将一张手牌当【乐不思蜀】对其使用。你以此法使用<font size=\"5\", color=\"#FF0000\"><b>♦</b></font>牌时，你摸一张牌。",
+	["shinmyoumaru_hegemony"] = "少名针妙丸",
+	["seija_hegemony"] = "鬼人正邪",
+	
 	
 --***********************
 --秋（风）	
@@ -245,6 +275,18 @@ return
 	[":diaoping_hegemony"] = "当其他角色使用【杀】指定目标后，若目标包含与你阵营相同的角色，你可以与此牌的使用者拼点：当你赢后，其横置且此【杀】无效；当你没赢后，你与其各摸一张牌。",
     ["diaoping_hegemony:slashtarget"]= "<font color=\"#FF8000\"><b>%src </b></font> 使用了【%dest】，你可以发动“钓瓶”。",
 	
+	["suika_hegemony"] = "伊吹萃香",
+	[":zuiyue_hegemony"] = "<font color=\"green\"><b>出牌阶段限一次，</b></font>若你于此阶段内使用过非基本牌，你可以视为使用【酒】。",
+	[":doujiu_hegemony"] = "<font color=\"purple\"><b>主将技，</b></font>此武将牌上单独的阴阳鱼个数-1；当其他角色使用【桃】或【酒】时，你可以摸一张牌并与其拼点，当你赢后，此牌无效，你回复1点体力。<font color=\"green\"><b>每阶段限一次。</b></font>",
+	["cuiji_hegemony"] = "萃集",
+	[":cuiji_hegemony"] = "<font color=\"purple\"><b>副将技，</b></font>摸牌阶段，你可以少摸一张牌，声明：基本牌，或非基本牌，或一种花色，然后检索一张符合条件的牌并获得之。",
+	["nonbasic"] = "非基本牌",
+	
+	["kasen_hegemony"] = "茨木華扇",
+	["hatate_hegemony"] = "姬海棠果",
+	["kuaizhao_hegemony"] = "快照",
+	[":kuaizhao_hegemony"] = "<font color=\"green\"><b>出牌阶段限一次，</b></font>你可以令一名角色视为对另一名角色使用【知己知彼（国）】；你须执行你使用的【知己知彼（国）】效果里的所有选项。",
+	
 --***********************
 --冬（雪）
 
@@ -288,31 +330,16 @@ return
 	["chen_hegemony"] = "橙",
 		
 	["letty_hegemony"]="蕾蒂",
-	--["designer:letty_hegemony"] = "名和行年",
+	["illustrator:letty_hegemony"] = "猫車",
+	["origin:letty_hegemony"] = "p号：39410238；个人ID：167342",
 	["hanbo_hegemony"] = "寒波",
-	[":hanbo_hegemony"] = "<font color=\"blue\"><b>锁定技，</b></font>你对其他角色造成非属性伤害时，若其没有手牌，此伤害+1。",
+	[":hanbo_hegemony"] = "<font color=\"blue\"><b>锁定技，</b></font>当你对其他角色造成非属性伤害时，若其没有手牌，此伤害值+1。",
 	["#HanboEffect"] = "%from 的【<font color=\"yellow\"><b>寒波</b></font>】效果被触发， %to 没有手牌，伤害从 %arg 增加至 %arg2",
 	["dongzhi_hegemony"] = "冬至",
 	["dongzhi"] = "冬至",
-	[":dongzhi_hegemony"] = "<font color=\"red\"><b>限定技，</b></font>出牌阶段，你可选择同一阵营的任意名有牌的角色，你依次弃置该角色x张牌（x为其装备区牌数+1）",
+	[":dongzhi_hegemony"] = "<font color=\"red\"><b>限定技，</b></font>出牌阶段，你可以选择任意名同一阵营的有牌的角色，依次弃置这些角色各X张牌（X为其装备区里的牌数+1）。",
 	--["#DongzhiDamage"] = "%from 的 <font color=\"yellow\"><b>冬至</b></font>效果被触发，伤害由 %arg 点增加至 %arg2 点",
 	["$dongzhiAnimate"]= "skill=letty:dongzhi",
-	
-	
-	["cirno_hegemony"] = "琪露诺",--国战修改
-	["dongjie_hegemony"] = "冻结",
-	[":dongjie_hegemony"] = "当你使用【杀】对一名角色造成伤害时，你可以令其选择一项：摸一张牌，然后翻面并防止此伤害，或弃置一张手牌。",
-	["@dongjie_discard"] =" %src 对你发动了“冻结”， 你可弃置一张手牌，否则将摸一张牌，翻面，防止当前伤害",
-	["bingpo_hegemony"]= "冰魄",
-	[":bingpo_hegemony"]= "<font color=\"blue\"><b>锁定技，</b></font>当你不因火焰伤害而进入濒死状态时，你回复1点体力。",
-	["#bingpo_hegemony_log"] = "%from的“%arg”被触发, %from 回复了 %arg2点体力.",
-	
-	["daiyousei_hegemony"]= "大妖精",--国战修改
-	["banyue_hegemony"]= "半月",
-	[":banyue_hegemony"]= "<font color=\"green\"><b>出牌阶段限一次，</b></font>你可以选择两名阵营不同的角色并失去1点体力，视为其中一名对另一名角色使用【远交近攻】。",
-	["juxian_hegemony"]= "具现",
-	[":juxian_hegemony"]= "<font color=\"red\"><b>限定技，</b></font>当你进入濒死状态时，你可以亮出牌堆顶的三张牌并获得之，然后你回复x点体力（x为其中的花色数）。",
-	["$juxianAnimate"]= "skill=daiyousei:juxian",
 	
 	
 	["lilywhite_hegemony"] = "莉莉霍瓦特",
@@ -333,18 +360,127 @@ return
 	--["mocao_hegemony"] = "魔操" ,
 	--[":mocao_hegemony"] = "<font color=\"green\"><b>出牌阶段限一次，</b></font>你可以获得一名其他角色装备区里的一张牌，令其摸X张牌（X为其已损失的体力值且至少为1）。",
 
-	
-	
 	["youki_hegemony"] = "魂魄妖忌" ,
-
+	
+	["cirno_hegemony"] = "琪露诺",--国战修改
+	["dongjie_hegemony"] = "冻结",
+	[":dongjie_hegemony"] = "当你使用【杀】对一名角色造成伤害时，你可以令其选择一项：摸一张牌，然后翻面并防止此伤害，或弃置一张手牌。",
+	["@dongjie_discard"] =" %src 对你发动了“冻结”， 你可弃置一张手牌，否则将摸一张牌，翻面，防止当前伤害",
+	["bingpo_hegemony"]= "冰魄",
+	[":bingpo_hegemony"]= "<font color=\"blue\"><b>锁定技，</b></font>当你不因火焰伤害而进入濒死状态时，你回复1点体力。",
+	["#bingpo_hegemony_log"] = "%from的“%arg”被触发, %from 回复了 %arg2点体力.",
+	
+	["daiyousei_hegemony"]= "大妖精",--国战修改
+	["banyue_hegemony"]= "半月",
+	[":banyue_hegemony"]= "<font color=\"green\"><b>出牌阶段限一次，</b></font>你可以选择两名阵营不同的角色并失去1点体力，视为其中一名对另一名角色使用【远交近攻】。",
+	["juxian_hegemony"]= "具现",
+	[":juxian_hegemony"]= "<font color=\"red\"><b>限定技，</b></font>当你进入濒死状态时，你可以亮出牌堆顶的三张牌并获得之，然后你回复x点体力（x为其中的花色数）。",
+	["$juxianAnimate"]= "skill=daiyousei:juxian",
+	
 	["renko_hegemony"] = "宇佐见莲子",
 	["merry_hegemony"] = "玛艾露贝莉",
+	["!merry_hegemony"] = "玛艾露贝莉·赫恩",
+	
 	
 	["luanying_hegemony"] = "乱影",
 	[":luanying_hegemony"] = "<font color=\"purple\"><b>主将技，</b></font>此武将牌上单独的阴阳鱼个数-1；当其他角色使用基本牌时，你可以将一张与此牌颜色相同的“境界”交给其，令此牌无效。<font color=\"green\"><b>每阶段限一次。</b></font>",
     ["mengxian_hegemony"] = "梦现",
 	--[":mengxian_hegemony"] = "<font color=\"purple\"><b>副将技，</b></font>一名角色的弃牌阶段开始时，你可以弃置X张境界，令其的手牌上限于本回合+X。",
-	[":mengxian_hegemony"] = "<font color=\"purple\"><b>副将技，</b></font>与你阵营相同的角色使用【杀】对目标角色造成伤害时，你可弃置一张境界，防止此伤害，依次弃置目标角色两张牌。",
+	[":mengxian_hegemony"] = "<font color=\"purple\"><b>副将技，</b></font>当与你阵营相同的角色使用【杀】对目标角色造成伤害时，你可以将一张“境界”置入弃牌堆，防止此伤害，依次弃置该角色两张牌。",
 	["@mengxian_hegemony"] = "你可以发动“梦现”： 你可以防止 %src 对 %dest  的伤害， 并弃置%dest两张牌",
 	["~mengxian_hegemony"] = "选择一张境界 -> 确定",
+	
+	["rinnosuke_hegemony"] = "森近霖之助",
+	["tokiko_hegemony"] = "朱鹭子",
+	["mima_hegemony"] = "魅魔" ,
+	
+------------------------------------------
+-- 设计者 @dawda 错了自己改
+	["designer:reimu_hegemony"] = "三国有单", -- 推重
+	["designer:marisa_hegemony"] = "星野梦美☆",
+
+	["designer:byakuren_hegemony"] = "星野梦美☆",
+	["designer:nue_hegemony"] = "星野梦美☆",
+	["designer:toramaru_hegemony"] = "三国有单",
+	["designer:murasa_hegemony"] = "星野梦美☆",
+	["designer:ichirin_hegemony"] = "星野梦美☆",
+	["designer:nazrin_hegemony"] = "三国有单",
+	["designer:miko_hegemony"] = "星野梦美☆",
+	["designer:mamizou_hegemony"] = "星野梦美☆",
+	["designer:futo_hegemony"] = "星野梦美☆",
+	["designer:toziko_hegemony"] = "星野梦美☆",
+	["designer:seiga_hegemony"] = "星野梦美☆",
+	["designer:yoshika_hegemony"] = "星野梦美☆",
+	["designer:kyouko_hegemony"] = "星野梦美☆",
+	["designer:kogasa_hegemony"] = "星野梦美☆",
+	["designer:kokoro_hegemony"] = "星野梦美☆",
+	["designer:unzan_hegemony"] = "三国有单", -- 这个云山是推重的吗？
+	["designer:myouren_hegemony"] = "辰焰天明",
+	["designer:sunny_hegemony"] = "星野梦美☆",
+	["designer:lunar_hegemony"] = "星野梦美☆",
+	["designer:star_hegemony"] = "三国有单",
+
+	["designer:remilia_hegemony"] = "星野梦美☆",
+	["designer:flandre_hegemony"] = "星野梦美☆",
+	["designer:sakuya_hegemony"] = "星野梦美☆",
+	["designer:patchouli_hegemony"] = "bullytou",
+	["designer:meirin_hegemony"] = "三国有单",
+	["designer:koakuma_hegemony"] = "bullytou",
+	["designer:kaguya_hegemony"] = "三国有单", -- 缝合怪
+	["designer:eirin_hegemony"] = "星野梦美☆",
+	["designer:mokou_hegemony"] = "星野梦美☆",
+	["designer:reisen_hegemony"] = "星野梦美☆",
+	["designer:keine_hegemony"] = "辰焰天明",
+	["designer:keine_sp_hegemony"] = "星野梦美☆",
+	["designer:tewi_hegemony"] = "星野梦美☆",
+	["designer:toyohime_hegemony"] = "星野梦美☆",
+	["designer:yorihime_hegemony"] = "星野梦美☆",
+	["designer:wriggle_hegemony"] = "星野梦美☆",
+	["designer:rumia_hegemony"] = "星野梦美☆",
+	["designer:yuka_hegemony"] = "星野梦美☆",
+	["designer:mystia_hegemony"] = "辰焰天明",
+	["designer:shinmyoumaru_hegemony"] = "三国有单",
+	["designer:seija_hegemony"] = "星野梦美☆",
+
+	["designer:kanako_hegemony"] = "星野梦美☆",
+	["designer:suwako_hegemony"] = "星野梦美☆",
+	["designer:sanae_hegemony"] = "星野梦美☆",
+	["designer:aya_hegemony"] = "星野梦美☆",
+	["designer:nitori_hegemony"] = "星野梦美☆",
+	["designer:hina_hegemony"] = "三国有单",
+	["designer:momizi_hegemony"] = "星野梦美☆",
+	["designer:minoriko_hegemony"] = "星野梦美☆",
+	["designer:shizuha_hegemony"] = "星野梦美☆",
+	["designer:satori_hegemony"] = "星野梦美☆",
+	["designer:koishi_hegemony"] = "星野梦美☆",
+	["designer:utsuho_hegemony"] = "星野梦美☆",
+	["designer:rin_hegemony"] = "星野梦美☆",
+	["designer:yugi_hegemony"] = "星野梦美☆",
+	["designer:parsee_hegemony"] = "三国有单",
+	["designer:yamame_hegemony"] = "三国有单",
+	["designer:kisume_hegemony"] = "星野梦美☆",
+	["designer:suika_hegemony"] = "星野梦美☆",
+	["designer:kasen_hegemony"] = "三国有单",
+	["designer:hatate_hegemony"] = "名和行年",
+
+	["designer:yuyuko_hegemony"] = "三国有单",
+	["designer:yukari_hegemony"] = "三国有单",
+	["designer:ran_hegemony"] = "三国有单",
+	["designer:youmu_hegemony"] = "三国有单",
+	["designer:lunasa_hegemony"] = "三国有单", -- 国战独占
+	["designer:merlin_hegemony"] = "三国有单", -- 国战独占
+	["designer:lyrica_hegemony"] = "三国有单", -- 国战独占
+	["designer:alice_hegemony"] = "三国有单",
+	["designer:chen_hegemony"] = "三国有单",
+	["designer:letty_hegemony"] = "名和行年", -- 推重，看到了设计者
+	["designer:lilywhite_hegemony"] = "三国有单", -- 推重
+	["designer:shanghai_hegemony"] = "星野梦美☆",
+	["designer:youki_hegemony"] = "辰焰天明",
+	["designer:cirno_hegemony"] = "星野梦美☆",
+	["designer:daiyousei_hegemony"] = "星野梦美☆",
+	["designer:renko_hegemony"] = "星野梦美☆",
+	["designer:merry_hegemony"] = "星野梦美☆",
+	["designer:rinnosuke_hegemony"] = "星野梦美☆",
+	["designer:tokiko_hegemony"] = "星野梦美☆",
+	["designer:mima_hegemony"] = "bullytou",
 }

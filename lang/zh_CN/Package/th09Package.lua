@@ -10,23 +10,39 @@ return
 	["#suika"] = "不羁奔放的古豪",
 	["designer:suika"] = "星野梦美☆",
 
-	["illustrator:suika"] = "阿桜",
-	["origin:suika"] = "p号：24157010，个人ID：39753",--(貌似ok)
+	["illustrator:suika"] = "りすたる",
+	["origin:suika"] = "p号：36915940；个人id：87950",
 	["illustrator:suika_1"] = "ryosios",
-	["origin:suika_1"] = "p号：16940878，个人ID：1508165", --（作者表态可以用）
+	["origin:suika_1"] = "p号：16940878，个人id：1508165", --（作者表态可以用）
 	["illustrator:suika_2"] = "キツネ",
-	["origin:suika_2"] = "p号：28972709，个人ID：126905",--（表态可以用）
+	["origin:suika_2"] = "p号：28972709，个人id：126905",--（表态可以用）
 	["illustrator:suika_3"] = "Tro",
-	["origin:suika_3"] = "p号：11675411，个人ID：52449",
+	["origin:suika_3"] = "p号：11675411，个人id：52449",
+	["illustrator:suika_4"] = "未知",
+	["origin:suika_4"] = "未知",
 	["illustrator:suika_5"] = "伊吹のつ",
-	["origin:suika_5"] = "p号：43405095，个人ID：7013",
+	["origin:suika_5"] = "p号：43405095，个人id：7013",
+	["illustrator:suika_6"] = "阿桜",
+	["origin:suika_6"] = "p号：24157010，个人id：39753",--(貌似ok)
+	["illustrator:suika_7"] = "たみく",
+	["origin:suika_7"] = "p号：85669957；个人id：20926215",
+	["illustrator:suika_8"] = "Goback",
+	["origin:suika_8"] = "p号：80083721；个人id：5846268",
+	["illustrator:suika_9"] = "まあち",
+	["origin:suika_9"] = "p号：71292988；个人id：23177484",
+	["illustrator:suika_10"] = "純",
+	["origin:suika_10"] = "p号：66365230；个人id：209109",
+	["illustrator:suika_11"] = "桐野",
+	["origin:suika_11"] = "p号：44318977；个人id：3297691",
 
 	["zuiyue"] = "醉月",
 	[":zuiyue"] = "出牌阶段，若你于此阶段内使用过非基本牌，你可以视为使用【酒】。",
 	["doujiu"] = "斗酒",
-	[":doujiu"] = "当其他角色于其出牌阶段内使用【桃】或【酒】时，你可以摸一张牌并与其拼点，当你赢后，此牌无效，你回复1点体力，然后结束当前阶段。",
+	--[":doujiu"] = "当其他角色于其出牌阶段内使用【桃】或【酒】时，你可以摸一张牌并与其拼点，当你赢后，此牌无效，你回复1点体力，然后结束当前阶段。",
+	[":doujiu"] = "当其他角色使用【桃】或【酒】时，你可以摸一张牌并与其拼点，当你赢后，此牌无效，你回复1点体力。<font color=\"green\"><b>每阶段限一次。</b></font>",
+
 	["yanhui"] = "宴会",
-	[":yanhui"] = "<font color=\"orange\"><b>主公技，</b></font>其他战势力角色可以将【桃】或【酒】当仙【桃】对你使用。",
+	[":yanhui"] = "<font color=\"orange\"><b>主公技，</b></font>其他战势力角色可以将【桃】或【酒】当仙【桃】对你使用（不受使用目标中异常状态的限制）。",
 	["yanhui_attach"] = "宴会",
 	[":yanhui_attach"] = "若你属于战势力，你可以将【桃】或【酒】当仙【桃】对拥有主公技“宴会”的角色使用。",
 
@@ -38,17 +54,17 @@ return
 	["designer:shikieiki"] = "星野梦美☆",
 
 	["illustrator:shikieiki"] = "風花風花",
-	["origin:shikieiki"] = "p号：37523603，个人ID：1316750",
+	["origin:shikieiki"] = "p号：37523603，个人id：1316750",
 	["illustrator:shikieiki_1"] = "ideolo",
-	["origin:shikieiki_1"] = "p号：41261013，个人ID：61513",
+	["origin:shikieiki_1"] = "p号：41261013，个人id：61513",
 	["illustrator:shikieiki_2"] = "DomotoLain",
-	["origin:shikieiki_2"] = "p号：27397315，个人ID：38674",--（国人 貌似可以）
+	["origin:shikieiki_2"] = "p号：27397315，个人id：38674",--（国人 貌似可以）
 	["illustrator:shikieiki_3"] = "もねてぃ",
-	["origin:shikieiki_3"] = "p号：59554554，个人ID：3066815", 
+	["origin:shikieiki_3"] = "p号：59554554，个人id：3066815", 
 	["illustrator:shikieiki_4"] = "カズ",
-	["origin:shikieiki_4"] = "p号：4734540，个人ID：137496",
+	["origin:shikieiki_4"] = "p号：4734540，个人id：137496",
 	["illustrator:shikieiki_5"] = " 偽造光 ",
-	["origin:shikieiki_5"] = "p号：19042745，个人ID：90809",
+	["origin:shikieiki_5"] = "p号：19042745，个人id：90809",
 
 	["shenpan"] = "审判" ,
 	[":shenpan"] = "摸牌阶段开始时，你可以放弃摸牌并对一名其他角色造成1点雷电伤害，然后若其手牌数大于其体力值，你摸一张牌。" ,
@@ -66,14 +82,14 @@ return
 	["#komachi"] = "三途河的领路人",
 	["designer:komachi"] = "星野梦美☆",
 
-	["illustrator:komachi"] = "牛",
-	["origin:komachi"] = "p号：23773957，个人ID：964140",
+	["illustrator:komachi"] = "赤りんご",
+	["origin:komachi"] = "p号：1377034，个人id：164813",
 	["illustrator:komachi_1"] = "七々しう",
-	["origin:komachi_1"] = "p号：10420340，个人ID：236979",
-	["illustrator:komachi_2"] = "赤りんご",
-	["origin:komachi_2"] = "p号：1377034，个人ID：164813",
+	["origin:komachi_1"] = "p号：10420340，个人id：236979",
+	["illustrator:komachi_2"] = "牛",
+	["origin:komachi_2"] = "p号：23773957，个人id：964140",
 	["illustrator:komachi_3"] = "pico",
-	["origin:komachi_3"] = "p号：14285106，个人ID：347929",
+	["origin:komachi_3"] = "p号：14285106，个人id：347929",
 
 	["boming"] = "薄命",
 	[":boming"] = "<font color=\"blue\"><b>锁定技，</b></font>当你使用【杀】对目标角色造成伤害时，若其体力值不大于其体力下限，伤害值+2。",
@@ -88,17 +104,17 @@ return
 	["designer:yuka"] = "星野梦美☆",
 
 	["illustrator:yuka"] = "Reina",
-	["origin:yuka"] = "p号：7593428，个人ID：309664",
+	["origin:yuka"] = "p号：7593428，个人id：309664",
 	["illustrator:yuka_1"] = "Cloudy.R",
-	["origin:yuka_1"] = "p号：42739088，个人ID：800504",
+	["origin:yuka_1"] = "p号：42739088，个人id：800504",
 	["illustrator:yuka_2"] = "ふらすこ@お仕事募集なう",
-	["origin:yuka_2"] = "p号：34199511，个人ID：848557",
+	["origin:yuka_2"] = "p号：34199511，个人id：848557",
 	["illustrator:yuka_3"] = "An2A",
-	["origin:yuka_3"] = "个人ID：173876",
+	["origin:yuka_3"] = "个人id：173876",
 	["illustrator:yuka_4"] = "赤シオ",
-	["origin:yuka_4"] = "p号：27321553，个人ID：341747",
+	["origin:yuka_4"] = "p号：27321553，个人id：341747",
 	["illustrator:yuka_5"] = "薩摩シャモ",
-	["origin:yuka_5"] = "p号：57598230，个人ID：18839016",
+	["origin:yuka_5"] = "p号：57598230，个人id：18839016",
 
 	["weiya"] = "威压",
 	[":weiya"] = "<font color=\"blue\"><b>锁定技，</b></font>当其他角色于你的回合内使用或打出基本牌或【无懈可击】时（除代替或替换判定牌时外），你令其选择一项：令此牌无效，或弃置一张与之牌名相同的牌。",
@@ -106,6 +122,9 @@ return
 	["@weiya"]= "由于“威压”的效果，你需要弃置一张牌名相同的牌，否则之前的【%src】无效。",
 	["#weiya"]= "由于“%arg”的效果，%from的【%arg2】无效。",
 	["#weiya_ask"]= "由于“%arg”的效果，%from 需要弃置一张与【%arg2】牌名相同的牌。",
+	
+	["fanhua"] = "繁花",
+	[":fanhua"] = "你可以将一张与场上一种花色相同的牌当无距离限制的【杀】使用或打出。",
 
 --**********************************************
 	--zhan005  势力：战 3血
@@ -115,15 +134,15 @@ return
 	["designer:medicine"] = "星野梦美☆",
 
 	["illustrator:medicine"] = "フカヒレ",
-	["origin:medicine"] = "p号：9174315，个人ID：58338",
+	["origin:medicine"] = "p号：9174315，个人id：58338",
 	["illustrator:medicine_1"] = "DQN",
-	["origin:medicine_1"] = "p号：39996142，个人ID：144174",
+	["origin:medicine_1"] = "p号：39996142，个人id：144174",
 	["illustrator:medicine_2"] = "亜音",
-	["origin:medicine_2"] = "p号：30981893，个人ID：759647",
+	["origin:medicine_2"] = "p号：30981893，个人id：759647",
 	["illustrator:medicine_3"] = "とりこ",
-	["origin:medicine_3"] = "p号：4357443，个人ID：73846",
+	["origin:medicine_3"] = "p号：4357443，个人id：73846",
 	["illustrator:medicine_4"] = "甘党",
-	["origin:medicine_4"] = "p号：15735289，个人ID：298982",
+	["origin:medicine_4"] = "p号：15735289，个人id：298982",
 
 	["judu"]= "剧毒",
 	[":judu"]= "当你对其他角色造成伤害后，你可以判定，若结果为黑色2~9，其失去1点体力。",
@@ -138,13 +157,13 @@ return
 	["designer:aya_sp"] = "星野梦美☆",
 
 	["illustrator:aya_sp"] = "An2A",
-	["origin:aya_sp"] = "个人ID：173876",
+	["origin:aya_sp"] = "个人id：173876",
 	["illustrator:aya_sp_1"] = "えふぇ",
-	["origin:aya_sp_1"] = "p号：18047920，个人ID：292644",
+	["origin:aya_sp_1"] = "p号：18047920，个人id：292644",
 	["illustrator:aya_sp_2"] = "ゆらみ 琥珀",
-	["origin:aya_sp_2"] = "p号：37017005，个人ID：321156",
+	["origin:aya_sp_2"] = "p号：37017005，个人id：321156",
 	["illustrator:aya_sp_3"] = " ウラジロ ",
-	["origin:aya_sp_3"] = "p号：48319281，个人ID：3517911",
+	["origin:aya_sp_3"] = "p号：48319281，个人id：3517911",
 
 	["toupai"]= "偷拍",
 	[":toupai"]= "摸牌阶段开始时，你可以放弃摸牌并选择一至两名有手牌的其他角色，观看这些角色各手牌并可以弃置各一张基本牌。",
@@ -160,17 +179,17 @@ return
 	["designer:tenshi"] = "dawda",
 
 	["illustrator:tenshi"] = "ななしな",
-	["origin:tenshi"] = "p号：23718711，个人ID：274594",
+	["origin:tenshi"] = "p号：23718711，个人id：274594",
 	["illustrator:tenshi_1"] = "君と子音",
-	["origin:tenshi_1"] = "p号：29746812，个人ID：8254",
+	["origin:tenshi_1"] = "p号：29746812，个人id：8254",
 	["illustrator:tenshi_2"] = "kirero",
-	["origin:tenshi_2"] = "p号：32282320，个人ID：35490",
+	["origin:tenshi_2"] = "p号：32282320，个人id：35490",
 	["illustrator:tenshi_3"] = "赤シオ",
-	["origin:tenshi_3"] = "p号：9218445，个人ID：341747",
+	["origin:tenshi_3"] = "p号：9218445，个人id：341747",
 	["illustrator:tenshi_4"] = " 亜音",
-	["origin:tenshi_4"] = "p号：45069411，个人ID：759647",
+	["origin:tenshi_4"] = "p号：45069411，个人id：759647",
 	["illustrator:tenshi_5"] = " 甘党",
-	["origin:tenshi_5"] = "p号：23900559，个人ID：298982",
+	["origin:tenshi_5"] = "p号：23900559，个人id：298982",
 
 	["feixiang"] = "绯想",
 	[":feixiang"] = "当判定牌生效前，你可以展示一名角色的一张牌，令其打出此牌替换之。",
@@ -187,26 +206,27 @@ return
 	--zhan008  势力：战 4血
 	["iku"] = "永江衣玖",
 	["#iku"] = "美丽的绯之衣",
-	["designer:iku"] = "星野梦美☆",
+	["designer:iku"] = "谁",
 
 	["illustrator:iku"] = "しろさ",
-	["origin:iku"] = "p号：28342536，个人ID：374262",
+	["origin:iku"] = "p号：28342536，个人id：374262",
 	["illustrator:iku_1"] = "しろさ",
-	["origin:iku_1"] = "p号：3805501，个人ID：374262",
+	["origin:iku_1"] = "p号：3805501，个人id：374262",
 	["illustrator:iku_2"] = "ながれ",
-	["origin:iku_2"] = "p号：39033688，个人ID：91059",
+	["origin:iku_2"] = "p号：39033688，个人id：91059",
 	["illustrator:iku_3"] = "爽希",
-	["origin:iku_3"] = "p号：38916055，个人ID：2318975",
+	["origin:iku_3"] = "p号：38916055，个人id：2318975",
 	["illustrator:iku_4"] = "HxxG / ホン",
-	["origin:iku_4"] = "p号：44536005，个人ID：1193139",
+	["origin:iku_4"] = "p号：44536005，个人id：1193139",
 	["illustrator:iku_5"] = "kirero",
-	["origin:iku_5"] = "p号：4385046，个人ID：35490",
+	["origin:iku_5"] = "p号：4385046，个人id：35490",
 
-	["jingdian"] = "静电",
-	[":jingdian"] = "<font color=\"blue\"><b>锁定技，</b></font>当你受到雷电伤害时，你防止此伤害并摸3X张牌（X为伤害值）。",
-	["#jingdian"] = "%from 的 “%arg” 被触发，%from 防止了 %arg2 点雷电伤害。",
-	["leiyun"] = "雷云",
-	[":leiyun"] = "你可以将一张<font size=\"5\", color=\"#808080\"><b>♠</b></font>或<font size=\"5\", color=\"#FF0000\"><b>♥</b></font>手牌当【闪电】使用。",
+	["leiyu"] = "雷羽",
+	[":leiyu"] = "你可以将<font size=\"5\", color=\"#FF0000\"><b>♥</b></font>或<font size=\"5\", color=\"#808080\"><b>♠</b></font>牌当雷【杀】使用或打出；当你受雷电伤害时，你可以防止此伤害，摸两张牌。",
+	["#leiyu"] = "%from 的 “%arg” 被触发，防止了 %arg2 点雷电伤害。",
+	["shizai"] = "示灾",
+	[":shizai"] = "<font color=\"green\"><b>出牌阶段限一次，</b></font>你可以判定，然后当你于此回合内使用与结果颜色相同的牌时，你须横置一名角色。",
+	["@@shizai-chain"] = "示灾：请选择一名角色，横置其人物牌",
 
 --**********************************************
 	--zhan009  势力：战 4血
@@ -215,18 +235,18 @@ return
 	["designer:hatate"] = "星野梦美☆",
 
 	["illustrator:hatate"] = "朱シオ",
-	["origin:hatate"] = "p号：18358973，个人ID：341747",
+	["origin:hatate"] = "p号：18358973，个人id：341747",
 	["illustrator:hatate_1"] = "nyanya",
-	["origin:hatate_1"] = "p号：10224496，个人ID：195891",
+	["origin:hatate_1"] = "p号：10224496，个人id：195891",
 	["illustrator:hatate_2"] = "赤樫はがね",
-	["origin:hatate_2"] = "p号：33060076，个人ID：1617408",
+	["origin:hatate_2"] = "p号：33060076，个人id：1617408",
 	["illustrator:hatate_3"] = "bon",
-	["origin:hatate_3"] = "p号：21411887，个人ID：1225738",
+	["origin:hatate_3"] = "p号：21411887，个人id：1225738",
 	["illustrator:hatate_4"] = "c7肘",
-	["origin:hatate_4"] = "p号：29166434，个人ID：217707",
+	["origin:hatate_4"] = "p号：29166434，个人id：217707",
 
 	["kuaizhao"] = "快照",
-	[":kuaizhao"] = "摸牌阶段，你可以少摸一张牌并令一名在你攻击范围内的角色展示其手牌，若如此做，你摸多摸X张牌（X为其中的基本牌的牌数且至多为2）。",
+	[":kuaizhao"] = "摸牌阶段，你可以少摸一张牌并令一名在你攻击范围内的角色展示其手牌，若如此做，你多摸X张牌（X为其中的基本牌的牌数且至多为2）。",
 	["@kuaizhao-select_one"] = "选择一名其他角色，令其展示其所有手牌。",
 	["#kuaizhao"] = "快照(后续)",
 	["duanjiao"] = "短焦",
@@ -247,7 +267,10 @@ return
 	["illustrator:kokoro_3"] = "ゾウノセ",
 	["origin:kokoro_3"] = "p号：39419401",
 	["illustrator:kokoro_4"] = "NEKO♨BFG1 II",
-	["origin:kokoro_4"] = "p号：38162749，个人ID：2600911",
+	["origin:kokoro_4"] = "p号：38162749，个人id：2600911",
+	["illustrator:kokoro_5"] = "ちろたた/tirotata",
+	["origin:kokoro_5"] = "p号：68574773；个人id：4743526",
+	
 
 	["nengwu"] = "能舞",
 	--[":nengwu"] = "当你于摸牌阶段外回复体力后或获得牌后，你可以令一名在你攻击范围内的角色摸一张牌；当你于出牌阶段外受到伤害后或失去手牌后，你可以弃置你攻击范围内一名角色的一张手牌。",
@@ -287,7 +310,7 @@ return
 --**********************************************
 	--zhan012  势力：战 4血
 	["sumireko_sp"] = "密封梦魇堇子",
-	[":sumireko_sp"] = "往返两界的梦魂", 
+	["#sumireko_sp"] = "往返两界的梦魂", 
 	["designer:sumireko_sp"] = "bullytou",
 
 	["illustrator:sumireko_sp"] = "EO@例大祭ひ19ab",
@@ -313,17 +336,17 @@ return
 	--zhan013  势力：战 4血
 	["yorigamis"] = "依神女苑&依神紫苑",
 	["#yorigamis"] = "最凶最恶的双子", 
+	["&yorigamis"] = "依神姐妹",
 	["designer:yorigamis"] = "bullytou",
 
 	["illustrator:yorigamis"] = "ひそな",
 	["origin:yorigamis"] = "p号：66714217；个人id：173260",
 
 	["jianshe"] = "俭奢",
-	[":jianshe"] = "其他角色的结束阶段开始时，你可令其选择一项：1.将手牌弃置至一张，若如此做，其回复1点体力；2.摸一张牌，然后失去1点体力。若你于此回合内没有失去过手牌，你须先弃置一张手牌。",
+	[":jianshe"] = "其他角色的结束阶段开始时，你可以令其选择一项（若你于此回合内没有失去过牌，你须先弃置一张手牌）：将手牌弃置至一张，若以此法弃置至少两张牌，其回复1点体力；或摸一张牌，然后失去1点体力。",
 	["@jianshe-discard"] = "你可以弃置一张手牌，对【%src】发动“俭奢”。",
-	["jianshe_jian"] = "摸一张牌，然后失去1点体力",
-	["jianshe_she"] = "将手牌弃置至一张，然后回复1点体力",
 	["@jianshe-hint"] = "请将手牌弃置至一张，否则你将摸一张牌并失去1点体力。",
+	["~jianshe"] = "选择要弃置的手牌 -> 确定",
 
 	["ysjie"] = "极厄",
 	[":ysjie"] = "<font color=\"blue\"><b>锁定技，</b></font>手牌数小于其已损失的体力值的其他角色于你的回合内不能使用或打出牌。",
@@ -331,4 +354,41 @@ return
 	["yishen"] = "依神",
 	[":yishen"] = "<font color=\"orange\"><b>主公技，</b></font><font color=\"blue\"><b>锁定技，</b></font>你与在其他战势力角色攻击范围内的其他角色的距离-1。",
 	
+--**********************************************
+
+	["kokoro_sp"] = "SP丧面秦心",
+	["&kokoro_sp"] = "丧面秦心",
+	["#kokoro_sp"] = "追寻希望的付丧神",
+	["designer:kokoro_sp"] = "223",
+	
+	["illustrator:kokoro_sp"] = "Ny速@3日目V23a",
+	["origin:kokoro_sp"] = "p号：37640183；个人id：218591",
+	["illustrator:kokoro_sp_1"] = "poppy",
+	["origin:kokoro_sp_1"] = "p号：38073917；个人id：3596054",
+	["illustrator:kokoro_sp_2"] = "ぢせ",
+	["origin:kokoro_sp_2"] = "p号：75568924；个人id：4790",
+	
+	["mianling"] = "面灵",
+	[":mianling"] = "<font color=\"blue\"><b>锁定技，</b></font>当你从牌堆获得牌时，你须将牌堆顶等量的牌置于人物牌上，称为“面”，然后若“面”数大于存活角色数，你将X张的“面”置入弃牌堆（X为“面”数与存活角色数之差）；你能使用“面”，以此法使用牌结算完毕后，你选择一项：弃置一张牌，或失去1点体力。",
+	["@mianling-exchange"] = "你因“面灵”的效果，需要将 %arg 张“面”置入弃牌堆。",
+	["@mianling-discard"] = "你因“面灵”的效果，需要弃置 1 张牌，否则失去 1 点体力。",
+	 ["~mianling"] = "选择要置入弃牌堆的“面” -> 确定",
+	
+	-- BE WARE: This skill name is "ximshang", not "xinshang"!!!!!
+	["ximshang"] = "心殇",
+	[":ximshang"] = "一名角色的结束阶段开始时，若你于此回合内失去过牌且此回合内置入弃牌堆的牌有四种不同的花色，你可以对一名角色造成1点伤害。",
+	["@ximshang-select"] = "你可以发动“心殇”对一名角色造成 1 点伤害。",
+	
+	["qsmian"] = "面",
+
+
+--**********************************************
+
+	["yuma"] = "饕餮尤魔",
+	["#yuma"] = "战无不胜的刚欲同盟盟主",
+	["designer:yuma"] = "？",
+
+	["illustrator:yuma"] = "谁",
+	["origin:yuma"] = "多少",
+
 }
