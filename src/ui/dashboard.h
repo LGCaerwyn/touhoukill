@@ -70,7 +70,7 @@ public:
     QSanSkillButton *addSkillButton(const QString &skillName, const bool &head = true);
     bool isAvatarUnderMouse();
 
-    void highlightEquip(QString skillName, bool hightlight);
+    void highlightEquip(QString skillName, bool highlight);
 
     void setTrust(bool trust);
     void killPlayer() override;
@@ -154,6 +154,7 @@ public slots:
     void updateHandPile();
 
     void selectLingshou();
+    void selectWeiyi();
 
 #ifdef Q_OS_WIN
     void updateTimedProgressBar(time_t val, time_t max);
@@ -283,7 +284,6 @@ protected:
     PixmapAnimation *_m_equipBorders[5];
     QSanSkillButton *_m_equipSkillBtns[5];
     bool _m_isEquipsAnimOn[5];
-    QList<QSanSkillButton *> _m_button_recycle;
 
     void _createEquipBorderAnimations();
     void _setEquipBorderAnimation(int index, bool turnOn);
@@ -291,7 +291,7 @@ protected:
     void drawEquip(QPainter *painter, const CardItem *equip, int order);
     void setSelectedItem(CardItem *card_item);
 
-    // for battle arry
+    // for battle array
     QHash<QString, PixmapAnimation *> _m_frameBorders;
     QHash<QString, PixmapAnimation *> _m_roleBorders;
     void _createBattleArrayAnimations();

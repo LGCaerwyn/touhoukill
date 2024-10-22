@@ -35,7 +35,7 @@ struct DamageStruct
     bool by_user;
     QString reason;
     bool trigger_chain;
-    QString trigger_info; //keep addtion info while record. since this damage event may be triggered lately by insertion of new damage event.
+    QString trigger_info; //keep addition info while record. since this damage event may be triggered lately by insertion of new damage event.
 
     QString getReason() const;
 };
@@ -505,6 +505,7 @@ struct CardAskedStruct
     QString prompt;
     ServerPlayer *player;
     Card::HandlingMethod method;
+    QVariant originalData;
 };
 
 struct SkillInvokeDetail
@@ -649,6 +650,8 @@ struct ExtraTurnStruct
     ServerPlayer *extraTarget; //record related target  --qinlue
 };
 
+// Note: Check various skill when this event list got modified.
+// There is currently some skill which make use of the value itself (by static_cast<int>) when searching for translation
 enum TriggerEvent
 {
     NonTrigger,

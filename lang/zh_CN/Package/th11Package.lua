@@ -7,8 +7,8 @@ return{
 	["#satori"] = "连怨灵也恐惧的少女",
 	["designer:satori"] = "星野梦美☆",
 
-	["illustrator:satori"] = "かめ",
-	["origin:satori"] = "p号：2776523，个人id：87447",
+	["illustrator:satori"] = "「楽園」エレデン",
+	["origin:satori"] = "p号：57123707；个人id：5808295",
 	["illustrator:satori_1"] = "ke-ta",
 	["origin:satori_1"] = "p号：60566361，个人id：3104565",
 	["illustrator:satori_2"] = "爽希",
@@ -22,18 +22,18 @@ return{
 	["illustrator:satori_6"] = "ke-ta",
 	["origin:satori_6"] = "p号：56906181，个人id：3104565",
 
-
-
 	["xiangqi"] = "想起",
 	[":xiangqi"] = "当你或一名在你攻击范围内的角色受到牌造成的伤害后，若其存活且伤害来源为另一名其他角色，你可以展示后者一张手牌：若与造成伤害的牌类别相同且前者不是你，你弃置之，对前者造成1点伤害，否则令前者获得之。",
 	["xiangqi:show"]= "<font color=\"#FF8000\"><b>%src </b></font> 使用【%arg】对 <font color=\"#00FF00\"><b>%dest </b></font> 造成了伤害，你可以发动“想起”。",
 	["duxin"] = "读心",
-	[":duxin"] = "<font color=\"blue\"><b>锁定技，</b></font>当你选择其他角色的手牌时，其手牌对你可见。",
-
-	["youtong"]= "幽瞳",
-	[":youtong"]= "<font color=\"orange\"><b>主公技，</b></font>其他地势力角色选择另一名角色的牌时（除使用选择牌外），其可以令你代为选择。",
-	["@youtong"]= "你可以令 拥有主公技 “幽瞳” 的角色 代替你选择  %src 的牌。",
-	["#huzhu_change"]= "%to 代替其成为 %from 使用的 %arg 的目标。",
+	[":duxin"] = "<font color=\"blue\"><b>锁定技，</b></font>当你选择其他角色的牌时，其手牌对你可见。",
+	["zhushi"] = "嘱事",
+	[":zhushi"] = "<font color=\"orange\"><b>主公技，</b></font>弃牌阶段弃牌后，你可以令一名其他地势力角色选择获得或使用其中一张牌。",
+	["@zhushi-select"] = "嘱事你于弃牌阶段弃置了牌，你可以选择一名地势力角色令其获得或者使用其中一张牌。",
+	["ZhushiOtherVS"] = "嘱事",
+	["@zhushi-othervs"] = "嘱事你可以获得或使用你选择的这张牌。",
+	["~ZhushiOtherVS"] = "（使用）选择目标 -> “确定”；（获得）“取消”",
+	["*zhushi_cardid"] = "嘱事(后续)",
 
 --*********************************************
 	--dld002  势力：地 3血
@@ -82,6 +82,10 @@ return{
 	["origin:utsuho_2"] = "p号：41578982，个人id：7013",
 	["illustrator:utsuho_3"] = "NAbyssor",
 	["origin:utsuho_3"] = "p号：30520942，个人id：467511",
+	["illustrator:utsuho_4"] = "NEKO♨敗北",
+	["origin:utsuho_4"] = "p号：55592344；个人id：2600911",
+	["illustrator:utsuho_5"] = "赤りんご",
+	["origin:utsuho_5"] = "p号：32417346；个人id：164813",
 
 	["yaoban"] = "耀斑" ,
 	[":yaoban"] = "当一名角色受到火焰伤害后，你可以弃置一张手牌并选择另一名角色，对其造成1点伤害。" ,
@@ -96,8 +100,7 @@ return{
 	["rin"] = "火焰猫燐",
 	["#rin"] = "地狱的车祸",
 	["designer:rin"] = "星野梦美☆",
-	
-	
+
 	["illustrator:rin"] = "リリア",
 	["origin:rin"] = "p号：12490103，个人id：997454",
 	["illustrator:rin_1"] = "まるかた",
@@ -133,12 +136,20 @@ return{
 	["origin:yugi_2"] = "p号：6218855，个人id：134118",
 	["illustrator:yugi_3"] = "Tro",
 	["origin:yugi_3"] = "p号：16639186，个人id：52449",
+	["illustrator:yugi_4"] = "Hong",
+	["origin:yugi_4"] = "p号：26819018；个人id：306422",
+	["illustrator:yugi_5"] = "shihou",
+	["origin:yugi_5"] = "p号：40305290；个人id：591727",
+	["illustrator:yugi_6"] = "Tuck坦",
+	["origin:yugi_6"] = "p号：77166698；个人id：6634476",
+	["illustrator:yugi_7"] = "赤りんご",
+	["origin:yugi_7"] = "p号：2522295；个人id：164813",
 
 	["guaili"] = "怪力",
 	[":guaili"] = "当你使用的【杀】被目标角色使用的【闪】抵消时，你可以弃置一张红色手牌，摸一张牌，然后令此【杀】依然对其生效。",
 	["@guaili"]= "你可以发动“怪力”，弃置一张红色手牌，令此【杀】 对<font color=\"#00FF00\"><b>%src </b></font>依旧生效。",
 	["jiuhao"] = "酒豪",
-	[":jiuhao"] = "<font color=\"green\"><b>出牌阶段限一次，</b></font>若你于此阶段内使用过【桃】或【酒】，你可以视为使用不计入限制的使用次数的【杀】。",
+	[":jiuhao"] = "<font color=\"green\"><b>出牌阶段限一次，</b></font>若你于此阶段内使用过【桃】或【酒】，你可以视为使用不计入使用次数限制的【杀】。",
 
 --*********************************************
 	--dld006  势力：地 3血
@@ -180,9 +191,10 @@ return{
 	["origin:yamame_2"] = "p号：57287597；个人id：3313233",
 
 	["chuanran"] = "传染",
-	[":chuanran"] = "<font color=\"blue\"><b>锁定技，</b></font>当你或处于连环状态的角色对另一名其他角色造成非属性伤害后，你令后者横置。",
+	[":chuanran"] = "<font color=\"blue\"><b>锁定技，</b></font>准备阶段开始时，你横置一名角色；当你或处于连环状态的角色对另一名其他角色造成非属性伤害后，你令后者横置。",
+	["@chuanran-forceselect"] = "传染你的准备阶段开始了，你选择一名角色横置",
 	["rebing"]= "热病",
-	[":rebing"]= "其他角色的结束阶段开始时，若其有牌，且处于连环状态或人物牌背面朝上，你可以选择其攻击范围内的一名角色并令其选择一项：对该角色使用【杀】，或令你获得其一张牌。",
+	[":rebing"]= "其他角色的结束阶段开始时，若其处于连环状态或人物牌背面朝上，你可以令其选择一项：对其攻击范围内你选择的一名角色使用【杀】；或令你获得其一张牌。",
 	["@rebing"]= "你可以发动“热病”，为<font color=\"#00FF00\"><b>%src </b></font> 选择一个使用【杀】的合法目标",
 	["@rebing-slash"] = "<font color=\"#00FF00\"><b>%src </b></font>对你发动“热病”，请对<font color=\"#00FF00\"><b>%dest </b></font>使用【杀】，否则<font color=\"#00FF00\"><b>%src </b></font>将获得你的一张牌。",
 
@@ -190,21 +202,25 @@ return{
 	--dld008  势力：地 3血
 	["kisume"] = "琪斯美",
 	["#kisume"] = "可怕的水井妖怪",
-	["designer:kisume"] = "星野梦美☆",
+	["designer:kisume"] = "裁缝",
 
-	["illustrator:kisume"] = "まるかた",
-	["origin:kisume"] = "p号：8537445，个人id：6359",
+	["illustrator:kisume"] = "菊月",
+	["origin:kisume"] = "p号：64134547，个人id：429883",
 	["illustrator:kisume_1"] = "くろぬこネーロ",
 	["origin:kisume_1"] = "p号：33450740，个人id：335493",
 	["illustrator:kisume_2"] = "LZH",
 	["origin:kisume_2"] = "p号：41926467，个人id：571766",
+	["illustrator:kisume_3"] = "まるかた",
+	["origin:kisume_3"] = "p号：8537445，个人id：6359",
 
-	["diaoping"] = "钓瓶",
-	[":diaoping"] = "当其他角色使用【杀】指定目标后，若此牌指定你或一名在你攻击范围内的角色为目标，你可以与此牌的使用者拼点：当你赢后，此【杀】无效并令其翻面；当你没赢后，你可以重复此流程。",
-	["diaoping:slashtarget"]= "<font color=\"#FF8000\"><b>%src </b></font> 使用了【%dest】，你可以发动“钓瓶”。",
-	["tongju"] = "桶居",
-	--[":tongju"] = "<font color=\"blue\"><b>锁定技，</b></font>你不是【南蛮入侵】、【万箭齐发】和【铁索连环】的合法目标。",
-    [":tongju"] = "<font color=\"blue\"><b>锁定技，</b></font>当你成为【南蛮入侵】或【万箭齐发】或【铁索连环】的目标时，你取消自己。",
+	["liaoluo"] = "燎落",
+	[":liaoluo"] = "一名角色的结束阶段开始时，若你于此回合内使用过牌，你可以视为对一名此回合内未受到过伤害的其他角色使用火【杀】，以此法造成伤害后，你重置人物牌。",
+	["@liaoluo"] = "燎落你可以视为对一名此回合内未受到过伤害的其他角色使用火【杀】",
+	["~liaoluo"] = "选择【杀】的目标角色 -> “确定”",
+	["#liaoluo-reset"] = "%to 因发动燎落造成了伤害， %to 重置了人物牌。",
+	["youju"] = "幽居",
+	[":youju"] = "当你成为其他角色使用的锦囊牌的目标时，若其人物牌的横竖放置方式与你相同，你可以横置或重置你的人物牌并取消你这目标。",
+
 --*********************************************
 	--dld009  势力：地 3血
 	["suika_sp"] = "地灵殿SP萃香" ,

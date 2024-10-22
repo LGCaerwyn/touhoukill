@@ -39,7 +39,7 @@ Dashboard::Dashboard(QGraphicsItem *widget) //QGraphicsPixmapItem *widget
     animations = new EffectAnimation();
     pending_card = nullptr;
 
-    leftHiddenMark = nullptr; //?? intialization?
+    leftHiddenMark = nullptr; //?? initialization?
     rightHiddenMark = nullptr;
     _m_pile_expanded = QMap<QString, QList<int>>(); //QStringList();
     for (int i = 0; i < 5; i++) {
@@ -255,7 +255,7 @@ int Dashboard::width()
 }
 
 void Dashboard::_createRight()
-{ //40 equals diff bettween middlefarme and rightframe
+{ //40 equals diff between middlefarme and rightframe
     int rwidth = (ServerInfo.Enable2ndGeneral) ? G_DASHBOARD_LAYOUT.m_rightWidthDouble : G_DASHBOARD_LAYOUT.m_rightWidth;
     QRect rect = QRect(_m_width - rwidth, -40, rwidth, G_DASHBOARD_LAYOUT.m_normalHeight + 40);
     _paintPixmap(_m_rightFrame, rect, QPixmap(1, 1), _m_groupMain);
@@ -619,13 +619,9 @@ QSanSkillButton *Dashboard::addSkillButton(const QString &skillName, const bool 
     const Skill *skill = Sanguosha->getSkill(skillName);
     Q_ASSERT(skill && !skill->inherits("WeaponSkill") && !skill->inherits("ArmorSkill") && !skill->inherits("TreasureSkill"));
 #endif
-    if (_m_skillDock->getSkillButtonByName(skillName) != nullptr && head) {
-        //_m_button_recycle.append(_m_skillDock->getSkillButtonByName(skillName));
+    if (_m_skillDock->getSkillButtonByName(skillName) != nullptr && head)
         return nullptr;
-    }
-
     if (_m_rightSkillDock->getSkillButtonByName(skillName) != nullptr && !head)
-        //_m_button_recycle.append(_m_leftSkillDock->getSkillButtonByName(skillName));
         return nullptr;
 
     QSanInvokeSkillDock *dock = head ? _m_skillDock : _m_rightSkillDock;
@@ -658,9 +654,6 @@ QSanSkillButton *Dashboard::removeSkillButton(const QString &skillName, bool hea
     if (btn == nullptr) {
         QSanInvokeSkillDock *dock = head ? _m_skillDock : _m_rightSkillDock;
         QSanSkillButton *temp = dock->getSkillButtonByName(skillName);
-        //if (_m_button_recycle.contains(temp))
-        //    _m_button_recycle.removeOne(temp);
-        //else
         if (temp != nullptr)
             btn = dock->removeSkillButtonByName(skillName);
     }
@@ -1184,17 +1177,13 @@ void Dashboard::disableAllCards()
 void Dashboard::enableCards()
 {
     m_mutexEnableCards.lock();
-    /*foreach (const QString &pile, Self->getPileNames()) {
-        if (pile.startsWith("&") || pile == "wooden_ox")
-            expandPileCards(pile);
-    }*/
     foreach (const QString &pile, Self->getHandPileList(false))
         expandPileCards(pile);
     expandSpecialCard();
 
-    foreach (CardItem *card_item, m_handCards) {
+    foreach (CardItem *card_item, m_handCards)
         card_item->setEnabled(card_item->getCard()->isAvailable(Self));
-    }
+
     m_mutexEnableCards.unlock();
 }
 
@@ -1219,7 +1208,7 @@ void Dashboard::startPending(const ViewAsSkill *skill)
         if ((resp_skill != nullptr) && (resp_skill->getRequest() == Card::MethodResponse || resp_skill->getRequest() == Card::MethodUse))
             expand = true;
     }
-    //deal askForCard at first, then use the card automaticly
+
     if (Self->hasFlag("Global_expandpileFailed"))
         expand = true;
 
@@ -1230,10 +1219,6 @@ void Dashboard::startPending(const ViewAsSkill *skill)
     retractSpecialCard();
 
     if (expand) {
-        /*foreach (const QString &pile, Self->getPileNames()) {
-            if (pile.startsWith("&") || pile == "wooden_ox")
-                expandPileCards(pile);
-        }*/
         foreach (const QString &pile, Self->getHandPileList(false))
             expandPileCards(pile);
         if (!((skill != nullptr) && skill->isResponseOrUse()))
@@ -1314,8 +1299,22 @@ void Dashboard::expandPileCards(const QString &pile_name)
             if (c->getSuit() == Card::Club && (c->isNDTrick() || c->getTypeId() == Card::TypeBasic))
                 pile << c->getEffectiveId();
         }
+    } else if (pile_name == "#xiufu_temp") {
+        foreach (const Card *c, ClientInstance->discarded_list) {
+            if (c->getTypeId() == Card::TypeEquip)
+                pile << c->getEffectiveId();
+        }
+    } else if (pile_name == "#shijie") {
+        QString dyingPlayerName = Self->property("currentdying").toString();
+        const Player *p = ClientInstance->findChild<const Player *>(dyingPlayerName);
+        if (p != nullptr && p != Self) {
+            foreach (const Card *c, p->getEquips())
+                pile << c->getEffectiveId();
+        }
     } else if (pile_name == "#judging_area") {
         pile = Self->getJudgingAreaID();
+    } else if (pile_name.startsWith("*")) {
+        pile = StringList2IntList(Self->property(pile_name.mid(1).toUtf8().constData()).toString().split("+"));
     } else {
         pile = Self->getPile(new_name);
     }
@@ -1340,9 +1339,8 @@ void Dashboard::expandPileCards(const QString &pile_name)
                     break;
                 }
             }
-        }
-        if (pile_name == "#mengxiang_temp") {
-            QString target_name = ""; //Self->tag.value("mengxiang_target", QString()).toString();
+        } else if (pile_name == "*mengxiang_temp") {
+            QString target_name = "";
             foreach (const Player *p, Self->getAliveSiblings()) {
                 if (p->hasFlag("mengxiangtarget")) {
                     target_name = p->objectName();
@@ -1352,6 +1350,14 @@ void Dashboard::expandPileCards(const QString &pile_name)
             if (target_name == "")
                 target_name = Self->objectName();
             pile_string = ClientInstance->getPlayerName(target_name);
+        } else if (pile_name == "*chunhua") {
+            bool isUse = false;
+            if (card_items.indexOf(card_item) == 0)
+                isUse = Self->property("chunhua_firstCardIsUsing").toString() == "1";
+            if (isUse)
+                pile_string = "use";
+            else
+                pile_string = "%shown_card";
         }
         _addHandCard(card_item, true, Sanguosha->translate(pile_string));
     }
@@ -1464,11 +1470,55 @@ void Dashboard::selectLingshou()
 
     if (view_as_skill != nullptr) {
         unselectAll();
-        QList<int> selectedIds = StringList2IntList(Self->property("lingshouSelected").toString().split("+"));
+        bool ok = false;
+        int selectedId = Self->property("lingshouSelected").toString().toInt(&ok);
+        if (!ok)
+            return;
+
+        CardItem *handcardItem = nullptr;
         foreach (CardItem *card_item, m_handCards) {
-            if (selectedIds.contains(card_item->getId())) {
+            if (selectedId == card_item->getId()) {
                 selectCard(card_item, true);
                 pendings << card_item;
+                handcardItem = card_item;
+                break;
+            }
+        }
+        if (handcardItem != nullptr) {
+            for (CardItem *card_item : _m_equipCards) {
+                if (card_item != nullptr) {
+                    if (handcardItem->getCard()->getSuit() == card_item->getCard()->getSuit()) {
+                        // selectCard(card_item, true);
+                        card_item->mark();
+                    }
+                }
+            }
+        }
+        updatePending();
+    }
+    adjustCards(true);
+}
+
+void Dashboard::selectWeiyi()
+{
+    foreach (const QString &pile, Self->getPileNames()) {
+        if (pile.startsWith("&") || pile == "wooden_ox")
+            retractPileCards(pile);
+    }
+    retractSpecialCard();
+
+    if (view_as_skill != nullptr) {
+        unselectAll();
+        bool ok = false;
+        int selectedId = Self->property("weiyiSelected").toString().toInt(&ok);
+        if (!ok)
+            return;
+
+        foreach (CardItem *card_item, m_handCards) {
+            if (selectedId == card_item->getId()) {
+                selectCard(card_item, true);
+                pendings << card_item;
+                break;
             }
         }
         updatePending();
@@ -1744,7 +1794,7 @@ void Dashboard::showSeat()
     _m_roleComboBox = new RoleComboBox(rightFrame, true);
 }*/
 
-// for battle arry
+// for battle array
 /*void Dashboard::repaintAll()
 {
     PlayerCardContainer::repaintAll();

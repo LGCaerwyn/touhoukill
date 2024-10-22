@@ -110,7 +110,7 @@ public:
     QList<int> getNCards(int n, bool update_pile_number = true, bool bottom = false);
     void returnToDrawPile(const QList<int> &cards, bool bottom = false);
     ServerPlayer *getLord(const QString &kingdom = "wei", bool include_death = false) const;
-    void askForGuanxing(ServerPlayer *zhuge, const QList<int> &cards, GuanxingType guanxing_type = GuanxingBothSides, QString skillName = "");
+    void askForGuanxing(ServerPlayer *zhuge, const QList<int> &cards, GuanxingType guanxing_type = GuanxingBothSides, const QString &skillName = {});
     int doGongxin(ServerPlayer *shenlvmeng, ServerPlayer *target, QList<int> enabled_ids = QList<int>(), QString skill_name = "gongxin", bool cancellable = true);
     int drawCard(bool bottom = false);
     void fillAG(const QList<int> &card_ids, ServerPlayer *who = nullptr, const QList<int> &disabled_ids = QList<int>(), const QList<int> &shownHandcard_ids = QList<int>());
@@ -119,6 +119,7 @@ public:
     void provide(const Card *card, ServerPlayer *who = nullptr);
     QList<ServerPlayer *> getLieges(const QString &kingdom, ServerPlayer *lord) const;
     void sendLog(const LogMessage &log);
+    void sendLog(const QString &logtype, ServerPlayer *logfrom, const QString &logarg = {}, const QList<ServerPlayer *> &logto = {}, const QString &logarg2 = {});
     void showCard(ServerPlayer *player, int card_id, ServerPlayer *only_viewer = nullptr);
     void showAllCards(ServerPlayer *player, ServerPlayer *to = nullptr);
     void retrial(const Card *card, ServerPlayer *player, JudgeStruct *judge, const QString &skill_name, bool exchange = false);
@@ -137,7 +138,7 @@ public:
     //        If true, return immediately after sending the request without waiting for client reply.
     // @return True if the a valid response is returned from client.
     // Usage note: when you need a round trip request-response vector with a SINGLE client, use this command
-    // with wait = true and read the reponse from player->getClientReply(). If you want to initiate a poll
+    // with wait = true and read the response from player->getClientReply(). If you want to initiate a poll
     // where more than one clients can respond simultaneously, you have to do it in two steps:
     // 1. Use this command with wait = false once for each client involved in the poll (or you can call this
     //    command only once in all with broadcast = true if the poll is to everypody).
@@ -292,8 +293,6 @@ public:
 
     void sortByActionOrder(QList<ServerPlayer *> &players);
     void defaultHeroSkin();
-    void touhouLogmessage(const QString &logtype, ServerPlayer *logfrom, const QString &logarg = QString(), const QList<ServerPlayer *> &logto = QList<ServerPlayer *>(),
-                          const QString &logarg2 = QString());
 
     const ProhibitSkill *isProhibited(const Player *from, const Player *to, const Card *card, const QList<const Player *> &others = QList<const Player *>()) const;
 
@@ -329,7 +328,7 @@ public:
     void moveCardsAtomic(QList<CardsMoveStruct> cards_move, bool forceMoveVisible);
     void moveCardsAtomic(CardsMoveStruct cards_move, bool forceMoveVisible);
     void moveCardsToEndOfDrawpile(QList<int> card_ids, bool forceVisible = false);
-    QList<CardsMoveStruct> _breakDownCardMoves(QList<CardsMoveStruct> &cards_moves);
+    QList<CardsMoveStruct> _breakDownCardMoves(const QList<CardsMoveStruct> &cards_moves);
 
     // interactive methods
     void activate(ServerPlayer *player, CardUseStruct &card_use);
@@ -360,7 +359,7 @@ public:
                                  bool addHistory = false);
     int askForAG(ServerPlayer *player, const QList<int> &card_ids, bool refusable, const QString &reason);
     void doExtraAmazingGrace(ServerPlayer *from, ServerPlayer *target, int times);
-    const Card *askForCardShow(ServerPlayer *player, ServerPlayer *requestor, const QString &reason);
+    const Card *askForCardShow(ServerPlayer *player, ServerPlayer *requester, const QString &reason);
     int askForRende(ServerPlayer *liubei, QList<int> &cards, const QString &skill_name = QString(), bool visible = false, bool optional = true, int max_num = -1,
                     QList<ServerPlayer *> players = QList<ServerPlayer *>(), CardMoveReason reason = CardMoveReason(), const QString &prompt = QString(),
                     bool notify_skill = false);
@@ -417,36 +416,6 @@ protected:
     int _m_Id;
 
 private:
-    struct _MoveSourceClassifier
-    {
-        explicit inline _MoveSourceClassifier(const CardsMoveStruct &move)
-        {
-            m_from = move.from;
-            m_from_place = move.from_place;
-            m_from_pile_name = move.from_pile_name;
-            m_from_player_name = move.from_player_name;
-        }
-        inline void copyTo(CardsMoveStruct &move) const
-        {
-            move.from = m_from;
-            move.from_place = m_from_place;
-            move.from_pile_name = m_from_pile_name;
-            move.from_player_name = m_from_player_name;
-        }
-        inline bool operator==(const _MoveSourceClassifier &other) const
-        {
-            return m_from == other.m_from && m_from_place == other.m_from_place && m_from_pile_name == other.m_from_pile_name && m_from_player_name == other.m_from_player_name;
-        }
-        inline bool operator<(const _MoveSourceClassifier &other) const
-        {
-            return m_from < other.m_from || m_from_place < other.m_from_place || m_from_pile_name < other.m_from_pile_name || m_from_player_name < other.m_from_player_name;
-        }
-        Player *m_from;
-        Player::Place m_from_place;
-        QString m_from_pile_name;
-        QString m_from_player_name;
-    };
-
     struct _MoveMergeClassifier
     {
         explicit inline _MoveMergeClassifier(const CardsMoveStruct &move)
@@ -516,9 +485,9 @@ private:
     };
 
     int _m_lastMovementId;
-    void _fillMoveInfo(CardsMoveStruct &moves, int card_index) const;
-    QList<CardsMoveOneTimeStruct> _mergeMoves(QList<CardsMoveStruct> cards_moves);
-    QList<CardsMoveStruct> _separateMoves(QList<CardsMoveOneTimeStruct> moveOneTimes);
+    void _fillMoveInfo(CardsMoveStruct &moves) const;
+    QList<CardsMoveOneTimeStruct> _mergeMoves(const QList<CardsMoveStruct> &cards_moves);
+    QList<CardsMoveStruct> _separateMoves(const QList<CardsMoveOneTimeStruct> &moveOneTimes);
     QString _chooseDefaultGeneral(ServerPlayer *player) const;
     QStringList _chooseDefaultGenerals(ServerPlayer *player) const;
     bool _setPlayerGeneral(ServerPlayer *player, const QString &generalName, bool isFirst);

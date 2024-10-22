@@ -1100,7 +1100,8 @@ void Client::askForCardOrUseCard(const QVariant &cardUsage)
         const Skill *skill = Sanguosha->getSkill(skill_name);
         if (skill != nullptr) {
             QString text = prompt_doc->toHtml();
-            text.append(tr("<br/> <b>Notice</b>: %1<br/>").arg(skill->getNotice(index)));
+            if (index != 0)
+                text.append(tr("<br/> <b>Notice</b>: %1<br/>").arg(skill->getNotice(index)));
             prompt_doc->setHtml(text);
         }
     }
@@ -1787,6 +1788,20 @@ void Client::setMark(const QVariant &mark_var)
 
     ClientPlayer *player = getPlayer(who);
     player->setMark(mark, value);
+
+    // for all the skills has a ViewAsSkill Effect { RoomScene::detachSkill(const QString &) }
+    // this is a DIRTY HACK!!! for we should prevent the ViewAsSkill button been removed temporily by duanchang
+    if (mark.startsWith("ViewAsSkill_") && mark.endsWith("Effect") && player == Self && value == 0) {
+        QString skill_name = mark.mid(12);
+        skill_name.chop(6);
+
+        QString lost_mark = "ViewAsSkill_" + skill_name + "Lost";
+
+        if (!Self->hasSkill(skill_name, true) && Self->getMark(lost_mark) > 0) {
+            Self->setMark(lost_mark, 0);
+            emit skill_detached(skill_name);
+        }
+    }
 }
 
 void Client::onPlayerChooseSuit()
@@ -1878,10 +1893,6 @@ void Client::askForSinglePeach(const QVariant &arg)
 
     } else {
         QString dying_general = getPlayerName(dying->objectName());
-        /*if (dying->hasLordSkill("yanhui") && Self->getKingdom() == "zhan") {
-            prompt_doc->setHtml(tr("%1 is dying, please provide %2 peach(es)(or analeptic) to save him").arg(dying_general).arg(peaches));
-            pattern << "analeptic";
-        } else*/
         prompt_doc->setHtml(tr("%1 is dying, please provide %2 peach(es) to save him").arg(dying_general).arg(peaches));
     }
 
@@ -1913,11 +1924,11 @@ void Client::askForSinglePeach(const QVariant &arg)
     setStatus(RespondingUse);
 }
 
-void Client::askForCardShow(const QVariant &requestor)
+void Client::askForCardShow(const QVariant &requester)
 {
-    if (!JsonUtils::isString(requestor))
+    if (!JsonUtils::isString(requester))
         return;
-    QString name = Sanguosha->translate(requestor.toString());
+    QString name = Sanguosha->translate(requester.toString());
     prompt_doc->setHtml(tr("%1 request you to show one hand card").arg(name));
 
     _m_roomState.setCurrentCardUsePattern(".");
@@ -2008,7 +2019,7 @@ void Client::askForGuanxing(const QVariant &arg)
     QList<int> card_ids;
     JsonUtils::tryParse(deck, card_ids);
 
-    emit guanxing(card_ids, single_side);
+    emit guanxing(card_ids, single_side, highlight_skill_name);
     setStatus(AskForGuanxing);
 }
 
@@ -2070,8 +2081,8 @@ void Client::askForPindian(const QVariant &ask_str)
     if (from == Self->objectName())
         prompt_doc->setHtml(tr("Please play a card for pindian"));
     else {
-        QString requestor = getPlayerName(from);
-        prompt_doc->setHtml(tr("%1 ask for you to play a card to pindian").arg(requestor));
+        QString requester = getPlayerName(from);
+        prompt_doc->setHtml(tr("%1 ask for you to play a card to pindian").arg(requester));
     }
     _m_roomState.setCurrentCardUsePattern(".");
     setStatus(AskForShowOrPindian);

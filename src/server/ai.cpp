@@ -227,7 +227,6 @@ QString TrustAI::askForKingdom()
     QStringList kingdoms = Sanguosha->getKingdoms();
     kingdoms.removeOne("zhu");
     kingdoms.removeOne("touhougod");
-    QString selfKingdom = self->getGeneral()->getKingdom();
     if (lord == nullptr)
         return kingdoms.at(qrand() % kingdoms.length());
 
@@ -338,12 +337,12 @@ const Card *TrustAI::askForCardShow(ServerPlayer *, const QString &)
     return self->getRandomHandCard();
 }
 
-const Card *TrustAI::askForPindian(ServerPlayer *requestor, const QString &)
+const Card *TrustAI::askForPindian(ServerPlayer *requester, const QString &)
 {
     QList<const Card *> cards = self->getHandcards();
     std::sort(cards.begin(), cards.end(), Card::CompareByNumber);
 
-    if (requestor != self && isFriend(requestor))
+    if (requester != self && isFriend(requester))
         return cards.first();
     else
         return cards.last();

@@ -121,7 +121,7 @@ void ServerPlayer::throwAllHandCardsAndEquips()
 
 void ServerPlayer::throwAllMarks(bool visible_only)
 {
-    foreach (QString mark_name, marks.keys()) {
+    foreach (const QString &mark_name, marks.keys()) {
         if (!mark_name.startsWith("@"))
             continue;
 
@@ -161,7 +161,7 @@ void ServerPlayer::clearOnePrivatePile(QString pile_name)
 
 void ServerPlayer::clearPrivatePiles()
 {
-    foreach (QString pile_name, piles.keys())
+    foreach (const QString &pile_name, piles.keys())
         clearOnePrivatePile(pile_name);
     piles.clear();
 }
@@ -367,7 +367,7 @@ void ServerPlayer::invoke(const AbstractPacket *packet)
 
 void ServerPlayer::invoke(const char *method, const QString &arg)
 {
-    unicast(QString("%1 %2").arg(method).arg(arg));
+    unicast(QString("%1 %2").arg(method, arg));
 }
 
 QString ServerPlayer::reportHeader() const
@@ -845,7 +845,7 @@ void ServerPlayer::skip(Player::Phase phase, bool isCost, bool sendLog)
                 return;
             }
             _m_phases_state[i].skipped = (isCost ? -1 : 1);
-            //defaultly skip all phases even someone has same pahses.
+            //defaultly skip all phases even someone has same phases.
         }
     }
 
@@ -889,7 +889,7 @@ void ServerPlayer::exchangePhases(Player::Phase phase1, Player::Phase phase2)
 
     int index1 = phases.indexOf(phase1);
     int index2 = phases.indexOf(phase2);
-    // make sure that "_m_phases_state" has already contain informations from "phases"
+    // make sure that "_m_phases_state" has already contain information from "phases"
     if (index1 > -1 && index2 > -1) {
         _phase1 = _m_phases_state[index1];
         _phase2 = _m_phases_state[index2];
@@ -1146,7 +1146,7 @@ void ServerPlayer::introduceTo(ServerPlayer *player)
     if (!isHegemonyGameMode(room->getMode()))
         return;
     if (hasShownGeneral()) {
-        foreach (const QString skill_name, skills.keys()) { //skills.keys()  skills_originalOrder
+        foreach (const QString &skill_name, skills.keys()) { //skills.keys()  skills_originalOrder
             if (Sanguosha->getSkill(skill_name)->isVisible()) {
                 JsonArray args1;
                 args1 << (int)S_GAME_EVENT_ADD_SKILL;
@@ -1169,7 +1169,7 @@ void ServerPlayer::introduceTo(ServerPlayer *player)
         }
     }
     if (hasShownGeneral2()) {
-        foreach (const QString skill_name, skills2.keys()) {
+        foreach (const QString &skill_name, skills2.keys()) {
             if (Sanguosha->getSkill(skill_name)->isVisible()) {
                 JsonArray args1;
                 args1 << S_GAME_EVENT_ADD_SKILL;
@@ -1300,7 +1300,7 @@ void ServerPlayer::marshal(ServerPlayer *player) const
         move.from_place = DrawPile;
         move.to_player_name = objectName();
         move.to_place = PlaceSpecial;
-        foreach (QString pile, piles.keys()) {
+        foreach (const QString &pile, piles.keys()) {
             move.card_ids.clear();
             move.card_ids.append(piles[pile]);
             move.to_pile_name = pile;
@@ -1333,7 +1333,7 @@ void ServerPlayer::marshal(ServerPlayer *player) const
                 hegemony_limitmarks.append(skill->getLimitMark());
     }
 
-    foreach (QString mark_name, marks.keys()) {
+    foreach (const QString &mark_name, marks.keys()) {
         if (mark_name.startsWith("@") && !hegemony_limitmarks.contains(mark_name)) {
             int value = getMark(mark_name);
             if (value > 0) {
@@ -1348,7 +1348,7 @@ void ServerPlayer::marshal(ServerPlayer *player) const
 
     if (!isHegemonyGameMode(room->getMode())) {
         foreach (const Skill *skill, getVisibleSkillList(true)) {
-            //should not nofity the lord skill
+            //should not notify the lord skill
             if (skill->isLordSkill() && !hasLordSkill(skill->objectName()))
                 continue;
             QString skill_name = skill->objectName();
@@ -1410,7 +1410,7 @@ void ServerPlayer::marshal(ServerPlayer *player) const
     foreach (QString flag, flags)
         room->notifyProperty(player, this, "flags", flag);
 
-    foreach (QString item, history.keys()) {
+    foreach (const QString &item, history.keys()) {
         int value = history.value(item);
         if (value > 0) {
             JsonArray arg;
@@ -1494,9 +1494,11 @@ void ServerPlayer::addToPile(const QString &pile_name, QList<int> card_ids, bool
 void ServerPlayer::addToShownHandCards(QList<int> card_ids)
 {
     QList<int> add_ids;
-    foreach (int id, card_ids)
+    foreach (int id, card_ids) {
         if (!shown_handcards.contains(id) && room->getCardOwner(id) == this)
             add_ids.append(id);
+    }
+
     if (add_ids.isEmpty())
         return;
 
@@ -1528,12 +1530,14 @@ void ServerPlayer::addToShownHandCards(QList<int> card_ids)
 
 void ServerPlayer::removeShownHandCards(QList<int> card_ids, bool sendLog, bool moveFromHand)
 {
-    if (card_ids.isEmpty())
-        return;
+    QList<int> removed_ids;
+    foreach (int id, card_ids) {
+        if (shown_handcards.removeAll(id) > 0)
+            removed_ids << id;
+    }
 
-    foreach (int id, card_ids)
-        if (shown_handcards.contains(id))
-            shown_handcards.removeOne(id);
+    if (removed_ids.isEmpty())
+        return;
 
     JsonArray arg;
     arg << objectName();
@@ -1546,13 +1550,13 @@ void ServerPlayer::removeShownHandCards(QList<int> card_ids, bool sendLog, bool 
         LogMessage log;
         log.type = "$RemoveShownHand";
         log.from = this;
-        log.card_str = IntList2StringList(card_ids).join("+");
+        log.card_str = IntList2StringList(removed_ids).join("+");
         room->sendLog(log);
         room->getThread()->delay();
     }
 
     ShownCardChangedStruct s;
-    s.ids = card_ids;
+    s.ids = removed_ids;
     s.player = this;
     s.shown = false;
     s.moveFromHand = moveFromHand;
@@ -1562,7 +1566,16 @@ void ServerPlayer::removeShownHandCards(QList<int> card_ids, bool sendLog, bool 
 
 void ServerPlayer::addBrokenEquips(QList<int> card_ids)
 {
-    broken_equips.append(card_ids);
+    QList<int> add_ids;
+    foreach (int id, card_ids) {
+        if (!broken_equips.contains(id) && room->getCardOwner(id) == this)
+            add_ids.append(id);
+    }
+
+    if (add_ids.isEmpty())
+        return;
+
+    broken_equips.append(add_ids);
 
     JsonArray arg;
     arg << objectName();
@@ -1577,13 +1590,13 @@ void ServerPlayer::addBrokenEquips(QList<int> card_ids)
     LogMessage log;
     log.type = "$AddBrokenEquip";
     log.from = this;
-    log.card_str = IntList2StringList(card_ids).join("+");
+    log.card_str = IntList2StringList(add_ids).join("+");
     room->sendLog(log);
     room->getThread()->delay();
 
     BrokenEquipChangedStruct b;
     b.player = this;
-    b.ids = card_ids;
+    b.ids = add_ids;
     b.broken = true;
     QVariant bv = QVariant::fromValue(b);
     room->getThread()->trigger(BrokenEquipChanged, room, bv);
@@ -1591,11 +1604,14 @@ void ServerPlayer::addBrokenEquips(QList<int> card_ids)
 
 void ServerPlayer::removeBrokenEquips(QList<int> card_ids, bool sendLog, bool moveFromEquip)
 {
-    if (card_ids.isEmpty())
-        return;
+    QList<int> removed_ids;
+    foreach (int id, card_ids) {
+        if (broken_equips.removeAll(id) > 0)
+            removed_ids << id;
+    }
 
-    foreach (int id, card_ids)
-        broken_equips.removeOne(id);
+    if (removed_ids.isEmpty())
+        return;
 
     JsonArray arg;
     arg << objectName();
@@ -1608,13 +1624,13 @@ void ServerPlayer::removeBrokenEquips(QList<int> card_ids, bool sendLog, bool mo
         LogMessage log;
         log.type = "$RemoveBrokenEquip";
         log.from = this;
-        log.card_str = IntList2StringList(card_ids).join("+");
+        log.card_str = IntList2StringList(removed_ids).join("+");
         room->sendLog(log);
         room->getThread()->delay();
     }
     BrokenEquipChangedStruct b;
     b.player = this;
-    b.ids = card_ids;
+    b.ids = removed_ids;
     b.broken = false;
     b.moveFromEquip = moveFromEquip;
     QVariant bv = QVariant::fromValue(b);
@@ -1637,7 +1653,7 @@ void ServerPlayer::addHiddenGenerals(const QStringList &generals)
 
 void ServerPlayer::removeHiddenGenerals(const QStringList &generals)
 {
-    foreach (QString name, generals)
+    foreach (const QString &name, generals)
         hidden_generals.removeOne(name);
 
     QString g = hidden_generals.join("|");
@@ -1655,8 +1671,8 @@ void ServerPlayer::removeHiddenGenerals(const QStringList &generals)
     arg1 << QString();
     room->doBroadcastNotify(S_COMMAND_SET_SHOWN_HIDDEN_GENERAL, arg1);
 
-    foreach (QString name, generals) {
-        room->touhouLogmessage("#RemoveHiddenGeneral", this, name);
+    foreach (const QString &name, generals) {
+        room->sendLog("#RemoveHiddenGeneral", this, name);
         foreach (const Skill *skill, Sanguosha->getGeneral(name)->getVisibleSkillList()) {
             room->handleAcquireDetachSkills(this, "-" + skill->objectName(), true);
         }
@@ -1685,7 +1701,7 @@ void ServerPlayer::showHiddenSkill(const QString &skill_name)
         const Skill *skill = Sanguosha->getSkill(skill_name);
         if ((reimu != nullptr) && !hasShownRole() && skill != nullptr && skill->getFrequency() != Skill::Eternal && !skill->isAttachedLordSkill() && !hasEquipSkill(skill_name)) {
             QString role = getRole();
-            room->touhouLogmessage("#YibianShow", this, role, room->getAllPlayers());
+            room->sendLog("#YibianShow", this, role, room->getAllPlayers());
             room->broadcastProperty(this, "role");
             room->setPlayerProperty(this, "role_shown", true); //important! to notify client
 
@@ -1714,7 +1730,7 @@ void ServerPlayer::showHiddenSkill(const QString &skill_name)
             }
 
             if (generalName != nullptr) {
-                room->touhouLogmessage("#ShowHiddenGeneral", this, generalName);
+                room->sendLog("#ShowHiddenGeneral", this, generalName);
 
                 JsonArray arg;
                 arg << (int)QSanProtocol::S_GAME_EVENT_HUASHEN;
@@ -1805,7 +1821,7 @@ QStringList ServerPlayer::checkTargetModSkillShow(const CardUseStruct &use)
     }
 
     //check ResidueNum
-    //only consider the folloing cards
+    //only consider the following cards
     if (use.card->isKindOf("Slash") || use.card->isKindOf("Analeptic")) {
         num = 0;
         if (use.card->isKindOf("Slash"))
@@ -1824,7 +1840,7 @@ QStringList ServerPlayer::checkTargetModSkillShow(const CardUseStruct &use)
     }
 
     //check DistanceLimit
-    //only consider the folloing cards
+    //only consider the following cards
     if (use.card->isKindOf("Slash") || use.card->isKindOf("SupplyShortage") || use.card->isKindOf("Snatch")) {
         int distance = 1;
         foreach (ServerPlayer *p, use.to) {
@@ -1844,7 +1860,7 @@ QStringList ServerPlayer::checkTargetModSkillShow(const CardUseStruct &use)
     }
 
     //check TargetFix
-    //only consider the folloing cards
+    //only consider the following cards
     //Peach , EquipCard , ExNihilo, Analeptic, Lightning
 
     use.card->setFlags("IgnoreFailed");
@@ -1909,7 +1925,7 @@ void ServerPlayer::notifyPreshow()
     JsonArray args;
     args << (int)S_GAME_EVENT_UPDATE_PRESHOW;
     JsonObject args1;
-    foreach (const QString skill, skills.keys() + skills2.keys()) {
+    foreach (const QString &skill, skills.keys() + skills2.keys()) {
         args1.insert(skill, skills.value(skill, false) || skills2.value(skill, false));
     }
     args << args1;

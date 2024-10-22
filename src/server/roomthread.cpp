@@ -29,7 +29,7 @@ QString LogMessage::toString() const
         if (player != nullptr)
             tos << player->objectName();
 
-    return QString("%1:%2->%3:%4:%5:%6").arg(type).arg(from != nullptr ? from->objectName() : "").arg(tos.join("+")).arg(card_str).arg(arg).arg(arg2);
+    return QString("%1:%2->%3:%4:%5:%6").arg(type, (from != nullptr ? from->objectName() : ""), tos.join("+"), card_str, arg, arg2);
 }
 
 QVariant LogMessage::toJsonValue() const
@@ -352,11 +352,11 @@ void RoomThread::run()
         room->doBroadcastNotify(S_COMMAND_START_IN_X_SECONDS, QVariant(0));
 
     if (room->getMode() == "04_1v3") {
-        ServerPlayer *lord = room->getPlayers().first();
+        ServerPlayer *lord = room->getPlayers().constFirst();
         room->setPlayerProperty(lord, "general", "yuyuko_1v3");
 
         QList<const General *> generals = QList<const General *>();
-        foreach (QString pack_name, GetConfigFromLuaState(Sanguosha->getLuaState(), "hulao_packages").toStringList()) {
+        foreach (const QString &pack_name, GetConfigFromLuaState(Sanguosha->getLuaState(), "hulao_packages").toStringList()) {
             const Package *pack = Sanguosha->findChild<const Package *>(pack_name);
             if (pack != nullptr)
                 generals << pack->findChildren<const General *>();
@@ -454,10 +454,10 @@ void RoomThread::run()
             actionHulaoPass(uuz, league, game_rule);
         } else {
             if (room->getMode() == "02_1v1") {
-                ServerPlayer *first = room->getPlayers().first();
+                ServerPlayer *first = room->getPlayers().constFirst();
                 if (first->getRole() != "renegade")
                     first = room->getPlayers().at(1);
-                ServerPlayer *second = room->getOtherPlayers(first).first();
+                ServerPlayer *second = room->getOtherPlayers(first).constFirst();
                 //ServerPlayer *second = first->getNext();
                 QVariant v1 = QVariant::fromValue(first);
                 trigger(Debut, room, v1);
@@ -493,9 +493,9 @@ void RoomThread::getSkillAndSort(TriggerEvent triggerEvent, Room *room, QList<QS
                                  const QList<QSharedPointer<SkillInvokeDetail>> &triggered, const QVariant &data)
 {
     // used to get all the skills which can be triggered now, and sort them.
-    // everytime this function is called, it will get all the skiils and judge the triggerable one by one
+    // every time this function is called, it will get all the skiils and judge the triggerable one by one
     QList<const TriggerSkill *> skillList = skill_table[triggerEvent];
-    QList<QSharedPointer<SkillInvokeDetail>> details; // We create a new list everytime this function is called
+    QList<QSharedPointer<SkillInvokeDetail>> details; // We create a new list every time this function is called
     foreach (const TriggerSkill *skill, skillList) {
         // judge every skill
         QList<SkillInvokeDetail> triggerable = skill->triggerable(triggerEvent, room, data);

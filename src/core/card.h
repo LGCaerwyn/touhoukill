@@ -236,8 +236,8 @@ public:
 
 protected:
     QString user_string;
+    bool sort_targets;
 
-    // Card interface
 public:
     void onUse(Room *room, const CardUseStruct &card_use) const override;
     void use(Room *room, const CardUseStruct &card_use) const override;

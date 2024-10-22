@@ -18,8 +18,8 @@ lessThan(QT_MINOR_VERSION, 6) {
 CONFIG += c++11
 CONFIG += lua
 
-VERSION = 0.10.8
-VERSIONNUMBER = 20221211
+VERSION = 0.10.10
+VERSIONNUMBER = 20240727
 
 CONFIG += precompiled_header
 PRECOMPILED_HEADER = src/pch.h
@@ -73,10 +73,12 @@ SOURCES += \
     src/package/th16.cpp \
     src/package/th17.cpp \
     src/package/th18.cpp \
+    src/package/th19.cpp \
     src/package/th99.cpp \
     src/package/thndj.cpp \
     src/package/touhougod.cpp \
     src/package/hegemonyGeneral.cpp \
+    src/package/washout.cpp \
     src/server/ai.cpp \
     src/server/gamerule.cpp \
     src/server/generalselector.cpp \
@@ -124,7 +126,6 @@ SOURCES += \
     src/ui/lightboxanimation.cpp \
     src/ui/chooseoptionsbox.cpp \
     src/ui/playercardbox.cpp \
-    src/package/testCard.cpp \
     src/package/hegemonyCard.cpp \
     src/package/playground.cpp \
     src/ui/hegemonyrolecombobox.cpp \
@@ -181,10 +182,12 @@ HEADERS += \
     src/package/th16.h \
     src/package/th17.h \
     src/package/th18.h \
+    src/package/th19.h \
     src/package/th99.h \
     src/package/thndj.h \
     src/package/touhougod.h \
     src/package/hegemonyGeneral.h \
+    src/package/washout.h \
     src/server/ai.h \
     src/server/gamerule.h \
     src/server/generalselector.h \
@@ -233,7 +236,6 @@ HEADERS += \
     src/ui/hegemonyrolecombobox.h \
     src/ui/chooseoptionsbox.h \
     src/ui/playercardbox.h \
-    src/package/testCard.h \
     src/package/hegemonyCard.h \
     src/package/playground.h \
     src/pch.h \
@@ -274,6 +276,7 @@ win32-msvc*{
     !contains(QMAKE_HOST.arch, x86_64) {
         DEFINES += WIN32
         LIBS += -L"$$_PRO_FILE_PWD_/lib/win/x86"
+        QMAKE_LFLAGS += "/LARGEADDRESSAWARE"
     } else {
         DEFINES += WIN64
         LIBS += -L"$$_PRO_FILE_PWD_/lib/win/x64"
@@ -343,7 +346,6 @@ CONFIG(audio){
     }
 }
 
-
 CONFIG(lua){
 
 android:DEFINES += "\"getlocaledecpoint()='.'\""
@@ -411,6 +413,15 @@ android:DEFINES += "\"getlocaledecpoint()='.'\""
 }
 
 SWIGFILES += $$_PRO_FILE_PWD_/swig/sanguosha.i
+SWIGDEPENDS += $$_PRO_FILE_PWD_/swig/sanguosha.i \
+               $$_PRO_FILE_PWD_/swig/ai.i \
+               $$_PRO_FILE_PWD_/swig/card.i \
+               $$_PRO_FILE_PWD_/swig/general_select.i \
+               $$_PRO_FILE_PWD_/swig/list.i \
+               $$_PRO_FILE_PWD_/swig/luaskills.i \
+               $$_PRO_FILE_PWD_/swig/native.i \
+               $$_PRO_FILE_PWD_/swig/naturalvar.i \
+               $$_PRO_FILE_PWD_/swig/qvariant.i
 
 SWIG_bin = "swig"
 contains(QMAKE_HOST.os, "Windows"): SWIG_bin = "$$_PRO_FILE_PWD_/tools/swig/swig.exe"
@@ -418,7 +429,7 @@ contains(QMAKE_HOST.os, "Windows"): SWIG_bin = "$$_PRO_FILE_PWD_/tools/swig/swig
 swig.commands = "$$system_path($$SWIG_bin) -c++ -lua -cppext cpp -o ${QMAKE_FILE_OUT} ${QMAKE_FILE_NAME}"
 swig.CONFIG = target_predeps
 swig.dependency_type = TYPE_C
-swig.depends = $$SWIGFILES
+swig.depends = $$SWIGDEPENDS
 swig.input = SWIGFILES
 swig.name = "Generating ${QMAKE_FILE_NAME}..."
 swig.output = ${QMAKE_FILE_BASE}_wrap.cpp

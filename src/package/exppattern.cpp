@@ -16,7 +16,7 @@ bool ExpPattern::match(const Player *player, const Card *card) const
 }
 
 // '|' means 'and', '#' means 'or'.
-// the expression splited by '#' has 3 parts,
+// the expression split by '#' has 3 parts,
 // 1st part means the card name, and ',' means more than one options.
 // 2nd patt means the card suit, and ',' means more than one options.
 // 3rd part means the card number, and ',' means more than one options,
@@ -31,7 +31,7 @@ bool ExpPattern::matchOne(const Player *player, const Card *card, QString exp) c
 
     bool checkpoint = false;
     QStringList card_types = factors.at(0).split(',');
-    foreach (QString or_name, card_types) {
+    foreach (const QString &or_name, card_types) {
         checkpoint = false;
         foreach (QString name, or_name.split('+')) {
             if (name == ".") {
@@ -90,7 +90,7 @@ bool ExpPattern::matchOne(const Player *player, const Card *card, QString exp) c
     QStringList card_numbers = factors.at(2).split(',');
     int cdn = card->getNumber();
 
-    foreach (QString number, card_numbers) {
+    foreach (const QString &number, card_numbers) {
         if (number == ".") {
             checkpoint = true;
             break;
@@ -133,7 +133,7 @@ bool ExpPattern::matchOne(const Player *player, const Card *card, QString exp) c
     if ((player == nullptr) || place == ".")
         checkpoint = true;
     if (!checkpoint) {
-        bool findOneShow = false; //only for check palce "show"
+        bool findOneShow = false; //only for check place "show"
         bool needCheckShow = place.split(",").contains("show"); //only for check place "show"
 
         QList<int> ids;

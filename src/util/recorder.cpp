@@ -136,9 +136,8 @@ int Replayer::getDuration() const
 
 qreal Replayer::getSpeed()
 {
-    qreal speed = NAN;
     mutex.lock();
-    speed = this->speed;
+    qreal speed = this->speed;
     mutex.unlock();
     return speed;
 }
@@ -210,7 +209,7 @@ void Replayer::run()
             delay /= getSpeed();
 
             msleep(delay);
-            emit elasped(pair.elapsed / 1000.0);
+            emit elapsed(pair.elapsed / 1000.0);
 
             if (!playing)
                 play_sem.acquire();

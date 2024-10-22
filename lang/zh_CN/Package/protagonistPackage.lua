@@ -13,7 +13,7 @@ return {
 	--zhu001 势力：主 4血
 	["reimu"] = "博丽灵梦",
 	["#reimu"] = "乐园的美妙巫女",
-	["designer:reimu"] = "星野梦美☆",
+	["designer:reimu"] = "三国有单",
 
 	["illustrator:reimu"] = "tearfish",
 	["origin:reimu"] = "p号：5228650",
@@ -25,6 +25,10 @@ return {
 	["origin:reimu_3"] = "p号：22911671",
 	["illustrator:reimu_4"] = "pico",
 	["origin:reimu_4"] = "p号：20132493",
+	["illustrator:reimu_5"] = "Uroam",
+	["origin:reimu_5"] = "p号：112111536；个人id：55184092",
+	["illustrator:reimu_6"] = "ののこ",
+	["origin:reimu_6"] = "p号：70624197；个人id：2458",
 
 	["qixiang"] = "绮想",
 	[":qixiang"] = "当牌因使用、打出或弃置以外的原因置入弃牌堆后，若其中有<font size=\"5\", color=\"#FF0000\"><b>♥</b></font>牌，你可以令一名角色摸一张牌。",
@@ -34,12 +38,10 @@ return {
 	[":fengmo"] = "当一名其他角色于一个回合内首次使用基本牌时，你可以弃置一张手牌，令该角色判定，若结果为红色，此牌无效。",
 	["@fengmo"] = "封魔： %src 使用了 【%dest】， 你可以弃置一张手牌， 发动封魔",
 
-	
 	["boli"] = "博丽",
 	["@boli-retrial"]= "你可以响应 <font color=\"#00FF00\"><b>%dest </b></font> 的主公技“博丽”，打出一张<font size=\"5\", color=\"#FF0000\"><b>♥</b></font>手牌，代替 <font color=\"#FF8000\"><b>%src </b></font> 的 “%arg” 判定牌。",
 	["boli:judge"] = "<font color=\"#00FF00\"><b>%src </b></font> 的 “%dest” 判定结果不为<font size=\"5\", color=\"#FF0000\"><b>♥</b></font>，你可以发动主公技“博丽”，令其他角色选择是否打出一张<font size=\"5\", color=\"#FF0000\"><b>♥</b></font>手牌代替之。",
 	[":boli"] = "<font color=\"orange\"><b>主公技，</b></font>当非<font size=\"5\", color=\"#FF0000\"><b>♥</b></font>的判定牌生效前，你可以令其他角色选择是否打出<font size=\"5\", color=\"#FF0000\"><b>♥</b></font>手牌代替之。",
-
 
 --************************************************
 	--zhu002 势力：主 4血
@@ -63,10 +65,12 @@ return {
 	["origin:marisa_6"] = "个人id：173876",
 
 	["mofa"] = "魔法",
-	[":mofa"] = "<font color=\"green\"><b>出牌阶段限一次，</b></font>你可以弃置一张手牌，令你于此回合内使用的【杀】或普通锦囊牌的伤害值基数+1，若以此法弃置<font size=\"5\", color=\"#808080\"><b>♠</b></font>牌，你摸一张牌。",
+	[":mofa"] = "<font color=\"green\"><b>出牌阶段限一次，</b></font>你可以弃置一张牌，令你于此回合内使用的【杀】或普通锦囊牌的伤害值基数+1。",
 	["#mofa_notice"]= "由于 %arg 的效果，此回合内 %from 使用的【杀】或普通锦囊牌的伤害值基数+1。",
 	["#mofa_damage"]= "%from 对 %to 的伤害由 %arg2 点增加到 %arg 点。",
 	["#TouhouBuff"]= "%from 的 %arg 效果被触发。",
+	["qinmian"] = "勤勉",
+	[":qinmian"] = "当你的<font size=\"5\", color=\"#808080\"><b>♠</b></font>牌从手牌里被弃置或从装备区里移出后，你可以摸一张牌。",
 	["wuyu"] = "雾雨",
 	[":wuyu"] = "<font color=\"orange\"><b>主公技，</b></font><font color=\"green\"><b>其他角色的出牌阶段限一次，</b></font>其可以将一张<font size=\"5\", color=\"#808080\"><b>♠</b></font>牌交给你。",
 	[":wuyu_attach"]= "<font color=\"green\"><b>出牌阶段限一次，</b></font>你可以将一张<font size=\"5\", color=\"#808080\"><b>♠</b></font>牌交给拥有主公技“雾雨”的角色。",
@@ -85,7 +89,8 @@ return {
 	["origin:reimu_sp_1"] = "p号：31824198，个人id：37336",
 	["illustrator:reimu_sp_2"] = "しがらき",
 	["origin:reimu_sp_2"] = "p号：19597658，个人id：1004274",
-
+	["illustrator:reimu_sp_3"] = "玄月ちひろ",
+	["origin:reimu_sp_3"] = "p号：36617322；个人id：1661046",
 
 	["saiqian"] = "赛钱",
 	[":saiqian"] = "<font color=\"green\"><b>其他角色的出牌阶段限一次，</b></font>其可以将一至三张手牌交给你，若如此做，你可以选择一至两项：1.弃置一张<font size=\"5\", color=\"#FF0000\"><b>♥</b></font>手牌；2.失去1点体力。每选择一项后，其回复1点体力。",
@@ -112,7 +117,7 @@ return {
 	["origin:marisa_sp_2"] = "p号：15273460，个人id：274333",
 
 	["jiezou"] = "借走",
-	[":jiezou"] = "出牌阶段，你可以将一张牌当【顺手牵羊】使用（以此法使用<font size=\"5\", color=\"#808080\"><b>♠</b></font>牌无距离限制）。以此法使用非<font size=\"5\", color=\"#808080\"><b>♠</b></font>牌时，或获得装备区里的<font size=\"5\", color=\"#808080\"><b>♠</b></font>牌后，你结束当前阶段。",
+	[":jiezou"] = "出牌阶段，你可以将一张牌当【顺手牵羊】使用，以此法：使用<font size=\"5\", color=\"#808080\"><b>♠</b></font>牌无距离限制；使用非<font size=\"5\", color=\"#808080\"><b>♠</b></font>牌时或获得装备区里的<font size=\"5\", color=\"#808080\"><b>♠</b></font>牌后，你结束出牌阶段。",
 	["$jiezou-skip1"]= "由于 %from 用非黑桃牌（%card）发动 %arg，%from 的出牌阶段将结束。",
 	["$jiezou-skip2"]= "由于 %from 发动 %arg 获得装备区里的黑桃牌（%card），%from 的出牌阶段将结束。",
 	["shoucang"] = "收藏",
@@ -156,13 +161,15 @@ return {
 	["origin:reimu_yym_1"] = "p号：9705615，个人id：60103",
 	["illustrator:reimu_yym_2"] = "かがよ",
 	["origin:reimu_yym_2"] = "p号：9056340，个人id：693172",
+	["illustrator:reimu_yym_3"] = "Mimi N",
+	["origin:reimu_yym_3"] = "p号：43852830；个人id：3380373",
 
 	["zhize"]= "职责",
 	[":zhize"]= "<font color=\"blue\"><b>锁定技，</b></font>摸牌阶段，你少摸一张牌并选择一名有手牌的其他角色，观看其手牌并获得其中一张牌。",
 	["@zhize"]= "请选择一名有手牌的其他角色，观看他的手牌并获得其中的一张牌。",
 	["chunxi"]= "春息",
-	[":chunxi"]= "当你获得牌后，你可以展示其中一张<font size=\"5\", color=\"#FF0000\"><b>♥</b></font>牌并选择一名有手牌的其他角色（其不能是此回合内以此法选择过的角色），获得其一张手牌。",
-	["@chunxi"]= "你可以发动“春息”，展示你获得的一张<font size=\"5\", color=\"#FF0000\"><b>♥</b></font>牌，并获得一名其他角色的一张手牌，但他不能是这回合内已用这方法获得过牌的人。",
+	[":chunxi"]= "当你不以此法而获得牌后，你可以展示其中一张<font size=\"5\", color=\"#FF0000\"><b>♥</b></font>牌并选择一名有手牌的其他角色，获得其一张手牌。",
+	["@chunxi"]= "你可以发动“春息”，展示你获得的一张<font size=\"5\", color=\"#FF0000\"><b>♥</b></font>牌，并获得一名其他角色的一张手牌。",
 	["~chunxi"]= "选择此次获得的一张红桃牌 -> 选择一名符合条件的其他角色 -> 确定",
 
 --************************************************
@@ -180,6 +187,8 @@ return {
 	["origin:reimu_slm_2"] = "p号：13295146，个人id：49165",
 	["illustrator:reimu_slm_3"] = "きんたろ",
 	["origin:reimu_slm_3"] = "p号：18697741，个人id：10009",
+	["illustrator:reimu_slm_4"] = "butyou",
+	["origin:reimu_slm_4"] = "p号：109934381；个人id：4321558",
 
 	["bllmwuyu"] = "五欲" ,
 	[":bllmwuyu"] = "准备阶段开始时，你可以将“欲”标记补至X枚（X为你已损失的体力值+1）；你可以弃1枚“欲”标记或弃置一张<font size=\"5\", color=\"#FF0000\"><b>♥</b></font>牌，发动下列中的一项技能：<br /><font color=\"orange\"><b>“名欲”</b></font>（你跳过判定阶段）。<br /><font color=\"orange\"><b>“财欲”</b></font>（摸牌阶段开始时，你摸一张牌）。<br /><font color=\"orange\"><b>“色欲”</b></font>（出牌阶段，你于此回合内使用【杀】的额外次数上限+1）。<br /><font color=\"orange\"><b>“睡欲”</b></font>（弃牌阶段开始时，你的手牌上限于此阶段内视为4）。<br /><font color=\"orange\"><b>“食欲”</b></font>（你可以将一张手牌当【酒】使用）。" ,
@@ -237,13 +246,11 @@ return {
 	["illustrator:sanae_slm_2"] = "木shiyo",
 	["origin:sanae_slm_2"] = "p号：34431982，个人id：40222",
 
-	["yuwang_list"] = "欲望",
 	["dfgzmsiyu"] = "私欲",
-	[":dfgzmsiyu"] = "<font color=\"green\"><b>出牌阶段限一次，</b></font>你可以将一至两张手牌交给一名其他角色。若如此做，此回合结束时，你可以观看其手牌并获得其中等量的牌。",
+	[":dfgzmsiyu"] = "<font color=\"green\"><b>出牌阶段限一次，</b></font>你可以将一至两张手牌交给一名其他角色。若如此做，此回合结束时，你观看其手牌并获得其中一张牌。",
 	["dfgzmsiyu:get"] = "私欲：你可以从 %src 拿回等量的牌",
 	["qishu"] = "奇术",
 	[":qishu"] = "你使用最后的手牌无距离限制；出牌阶段内，若你使用的【杀】或普通锦囊牌是最后的手牌，你使用此牌的额外目标数无上限。",
-	["~qishu"] = "第一个目标为持有武器的角色，第二个目标为出杀的目标。",
 	["@qishu-add"] = "请选择【%arg】的额外目标",
 	["#QishuAdd"] = "%from 发动了“%arg2”为【%arg】增加了额外目标 %to",
 	["#qishu-mod"] = "奇术",
@@ -283,14 +290,12 @@ return {
 	["illustrator:reimu_old_1"] = "くろぬこネーロ",
 	["origin:reimu_old_1"] = "p号：32920520，个人id：335493",
 
-
 	["yinyang"] = "阴阳" ,
 	[":yinyang"] = "<font color=\"green\"><b>出牌阶段限一次，</b></font>你可以选择一名有手牌的其他角色，令其弃置一张手牌，然后你弃置一张手牌，若以此法弃置两张牌且颜色：不同，其摸一张牌，然后其回复1点体力；相同，你摸两张牌，然后失去1点体力。" ,
 	["@yinyang_discard"] = "因“阴阳”的效果，你须弃置一张手牌",
 	["lingji"] = "灵击" ,
-	[":lingji"] = "结束阶段开始时，若你于此回合内因使用或打出或弃置而失去过<font size=\"5\", color=\"#FF0000\"><b>♥</b></font>牌，你可以对一名其他角色造成1点伤害。" ,
+	[":lingji"] = "结束阶段开始时，若你于此回合内因使用、打出或弃置而失去过<font size=\"5\", color=\"#FF0000\"><b>♥</b></font>牌，你可以对一名其他角色造成1点伤害。" ,
 	["@lingji"] = "你可以发动“灵击”，对一名其他角色造成1点伤害",
-
 
 --***********************************
 	--zhu012  势力：主 4血
@@ -303,9 +308,12 @@ return {
 	["origin:marisa_old"] = "p号：52502794，个人id：iLed@いきなりアニメ原画",
 	["illustrator:marisa_old_1"] = "カタケイ",
 	["origin:marisa_old_1"] = "p号：50400667，个人id：90042",
+	["illustrator:marisa_old_2"] = "グウミン",
+	["origin:marisa_old_2"] = "p号：109713097；个人id：44056178",
+	["illustrator:marisa_old_3"] = "グウミン",
+	["origin:marisa_old_3"] = "p号：110390303；个人id：44056178",
 
 	["toushi"] = "偷师" ,
-	--[":toushi"] = "其他角色的出牌阶段结束时，若其于此阶段内使用的最后的牌为【杀】或普通锦囊牌，你可以将一张基本牌或<font size=\"5\", color=\"#808080\"><b>♠</b></font>牌当同名牌使用。" ,
 	[":toushi"] = "其他角色的出牌阶段结束时，若其于此阶段内使用的最后的牌为【杀】或普通锦囊牌，你可以将一张非锦囊牌当同名牌使用。当你以此法使用<font size=\"5\", color=\"#808080\"><b>♠</b></font>牌时，摸一张牌。" ,
 	["@toushi"]= "你可以发动“偷师”，将一张 非锦囊的牌 当做【%src】使用。用<font size=\"5\", color=\"#808080\"><b>♠</b></font> 牌时还能摸一张牌。",
 	["~toushi"]= "选择非锦囊牌并选择此转化牌的目标 -> 确定",
@@ -313,14 +321,13 @@ return {
 	[":moli"] = "一名角色的结束阶段开始时，若你于此回合内造成与受到过的伤害之和大于1点，你可以令一名角色回复1点体力。",
 	["@moli"]= "你可以发动“魔力”，令一名角色回复1点体力",
 
-
 --***********************************
 	--zhu013  势力：主 4血
 	["reisen_gzz"] = "绀珠传SP铃仙",
 	["&reisen_gzz"] = "绀珠传铃仙",
 	["#reisen_gzz"] = "地上的月兔",
 	["designer:reisen_gzz"] = "蔚海幽浮",
-	
+
 	["illustrator:reisen_gzz"] = "まさる.jp",
 	["origin:reisen_gzz"] = "p号：59883222，个人id：6547201",
 	["illustrator:reisen_gzz_1"] = "カズ",
@@ -333,7 +340,7 @@ return {
 	["origin:reisen_gzz_4"] = "p号：50003628；个人id：292644",
 	["illustrator:reisen_gzz_5"] = "Goback",
 	["origin:reisen_gzz_5"] = "p号：81985109；个人id：5846268",
-	
+
 	["bodong"] = "波动" ,
 	[":bodong"] = "<font color=\"green\"><b>出牌阶段限一次，</b></font>你可以弃置一张手牌并选择场上一至三张装备牌，依次横置之。",
 	["huanlong"] = "幻胧",
